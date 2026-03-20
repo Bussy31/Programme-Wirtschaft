@@ -48,6 +48,7 @@ with tab1:
     with col2:
         eb_wert = st.number_input("AB-Wert (€):", min_value=0.0, value=0.0, step=100.0)
     with col3:
+        st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)  # Trick für die Button-Höhe
         if st.button("🟢 Aktivkonto (Soll)", use_container_width=True):
             name = kto_name.strip()
             if name and name not in st.session_state.konten:
@@ -55,11 +56,13 @@ with tab1:
                 if eb_wert > 0:
                     st.session_state.konten[name]["Soll"].append((eb_wert, "AB", ""))
                 st.success(f"Aktivkonto '{name}' angelegt!")
+                st.rerun()
             elif not name:
                 st.error("Bitte einen Namen eingeben.")
             else:
                 st.error("Konto existiert bereits!")
     with col4:
+        st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)  # Trick für die Button-Höhe
         if st.button("🔵 Passivkonto (Haben)", use_container_width=True):
             name = kto_name.strip()
             if name and name not in st.session_state.konten:
@@ -67,6 +70,7 @@ with tab1:
                 if eb_wert > 0:
                     st.session_state.konten[name]["Haben"].append((eb_wert, "AB", ""))
                 st.success(f"Passivkonto '{name}' angelegt!")
+                st.rerun()
             elif not name:
                 st.error("Bitte einen Namen eingeben.")
             else:
@@ -110,22 +114,73 @@ with tab1:
     else:
         m3.success(f"Differenz: {diff:,.2f} € (Ausgeglichen!)")
 
-    # Konten-Tabelle
+    # Konten-Tabelle und Bearbeitung
     if konten_liste:
         df_konten = pd.DataFrame(konten_liste)
         st.dataframe(df_konten, use_container_width=True, hide_index=True)
 
-        # Konto löschen (als einfaches Dropdown)
-        with st.expander("Konto löschen"):
-            kto_to_delete = st.selectbox("Wähle ein Konto zum Löschen", options=[k["Konto"] for k in konten_liste])
-            if st.button("Konto endgültig löschen", type="primary"):
-                in_use = any(s == kto_to_delete or h == kto_to_delete for _, s, h, _ in st.session_state.journal)
-                if in_use:
-                    st.error("Konto wird im Journal verwendet! Zuerst Buchung löschen.")
-                else:
-                    del st.session_state.konten[kto_to_delete]
-                    st.success("Gelöscht!")
-                    st.rerun()
+        with st.expander("✏️ Konto bearbeiten oder löschen"):
+            selected_kto = st.selectbox("Konto auswählen:", options=[k["Konto"] for k in konten_liste])
+
+            if selected_kto:
+                # Aktuelle Werte abrufen
+                k_daten = st.session_state.konten[selected_kto]
+                cur_ab = 0.0
+                if k_daten["Soll"] and k_daten["Soll"][0][1] == "AB":
+                    cur_ab = k_daten["Soll"][0][0]
+                elif k_daten["Haben"] and k_daten["Haben"][0][1] == "AB":
+                    cur_ab = k_daten["Haben"][0][0]
+
+                c_edit1, c_edit2, c_edit3 = st.columns(3)
+                with c_edit1:
+                    new_k_name = st.text_input("Name", value=selected_kto)
+                with c_edit2:
+                    new_k_ab = st.number_input("AB-Wert (€)", value=float(cur_ab), min_value=0.0, step=100.0)
+                with c_edit3:
+                    new_k_seite = st.selectbox("Typ", options=["Soll", "Haben"],
+                                               index=0 if k_daten["Seite"] == "Soll" else 1)
+
+                cb1, cb2 = st.columns(2)
+                with cb1:
+                    if st.button("💾 Änderungen speichern", use_container_width=True, type="primary"):
+                        new_k_name = new_k_name.strip()
+                        if not new_k_name:
+                            st.error("Der Name darf nicht leer sein.")
+                        elif new_k_name != selected_kto and new_k_name in st.session_state.konten:
+                            st.error("Ein Konto mit diesem Namen existiert bereits!")
+                        else:
+                            # 1. Wenn der Name sich ändert, im Dictionary und im Journal anpassen
+                            if new_k_name != selected_kto:
+                                st.session_state.konten[new_k_name] = st.session_state.konten.pop(selected_kto)
+                                for i, (nr, s, h, b) in enumerate(st.session_state.journal):
+                                    new_s = new_k_name if s == selected_kto else s
+                                    new_h = new_k_name if h == selected_kto else h
+                                    st.session_state.journal[i] = (nr, new_s, new_h, b)
+
+                            # 2. Werte aktualisieren
+                            st.session_state.konten[new_k_name]["Seite"] = new_k_seite
+                            # Alte AB-Werte entfernen
+                            st.session_state.konten[new_k_name]["Soll"] = [x for x in
+                                                                           st.session_state.konten[new_k_name]["Soll"]
+                                                                           if x[1] != "AB"]
+                            st.session_state.konten[new_k_name]["Haben"] = [x for x in
+                                                                            st.session_state.konten[new_k_name]["Haben"]
+                                                                            if x[1] != "AB"]
+                            # Neuen AB-Wert setzen
+                            if new_k_ab > 0:
+                                st.session_state.konten[new_k_name][new_k_seite].insert(0, (new_k_ab, "AB", ""))
+
+                            rebuild_accounts()
+                            st.rerun()
+
+                with cb2:
+                    if st.button("🗑️ Konto endgültig löschen", use_container_width=True):
+                        in_use = any(s == selected_kto or h == selected_kto for _, s, h, _ in st.session_state.journal)
+                        if in_use:
+                            st.error("Konto wird im Journal verwendet! Bitte zuerst die Buchungen löschen.")
+                        else:
+                            del st.session_state.konten[selected_kto]
+                            st.rerun()
 
 # ==========================================
 # TAB 2: JOURNAL (BUCHEN)
@@ -165,15 +220,37 @@ with tab2:
         df_journal = pd.DataFrame(st.session_state.journal, columns=["Nr", "Soll", "Haben", "Betrag (€)"])
         st.dataframe(df_journal, use_container_width=True, hide_index=True)
 
-        with st.expander("Buchung löschen"):
-            buchung_to_delete = st.selectbox("Wähle Buchungsnummer zum Löschen",
-                                             options=[b[0] for b in st.session_state.journal])
-            if st.button("Buchung löschen", type="primary"):
-                # Finde den Index und lösche
-                idx_to_delete = next(i for i, b in enumerate(st.session_state.journal) if b[0] == buchung_to_delete)
-                st.session_state.journal.pop(idx_to_delete)
-                rebuild_accounts()
-                st.rerun()
+        with st.expander("✏️ Buchung bearbeiten oder löschen"):
+            # Ein übersichtliches Wörterbuch für das Dropdown erstellen
+            b_dict = {f"Nr. {b[0]}: {b[1]} an {b[2]} ({b[3]:.2f} €)": i for i, b in enumerate(st.session_state.journal)}
+            selected_b = st.selectbox("Buchung auswählen:", options=list(b_dict.keys()))
+
+            if selected_b:
+                idx = b_dict[selected_b]
+                b_nr, old_s, old_h, old_betrag = st.session_state.journal[idx]
+
+                c_edit1, c_edit2, c_edit3 = st.columns(3)
+                with c_edit1:
+                    new_b_s = st.selectbox("Neues Soll-Konto", options=kto_namen,
+                                           index=kto_namen.index(old_s) if old_s in kto_namen else 0)
+                with c_edit2:
+                    new_b_h = st.selectbox("Neues Haben-Konto", options=kto_namen,
+                                           index=kto_namen.index(old_h) if old_h in kto_namen else 0)
+                with c_edit3:
+                    new_b_betrag = st.number_input("Neuer Betrag (€)", value=float(old_betrag), min_value=0.01,
+                                                   step=10.0)
+
+                cb1, cb2 = st.columns(2)
+                with cb1:
+                    if st.button("💾 Buchung speichern", use_container_width=True, type="primary"):
+                        st.session_state.journal[idx] = (b_nr, new_b_s, new_b_h, new_b_betrag)
+                        rebuild_accounts()
+                        st.rerun()
+                with cb2:
+                    if st.button("🗑️ Buchung löschen", use_container_width=True):
+                        st.session_state.journal.pop(idx)
+                        rebuild_accounts()
+                        st.rerun()
     else:
         st.write("Noch keine Buchungen vorhanden.")
 
@@ -223,127 +300,4 @@ with tab3:
         pdf.set_font("Helvetica", "B", 10)
         pdf.cell(90, 8, f"S                            {name[:20]}                            H", border="B", align="C")
         y += 8
-        pdf.set_xy(x, y)
-        pdf.set_font("Helvetica", "", 9)
-        max_len = max(len(werte["Soll"]), len(werte["Haben"]))
-
-        for i in range(max_len):
-            if i < len(werte["Soll"]):
-                val, ref, gkto = werte["Soll"][i]
-                s_text = f"{ref}) {gkto}" if gkto else str(ref)
-                s_val = f"{val:,.2f}"
-            else:
-                s_text, s_val = "", ""
-
-            if i < len(werte["Haben"]):
-                val, ref, gkto = werte["Haben"][i]
-                h_text = f"{ref}) {gkto}" if gkto else str(ref)
-                h_val = f"{val:,.2f}"
-            else:
-                h_text, h_val = "", ""
-
-            pdf.cell(27, 6, s_text[:15], border="L")
-            pdf.cell(18, 6, s_val, border="R", align="R")
-            pdf.cell(27, 6, h_text[:15])
-            pdf.cell(18, 6, h_val, border="R", align="R")
-            y += 6
-            pdf.set_xy(x, y)
-
-        s_sum = sum(i[0] for i in werte["Soll"])
-        h_sum = sum(i[0] for i in werte["Haben"])
-        sb = abs(s_sum - h_sum)
-
-        pdf.set_font("Helvetica", "I", 9)
-        if s_sum >= h_sum:
-            pdf.cell(45, 6, "", border="LR")
-            pdf.cell(20, 6, "SB", align="L")
-            pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R")
-        else:
-            pdf.cell(20, 6, "SB", border="L", align="L")
-            pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R")
-            pdf.cell(45, 6, "", border="R")
-        y += 6
-        pdf.set_xy(x, y)
-
-        max_sum = max(s_sum, h_sum)
-        pdf.set_font("Helvetica", "B", 9)
-        pdf.cell(20, 6, "", border="TLB")
-        pdf.cell(25, 6, f"{max_sum:,.2f}", border="TRB", align="R")
-        pdf.cell(20, 6, "", border="TLB")
-        pdf.cell(25, 6, f"{max_sum:,.2f}", border="TRB", align="R")
-        return y + 10
-
-
-    if st.button("📄 PDF generieren & vorbereiten", type="primary"):
-        pdf = FPDF()
-        pdf.add_page()
-
-        eb_aktiv, eb_passiv = [], []
-        for name, daten in st.session_state.konten.items():
-            if daten["Seite"] == "Soll" and daten["Soll"] and daten["Soll"][0][1] == "AB":
-                eb_aktiv.append((name, daten["Soll"][0][0]))
-            if daten["Seite"] == "Haben" and daten["Haben"] and daten["Haben"][0][1] == "AB":
-                eb_passiv.append((name, daten["Haben"][0][0]))
-        draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv, eb_passiv)
-
-        pdf.set_font("Helvetica", "B", 12)
-        pdf.cell(0, 10, "Grundbuch", ln=True)
-        pdf.set_font("Helvetica", "", 10)
-        if not st.session_state.journal:
-            pdf.cell(0, 6, "(Keine Buchungen)", ln=True)
-        for nr, s, h, b in st.session_state.journal:
-            pdf.cell(0, 6, f"{nr}) {s} {b:,.2f} an {h} {b:,.2f}", ln=True)
-        pdf.ln(10)
-
-        pdf.set_font("Helvetica", "B", 12)
-        pdf.cell(0, 10, "Hauptbuch (Aktivkonten links, Passivkonten rechts)", ln=True)
-        aktiv_konten = [(k, v) for k, v in st.session_state.konten.items() if v["Seite"] == "Soll"]
-        passiv_konten = [(k, v) for k, v in st.session_state.konten.items() if v["Seite"] == "Haben"]
-        max_konten_len = max(len(aktiv_konten), len(passiv_konten))
-
-        for i in range(max_konten_len):
-            start_y = pdf.get_y()
-            if start_y > 230:
-                pdf.add_page()
-                start_y = pdf.get_y()
-            y_left = start_y
-            y_right = start_y
-            if i < len(aktiv_konten):
-                y_left = draw_single_t_konto(pdf, 10, start_y, aktiv_konten[i][0], aktiv_konten[i][1])
-            if i < len(passiv_konten):
-                y_right = draw_single_t_konto(pdf, 105, start_y, passiv_konten[i][0], passiv_konten[i][1])
-            pdf.set_y(max(y_left, y_right))
-            pdf.set_x(10)
-
-        if pdf.get_y() > 220:
-            pdf.add_page()
-        else:
-            pdf.ln(10)
-
-        sb_aktiv, sb_passiv = [], []
-        for name, daten in st.session_state.konten.items():
-            s_sum = sum(i[0] for i in daten["Soll"])
-            h_sum = sum(i[0] for i in daten["Haben"])
-            if s_sum > h_sum:
-                sb_aktiv.append((name, s_sum - h_sum))
-            elif h_sum > s_sum:
-                sb_passiv.append((name, h_sum - s_sum))
-            elif s_sum > 0:
-                if daten["Seite"] == "Soll":
-                    sb_aktiv.append((name, 0.0))
-                else:
-                    sb_passiv.append((name, 0.0))
-        draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv, sb_passiv)
-
-        # PDF in eine temporäre Datei speichern, einlesen und zum Download freigeben
-        temp_pdf_path = "temp_loesung.pdf"
-        pdf.output(temp_pdf_path)
-
-        with open(temp_pdf_path, "rb") as pdf_file:
-            PDFbyte = pdf_file.read()
-
-        st.success("PDF wurde erfolgreich generiert!")
-        st.download_button(label="📥 PDF jetzt herunterladen",
-                           data=PDFbyte,
-                           file_name="Buchhaltung_Loesung_Komplett.pdf",
-                           mime='application/octet-stream')
+        pdf.set_xy(
