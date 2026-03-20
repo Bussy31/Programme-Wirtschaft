@@ -79,7 +79,7 @@ with tab1:
             st.success(st.session_state.form_msg["text"])
         else:
             st.error(st.session_state.form_msg["text"])
-        st.session_state.form_msg = None  # Nachricht nach dem Anzeigen löschen
+        st.session_state.form_msg = None
 
     st.divider()
 
@@ -91,7 +91,11 @@ with tab1:
     for name, werte in st.session_state.konten.items():
         s = sum(item[0] for item in werte["Soll"])
         h = sum(item[0] for item in werte["Haben"])
-        konten_liste.append({"Konto": name, "Typ": werte["Seite"], "Soll": s, "Haben": h, "Saldo": abs(s - h)})
+
+        # NEU: Klartext-Anzeige für den Typ in der Tabelle
+        typ_anzeige = "Aktivkonto (Soll)" if werte["Seite"] == "Soll" else "Passivkonto (Haben)"
+
+        konten_liste.append({"Konto": name, "Typ": typ_anzeige, "Soll": s, "Haben": h, "Saldo": abs(s - h)})
 
         if werte["Seite"] == "Soll" and werte["Soll"] and werte["Soll"][0][1] == "AB":
             sum_aktiv_ab += werte["Soll"][0][0]
@@ -109,14 +113,13 @@ with tab1:
 
     diff = abs(sum_aktiv - sum_passiv)
 
-    # Bilanz-Check Anzeige (Jetzt auf einer Höhe!)
+    # Bilanz-Check Anzeige
     st.subheader("Bilanz-Check")
     m1, m2, m3 = st.columns(3)
     m1.metric("Summe Aktiv", f"{sum_aktiv:,.2f} €")
     m2.metric("Summe Passiv", f"{sum_passiv:,.2f} €")
     m3.metric("Differenz", f"{diff:,.2f} €")
 
-    # Optische Warnung direkt unter den Kennzahlen
     if diff > 0.01:
         st.error(f"⚠️ Achtung: Die Bilanz ist nicht ausgeglichen! (Differenz: {diff:,.2f} €)")
     else:
@@ -144,8 +147,10 @@ with tab1:
                 with c_edit2:
                     new_k_ab = st.number_input("AB-Wert (€) bearbeiten", value=float(cur_ab), min_value=0.0, step=100.0)
                 with c_edit3:
-                    new_k_seite = st.selectbox("Typ", options=["Soll", "Haben"],
-                                               index=0 if k_daten["Seite"] == "Soll" else 1)
+                    # NEU: Klartext auch im Bearbeitungs-Dropdown
+                    typ_options = ["Aktivkonto (Soll)", "Passivkonto (Haben)"]
+                    new_k_seite_display = st.selectbox("Typ", options=typ_options,
+                                                       index=0 if k_daten["Seite"] == "Soll" else 1)
 
                 cb1, cb2 = st.columns(2)
                 with cb1:
@@ -156,6 +161,9 @@ with tab1:
                         elif new_k_name != selected_kto and new_k_name in st.session_state.konten:
                             st.error("Ein Konto mit diesem Namen existiert bereits!")
                         else:
+                            # Intern wieder in "Soll" und "Haben" umwandeln
+                            new_k_seite_intern = "Soll" if "Aktiv" in new_k_seite_display else "Haben"
+
                             if new_k_name != selected_kto:
                                 st.session_state.konten[new_k_name] = st.session_state.konten.pop(selected_kto)
                                 for i, (nr, s, h, b) in enumerate(st.session_state.journal):
@@ -163,7 +171,7 @@ with tab1:
                                     new_h = new_k_name if h == selected_kto else h
                                     st.session_state.journal[i] = (nr, new_s, new_h, b)
 
-                            st.session_state.konten[new_k_name]["Seite"] = new_k_seite
+                            st.session_state.konten[new_k_name]["Seite"] = new_k_seite_intern
                             st.session_state.konten[new_k_name]["Soll"] = [x for x in
                                                                            st.session_state.konten[new_k_name]["Soll"]
                                                                            if x[1] != "AB"]
@@ -172,7 +180,7 @@ with tab1:
                                                                             if x[1] != "AB"]
 
                             if new_k_ab > 0:
-                                st.session_state.konten[new_k_name][new_k_seite].insert(0, (new_k_ab, "AB", ""))
+                                st.session_state.konten[new_k_name][new_k_seite_intern].insert(0, (new_k_ab, "AB", ""))
 
                             rebuild_accounts()
                             st.rerun()
