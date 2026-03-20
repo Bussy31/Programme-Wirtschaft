@@ -12,17 +12,17 @@ if "konten" not in st.session_state:
     st.session_state.konten = {}
 if "journal" not in st.session_state:
     st.session_state.journal = []
+if "form_msg" not in st.session_state:
+    st.session_state.form_msg = None
 
 
 # --- DATEN-MANAGER ---
 def rebuild_accounts():
     """Setzt alle Konten auf den AB zurück und bucht das gesamte Journal neu durch."""
-    # 1. Konten auf AB zurücksetzen
     for name, daten in st.session_state.konten.items():
         daten["Soll"] = [x for x in daten["Soll"] if x[1] == "AB"]
         daten["Haben"] = [x for x in daten["Haben"] if x[1] == "AB"]
 
-    # 2. Journal neu durchbuchen
     new_journal = []
     for idx, (old_nr, s, h, b) in enumerate(st.session_state.journal):
         nr = idx + 1
@@ -30,6 +30,26 @@ def rebuild_accounts():
         st.session_state.konten[s]["Soll"].append((b, str(nr), h))
         st.session_state.konten[h]["Haben"].append((b, str(nr), s))
     st.session_state.journal = new_journal
+
+
+# --- CALLBACK FUNKTION FÜR NEUE KONTEN (Leert die Felder) ---
+def add_konto(seite):
+    name = st.session_state.kto_name_input.strip()
+    eb_wert = st.session_state.kto_wert_input
+
+    if name and name not in st.session_state.konten:
+        st.session_state.konten[name] = {"Seite": seite, "Soll": [], "Haben": []}
+        if eb_wert > 0:
+            st.session_state.konten[name][seite].append((eb_wert, "AB", ""))
+        st.session_state.form_msg = {"type": "success",
+                                     "text": f"{'Aktiv' if seite == 'Soll' else 'Passiv'}konto '{name}' erfolgreich angelegt!"}
+        # Felder zurücksetzen
+        st.session_state.kto_name_input = ""
+        st.session_state.kto_wert_input = 0.0
+    elif not name:
+        st.session_state.form_msg = {"type": "error", "text": "Bitte einen Kontonamen eingeben."}
+    else:
+        st.session_state.form_msg = {"type": "error", "text": "Dieses Konto existiert bereits!"}
 
 
 # --- TABS ERSTELLEN ---
@@ -41,40 +61,25 @@ tab1, tab2, tab3 = st.tabs(["1. Konten & Eröffnung", "2. Buchen (Journal)", "3.
 with tab1:
     st.subheader("Konto eröffnen")
 
-    # Eingabeformular für neues Konto
     col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
     with col1:
-        kto_name = st.text_input("Kontoname:")
+        st.text_input("Kontoname:", key="kto_name_input")
     with col2:
-        eb_wert = st.number_input("AB-Wert (€):", min_value=0.0, value=0.0, step=100.0)
+        st.number_input("AB-Wert (€):", min_value=0.0, step=100.0, key="kto_wert_input")
     with col3:
-        st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)  # Trick für die Button-Höhe
-        if st.button("🟢 Aktivkonto (Soll)", use_container_width=True):
-            name = kto_name.strip()
-            if name and name not in st.session_state.konten:
-                st.session_state.konten[name] = {"Seite": "Soll", "Soll": [], "Haben": []}
-                if eb_wert > 0:
-                    st.session_state.konten[name]["Soll"].append((eb_wert, "AB", ""))
-                st.success(f"Aktivkonto '{name}' angelegt!")
-                st.rerun()
-            elif not name:
-                st.error("Bitte einen Namen eingeben.")
-            else:
-                st.error("Konto existiert bereits!")
+        st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+        st.button("🟢 Aktivkonto (Soll)", use_container_width=True, on_click=add_konto, args=("Soll",))
     with col4:
-        st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)  # Trick für die Button-Höhe
-        if st.button("🔵 Passivkonto (Haben)", use_container_width=True):
-            name = kto_name.strip()
-            if name and name not in st.session_state.konten:
-                st.session_state.konten[name] = {"Seite": "Haben", "Soll": [], "Haben": []}
-                if eb_wert > 0:
-                    st.session_state.konten[name]["Haben"].append((eb_wert, "AB", ""))
-                st.success(f"Passivkonto '{name}' angelegt!")
-                st.rerun()
-            elif not name:
-                st.error("Bitte einen Namen eingeben.")
-            else:
-                st.error("Konto existiert bereits!")
+        st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+        st.button("🔵 Passivkonto (Haben)", use_container_width=True, on_click=add_konto, args=("Haben",))
+
+    # Meldungen nach dem Klick anzeigen
+    if st.session_state.form_msg:
+        if st.session_state.form_msg["type"] == "success":
+            st.success(st.session_state.form_msg["text"])
+        else:
+            st.error(st.session_state.form_msg["text"])
+        st.session_state.form_msg = None  # Nachricht nach dem Anzeigen löschen
 
     st.divider()
 
@@ -104,15 +109,18 @@ with tab1:
 
     diff = abs(sum_aktiv - sum_passiv)
 
-    # Bilanz-Check Anzeige
+    # Bilanz-Check Anzeige (Jetzt auf einer Höhe!)
     st.subheader("Bilanz-Check")
     m1, m2, m3 = st.columns(3)
     m1.metric("Summe Aktiv", f"{sum_aktiv:,.2f} €")
     m2.metric("Summe Passiv", f"{sum_passiv:,.2f} €")
+    m3.metric("Differenz", f"{diff:,.2f} €")
+
+    # Optische Warnung direkt unter den Kennzahlen
     if diff > 0.01:
-        m3.error(f"Differenz: {diff:,.2f} €")
+        st.error(f"⚠️ Achtung: Die Bilanz ist nicht ausgeglichen! (Differenz: {diff:,.2f} €)")
     else:
-        m3.success(f"Differenz: {diff:,.2f} € (Ausgeglichen!)")
+        st.success("✅ Die Bilanz ist perfekt ausgeglichen!")
 
     # Konten-Tabelle und Bearbeitung
     if konten_liste:
@@ -123,7 +131,6 @@ with tab1:
             selected_kto = st.selectbox("Konto auswählen:", options=[k["Konto"] for k in konten_liste])
 
             if selected_kto:
-                # Aktuelle Werte abrufen
                 k_daten = st.session_state.konten[selected_kto]
                 cur_ab = 0.0
                 if k_daten["Soll"] and k_daten["Soll"][0][1] == "AB":
@@ -135,7 +142,7 @@ with tab1:
                 with c_edit1:
                     new_k_name = st.text_input("Name", value=selected_kto)
                 with c_edit2:
-                    new_k_ab = st.number_input("AB-Wert (€)", value=float(cur_ab), min_value=0.0, step=100.0)
+                    new_k_ab = st.number_input("AB-Wert (€) bearbeiten", value=float(cur_ab), min_value=0.0, step=100.0)
                 with c_edit3:
                     new_k_seite = st.selectbox("Typ", options=["Soll", "Haben"],
                                                index=0 if k_daten["Seite"] == "Soll" else 1)
@@ -149,7 +156,6 @@ with tab1:
                         elif new_k_name != selected_kto and new_k_name in st.session_state.konten:
                             st.error("Ein Konto mit diesem Namen existiert bereits!")
                         else:
-                            # 1. Wenn der Name sich ändert, im Dictionary und im Journal anpassen
                             if new_k_name != selected_kto:
                                 st.session_state.konten[new_k_name] = st.session_state.konten.pop(selected_kto)
                                 for i, (nr, s, h, b) in enumerate(st.session_state.journal):
@@ -157,16 +163,14 @@ with tab1:
                                     new_h = new_k_name if h == selected_kto else h
                                     st.session_state.journal[i] = (nr, new_s, new_h, b)
 
-                            # 2. Werte aktualisieren
                             st.session_state.konten[new_k_name]["Seite"] = new_k_seite
-                            # Alte AB-Werte entfernen
                             st.session_state.konten[new_k_name]["Soll"] = [x for x in
                                                                            st.session_state.konten[new_k_name]["Soll"]
                                                                            if x[1] != "AB"]
                             st.session_state.konten[new_k_name]["Haben"] = [x for x in
                                                                             st.session_state.konten[new_k_name]["Haben"]
                                                                             if x[1] != "AB"]
-                            # Neuen AB-Wert setzen
+
                             if new_k_ab > 0:
                                 st.session_state.konten[new_k_name][new_k_seite].insert(0, (new_k_ab, "AB", ""))
 
@@ -221,7 +225,6 @@ with tab2:
         st.dataframe(df_journal, use_container_width=True, hide_index=True)
 
         with st.expander("✏️ Buchung bearbeiten oder löschen"):
-            # Ein übersichtliches Wörterbuch für das Dropdown erstellen
             b_dict = {f"Nr. {b[0]}: {b[1]} an {b[2]} ({b[3]:.2f} €)": i for i, b in enumerate(st.session_state.journal)}
             selected_b = st.selectbox("Buchung auswählen:", options=list(b_dict.keys()))
 
@@ -261,7 +264,6 @@ with tab3:
     st.subheader("PDF Lösung generieren")
 
 
-    # Die originalen PDF-Zeichenfunktionen als Hilfsfunktionen
     def draw_bilanz_pdf(pdf, title, links, rechts):
         pdf.set_font("Helvetica", "B", 14)
         pdf.cell(180, 10, title, ln=True, align="C")
@@ -412,7 +414,6 @@ with tab3:
                     sb_passiv.append((name, 0.0))
         draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv, sb_passiv)
 
-        # PDF in eine temporäre Datei speichern, einlesen und zum Download freigeben
         temp_pdf_path = "temp_loesung.pdf"
         pdf.output(temp_pdf_path)
 
