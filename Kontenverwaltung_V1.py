@@ -53,7 +53,7 @@ def add_konto(seite):
 
 
 # --- TABS ERSTELLEN ---
-tab1, tab2, tab3 = st.tabs(["1. Konten & Eröffnung", "2. Buchen (Journal)", "3. Abschluss & PDF"])
+tab1, tab2, tab3 = st.tabs(["1. Konten & Eröffnung", "2. Buchen (Grundbuch)", "3. Abschluss & PDF"])
 
 # ==========================================
 # TAB 1: KONTEN & ERÖFFNUNG
