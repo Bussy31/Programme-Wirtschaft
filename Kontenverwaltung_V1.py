@@ -300,4 +300,127 @@ with tab3:
         pdf.set_font("Helvetica", "B", 10)
         pdf.cell(90, 8, f"S                            {name[:20]}                            H", border="B", align="C")
         y += 8
-        pdf.set_xy(
+        pdf.set_xy(x, y)
+        pdf.set_font("Helvetica", "", 9)
+        max_len = max(len(werte["Soll"]), len(werte["Haben"]))
+
+        for i in range(max_len):
+            if i < len(werte["Soll"]):
+                val, ref, gkto = werte["Soll"][i]
+                s_text = f"{ref}) {gkto}" if gkto else str(ref)
+                s_val = f"{val:,.2f}"
+            else:
+                s_text, s_val = "", ""
+
+            if i < len(werte["Haben"]):
+                val, ref, gkto = werte["Haben"][i]
+                h_text = f"{ref}) {gkto}" if gkto else str(ref)
+                h_val = f"{val:,.2f}"
+            else:
+                h_text, h_val = "", ""
+
+            pdf.cell(27, 6, s_text[:15], border="L")
+            pdf.cell(18, 6, s_val, border="R", align="R")
+            pdf.cell(27, 6, h_text[:15])
+            pdf.cell(18, 6, h_val, border="R", align="R")
+            y += 6
+            pdf.set_xy(x, y)
+
+        s_sum = sum(i[0] for i in werte["Soll"])
+        h_sum = sum(i[0] for i in werte["Haben"])
+        sb = abs(s_sum - h_sum)
+
+        pdf.set_font("Helvetica", "I", 9)
+        if s_sum >= h_sum:
+            pdf.cell(45, 6, "", border="LR")
+            pdf.cell(20, 6, "SB", align="L")
+            pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R")
+        else:
+            pdf.cell(20, 6, "SB", border="L", align="L")
+            pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R")
+            pdf.cell(45, 6, "", border="R")
+        y += 6
+        pdf.set_xy(x, y)
+
+        max_sum = max(s_sum, h_sum)
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.cell(20, 6, "", border="TLB")
+        pdf.cell(25, 6, f"{max_sum:,.2f}", border="TRB", align="R")
+        pdf.cell(20, 6, "", border="TLB")
+        pdf.cell(25, 6, f"{max_sum:,.2f}", border="TRB", align="R")
+        return y + 10
+
+
+    if st.button("📄 PDF generieren & vorbereiten", type="primary"):
+        pdf = FPDF()
+        pdf.add_page()
+
+        eb_aktiv, eb_passiv = [], []
+        for name, daten in st.session_state.konten.items():
+            if daten["Seite"] == "Soll" and daten["Soll"] and daten["Soll"][0][1] == "AB":
+                eb_aktiv.append((name, daten["Soll"][0][0]))
+            if daten["Seite"] == "Haben" and daten["Haben"] and daten["Haben"][0][1] == "AB":
+                eb_passiv.append((name, daten["Haben"][0][0]))
+        draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv, eb_passiv)
+
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.cell(0, 10, "Grundbuch", ln=True)
+        pdf.set_font("Helvetica", "", 10)
+        if not st.session_state.journal:
+            pdf.cell(0, 6, "(Keine Buchungen)", ln=True)
+        for nr, s, h, b in st.session_state.journal:
+            pdf.cell(0, 6, f"{nr}) {s} {b:,.2f} an {h} {b:,.2f}", ln=True)
+        pdf.ln(10)
+
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.cell(0, 10, "Hauptbuch (Aktivkonten links, Passivkonten rechts)", ln=True)
+        aktiv_konten = [(k, v) for k, v in st.session_state.konten.items() if v["Seite"] == "Soll"]
+        passiv_konten = [(k, v) for k, v in st.session_state.konten.items() if v["Seite"] == "Haben"]
+        max_konten_len = max(len(aktiv_konten), len(passiv_konten))
+
+        for i in range(max_konten_len):
+            start_y = pdf.get_y()
+            if start_y > 230:
+                pdf.add_page()
+                start_y = pdf.get_y()
+            y_left = start_y
+            y_right = start_y
+            if i < len(aktiv_konten):
+                y_left = draw_single_t_konto(pdf, 10, start_y, aktiv_konten[i][0], aktiv_konten[i][1])
+            if i < len(passiv_konten):
+                y_right = draw_single_t_konto(pdf, 105, start_y, passiv_konten[i][0], passiv_konten[i][1])
+            pdf.set_y(max(y_left, y_right))
+            pdf.set_x(10)
+
+        if pdf.get_y() > 220:
+            pdf.add_page()
+        else:
+            pdf.ln(10)
+
+        sb_aktiv, sb_passiv = [], []
+        for name, daten in st.session_state.konten.items():
+            s_sum = sum(i[0] for i in daten["Soll"])
+            h_sum = sum(i[0] for i in daten["Haben"])
+            if s_sum > h_sum:
+                sb_aktiv.append((name, s_sum - h_sum))
+            elif h_sum > s_sum:
+                sb_passiv.append((name, h_sum - s_sum))
+            elif s_sum > 0:
+                if daten["Seite"] == "Soll":
+                    sb_aktiv.append((name, 0.0))
+                else:
+                    sb_passiv.append((name, 0.0))
+        draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv, sb_passiv)
+
+        # PDF in eine temporäre Datei speichern, einlesen und zum Download freigeben
+        temp_pdf_path = "temp_loesung.pdf"
+        pdf.output(temp_pdf_path)
+
+        with open(temp_pdf_path, "rb") as pdf_file:
+            PDFbyte = pdf_file.read()
+
+        st.success("PDF wurde erfolgreich generiert!")
+        st.download_button(label="📥 PDF jetzt herunterladen",
+                           data=PDFbyte,
+                           file_name="Buchhaltung_Loesung_Komplett.pdf",
+                           mime='application/octet-stream')
