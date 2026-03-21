@@ -371,9 +371,9 @@ with tab3:
         st.write("Wähle die Konten so, dass das Konto mit dem **kleineren Saldo** ausgeglichen wird. Das System übernimmt den Betrag automatisch.")
         col_t1, col_t2 = st.columns(2)
         with col_t1:
-            tax_soll = None
+            tax_soll = st.selectbox("Steuerkonto im Soll:", konten_liste_namen, index=0)
         with col_t2:
-            tax_haben = None
+            tax_haben = st.selectbox("Steuerkonto im Haben:", konten_liste_namen, index=0)
 
         st.write("")
 
