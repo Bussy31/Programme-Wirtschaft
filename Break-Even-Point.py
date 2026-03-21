@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="Break-Even-Point Simulator", layout="wide")
 
 # --- Titel und Einleitung ---
-st.title("📈 Break-Even-Point Simulator")
+st.title("Break-Even-Point Simulator")
 st.markdown("""
 Willkommen im Simulator! Hier kannst du ausprobieren, ab welcher Verkaufsmenge ein Unternehmen Gewinn macht. 
 Verändere die Parameter in der Seitenleiste und beobachte, wie sich die Gewinnschwelle verschiebt.
@@ -32,7 +32,7 @@ if deckungsbeitrag > 0:
     bep_umsatz = bep_menge * preis
 
     # --- Kennzahlen (KPIs) anzeigen ---
-    st.markdown("### 📊 Deine Ergebnisse")
+    st.markdown("### Deine Ergebnisse")
     col1, col2, col3 = st.columns(3)
     col1.metric("Deckungsbeitrag je Stück", f"{deckungsbeitrag:.2f} €")
     col2.metric("Break-Even-Menge", f"{bep_menge:.0f} Stück")
