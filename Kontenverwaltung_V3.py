@@ -323,8 +323,20 @@ with tab2:
                 nr = len(st.session_state.journal) + 1
                 st.session_state.journal.append({"nr": nr, "soll": soll_items, "haben": haben_items})
                 rebuild_accounts()
+
+                # --- EINFACHER RESET ---
+                # 1. Wir setzen die Anzahl der Zeilen wieder auf 1
+                st.session_state.soll_count = 1
+                st.session_state.haben_count = 1
+
+                # 2. Wir entfernen NUR die eingetippten Beträge.
+                # Dadurch springen sie auf 0.0, aber die Dropdowns (Konten) bleiben exakt so, wie sie waren!
+                for key in list(st.session_state.keys()):
+                    if key.startswith("s_val_") or key.startswith("h_val_"):
+                        del st.session_state[key]
+                # -----------------------
+
                 st.success("Erfolgreich gebucht!")
-                reset_buchung()
                 st.rerun()
 
     st.divider()
