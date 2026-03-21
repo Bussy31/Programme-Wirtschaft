@@ -509,26 +509,81 @@ with tab3:
                     eb_passiv.append((name, daten["Haben"][0][0]))
             draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv, eb_passiv)
 
-            # 2. Journal (Aufgeteilt in Manuell und Automatisch)
-            pdf.set_font("Helvetica", "B", 12);
-            pdf.cell(0, 10, "Grundbuch (selbst gebuchte Geschäftsfälle)", ln=True);
-            pdf.set_font("Helvetica", "", 10)
+            # --- 2. Journal & Abschluss (Zwei Spalten Layout) ---
+            pdf.set_font("Helvetica", "B", 12)
+            y_start_journal = pdf.get_y()
+            col_width = 90  # Breite einer Spalte
+
+            # --- LINKE SPALTE: Grundbuch (Manuelle Buchungen) ---
+            pdf.set_xy(10, y_start_journal)
+            pdf.cell(col_width, 10, "Grundbuch (Manuell)", ln=False)
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_xy(10, y_start_journal + 10)
+
             if original_journal_len == 0:
-                pdf.cell(0, 6, "(Keine manuellen Buchungen)", ln=True)
-            for nr, s, h, b in temp_journal[:original_journal_len]:
-                pdf.cell(0, 6, f"{nr}) {s} {b:,.2f} an {h} {b:,.2f}", ln=True)
+                pdf.cell(col_width, 6, "(Keine manuellen Buchungen)", ln=True)
+            else:
+                for entry in temp_journal[:original_journal_len]:
+                    if pdf.get_y() > 260:  # Seitenumbruch-Check
+                        pdf.add_page()
+                        pdf.set_xy(10, 20)
 
-            pdf.ln(5)
+                    s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in entry["soll"]]
+                    h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in entry["haben"]]
 
-            pdf.set_font("Helvetica", "B", 12);
-            pdf.cell(0, 10, "Abschlussbuchungen (automatisch erstellt)", ln=True);
-            pdf.set_font("Helvetica", "", 10)
+                    curr_x = 10
+                    pdf.set_x(curr_x)
+                    pdf.set_font("Helvetica", "B", 9)
+                    pdf.cell(8, 6, f"{entry['nr']})")
+                    pdf.set_font("Helvetica", "", 9)
+                    pdf.cell(col_width - 8, 6, s_lines[0], ln=True)
+
+                    for s in s_lines[1:]:
+                        pdf.set_x(curr_x + 8)
+                        pdf.cell(col_width - 8, 6, s, ln=True)
+
+                    for h in h_lines:
+                        pdf.set_x(curr_x + 13)
+                        pdf.cell(col_width - 13, 6, h, ln=True)
+                    pdf.ln(1)
+
+            y_end_left = pdf.get_y()
+
+            # --- RECHTE SPALTE: Abschlussbuchungen ---
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.set_xy(110, y_start_journal)  # Start rechts bei X=110
+            pdf.cell(col_width, 10, "Abschlussbuchungen", ln=False)
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_xy(110, y_start_journal + 10)
+
             if len(temp_journal) == original_journal_len:
-                pdf.cell(0, 6, "(Keine Abschlussbuchungen notwendig)", ln=True)
-            for nr, s, h, b in temp_journal[original_journal_len:]:
-                pdf.cell(0, 6, f"{nr}) {s} {b:,.2f} an {h} {b:,.2f}", ln=True)
+                pdf.cell(col_width, 6, "(Keine Abschlussbuchungen notwendig)", ln=True)
+            else:
+                for entry in temp_journal[original_journal_len:]:
+                    if pdf.get_y() > 260:
+                        pdf.set_xy(110, 20)
 
-            pdf.ln(10)
+                    s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in entry["soll"]]
+                    h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in entry["haben"]]
+
+                    curr_x = 110
+                    pdf.set_x(curr_x)
+                    pdf.set_font("Helvetica", "B", 9)
+                    pdf.cell(8, 6, f"{entry['nr']})")
+                    pdf.set_font("Helvetica", "", 9)
+                    pdf.cell(col_width - 8, 6, s_lines[0], ln=True)
+
+                    for s in s_lines[1:]:
+                        pdf.set_x(curr_x + 8)
+                        pdf.cell(col_width - 8, 6, s, ln=True)
+
+                    for h in h_lines:
+                        pdf.set_x(curr_x + 13)
+                        pdf.cell(col_width - 13, 6, h, ln=True)
+                    pdf.ln(1)
+
+            # Cursor auf den niedrigsten Punkt setzen, damit der Rest (z.B. T-Konten) darunter weitergeht
+            pdf.set_y(max(y_end_left, pdf.get_y()) + 10)
 
             # 3. Hauptbuch - Bestandskonten
             if pdf.get_y() > 240: pdf.add_page()
