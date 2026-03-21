@@ -316,65 +316,21 @@ with tab2:
 
         st.dataframe(pd.DataFrame(journal_display), use_container_width=True, hide_index=True)
 
-        with st.expander("✏️ Buchung bearbeiten oder löschen"):
+        with st.expander("🗑️ Buchung löschen"):
+            # Buchungen für das Dropdown-Menü aufbereiten
             b_dict = {f"Nr. {entry['nr']}: {entry['soll'][0]['konto']} an {entry['haben'][0]['konto']}...": i for
                       i, entry in enumerate(st.session_state.journal)}
             selected_b = st.selectbox("Buchung auswählen:", options=list(b_dict.keys()))
 
             if selected_b:
                 idx = b_dict[selected_b]
-                entry = st.session_state.journal[idx]
 
-                st.markdown("**Werte anpassen (Betrag auf 0 setzt die Zeile zurück):**")
-
-                new_soll = []
-                new_haben = []
-
-                c_edit1, c_edit2 = st.columns(2)
-                with c_edit1:
-                    st.write("**Soll**")
-                    for i, s in enumerate(entry["soll"]):
-                        k = st.selectbox(f"Soll {i + 1}", kto_namen,
-                                         index=kto_namen.index(s["konto"]) if s["konto"] in kto_namen else 0,
-                                         key=f"edit_s_k_{idx}_{i}")
-                        b = st.number_input(f"Betrag {i + 1}", min_value=0.0, value=float(s["betrag"]), step=10.0,
-                                            key=f"edit_s_b_{idx}_{i}")
-                        new_soll.append({"konto": k, "betrag": b})
-
-                with c_edit2:
-                    st.write("**Haben**")
-                    for i, h in enumerate(entry["haben"]):
-                        k = st.selectbox(f"Haben {i + 1}", kto_namen,
-                                         index=kto_namen.index(h["konto"]) if h["konto"] in kto_namen else 0,
-                                         key=f"edit_h_k_{idx}_{i}")
-                        b = st.number_input(f"Betrag {i + 1} ", min_value=0.0, value=float(h["betrag"]), step=10.0,
-                                            key=f"edit_h_b_{idx}_{i}")
-                        new_haben.append({"konto": k, "betrag": b})
-
-                st.write("")
-                cb1, cb2 = st.columns(2)
-                with cb1:
-                    if st.button("💾 Änderungen speichern", use_container_width=True, type="primary"):
-                        s_sum = sum(x["betrag"] for x in new_soll)
-                        h_sum = sum(x["betrag"] for x in new_haben)
-
-                        clean_soll = [x for x in new_soll if x["betrag"] > 0]
-                        clean_haben = [x for x in new_haben if x["betrag"] > 0]
-
-                        if not clean_soll or not clean_haben:
-                            st.error("Es muss mindestens ein Soll- und ein Haben-Konto mit Betrag > 0 existieren.")
-                        elif abs(s_sum - h_sum) > 0.01:
-                            st.error(f"Soll ({s_sum:.2f} €) und Haben ({h_sum:.2f} €) müssen ausgeglichen sein!")
-                        else:
-                            st.session_state.journal[idx]["soll"] = clean_soll
-                            st.session_state.journal[idx]["haben"] = clean_haben
-                            rebuild_accounts()
-                            st.rerun()
-                with cb2:
-                    if st.button("🗑️ Buchung endgültig löschen", use_container_width=True):
-                        st.session_state.journal.pop(idx)
-                        rebuild_accounts()
-                        st.rerun()
+                # Habe dem Löschen-Button vorsichtshalber noch einen eindeutigen 'key' gegeben, damit er 100% sicher funktioniert
+                if st.button("🗑️ Gewählte Buchung endgültig löschen", use_container_width=True, type="primary",
+                             key=f"del_btn_{idx}"):
+                    st.session_state.journal.pop(idx)
+                    rebuild_accounts()
+                    st.rerun()
     else:
         st.write("Noch keine Buchungen vorhanden.")
 
