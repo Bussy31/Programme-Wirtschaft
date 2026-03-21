@@ -3,7 +3,7 @@ import pandas as pd
 from fpdf import FPDF
 import copy
 
-# --- SEITEN-KONFIGURATION ---
+# ---  SEITEN-KONFIGURATION  ---
 st.set_page_config(page_title="Profi-Buchhaltungstrainer 2026 - Ultimate Edition", layout="wide")
 st.title("📊 Profi-Buchhaltungstrainer 2026 - Ultimate Edition")
 
