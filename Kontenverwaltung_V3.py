@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
-import os
 import copy
 
 # --- SEITEN-KONFIGURATION ---
@@ -48,11 +47,6 @@ def rebuild_accounts():
 
     new_journal = []
     for idx, entry in enumerate(st.session_state.journal):
-        # Fallback für ganz alte Versionen
-        if isinstance(entry, tuple):
-            nr, s, h, b = entry
-            entry = {"nr": idx + 1, "soll": [{"konto": s, "betrag": b}], "haben": [{"konto": h, "betrag": b}]}
-
         nr = idx + 1
         entry["nr"] = nr
         new_journal.append(entry)
@@ -73,7 +67,7 @@ def rebuild_accounts():
     st.session_state.journal = new_journal
 
 
-# --- CALLBACK FUNKTION FÜR NEUE KONTEN ---
+# --- CALLBACK FUNKTIONEN FÜR NEUE KONTEN ---
 def add_konto(kategorie, seite):
     name = st.session_state.kto_name_input.strip()
     eb_wert = st.session_state.kto_wert_input
@@ -95,6 +89,14 @@ def add_konto(kategorie, seite):
         st.session_state.form_msg = {"type": "error", "text": "Dieses Konto existiert bereits!"}
 
 
+def add_special_konto(name, kategorie, seite):
+    if name not in st.session_state.konten:
+        st.session_state.konten[name] = {"Kategorie": kategorie, "Seite": seite, "Soll": [], "Haben": []}
+        st.session_state.form_msg = {"type": "success", "text": f"Spezialkonto '{name}' erfolgreich angelegt!"}
+    else:
+        st.session_state.form_msg = {"type": "error", "text": f"Das Konto '{name}' existiert bereits!"}
+
+
 # --- TABS ERSTELLEN ---
 tab1, tab2, tab3 = st.tabs(["1. Konten & Eröffnung", "2. Buchen (Grundbuch)", "3. Abschluss & PDF"])
 
@@ -110,7 +112,8 @@ with tab1:
     with col_w:
         st.number_input("AB-Wert (€) (Nur für Bestandskonten):", min_value=0.0, step=100.0, key="kto_wert_input")
 
-    col1, col2, col3, col4, col5 = st.columns(5)
+    # Zeile 1: Normale Konten
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.button("🟢 Aktivkonto", use_container_width=True, on_click=add_konto, args=("Aktiv", "Soll"))
     with col2:
@@ -119,8 +122,21 @@ with tab1:
         st.button("🔴 Aufwandskonto", use_container_width=True, on_click=add_konto, args=("Aufwand", "Soll"))
     with col4:
         st.button("🟡 Ertragskonto", use_container_width=True, on_click=add_konto, args=("Ertrag", "Haben"))
-    with col5:
-        st.button("⚪ Konto (Neutral)", use_container_width=True, on_click=add_konto, args=("Konto", "Soll"))
+
+    st.write("")  # Abstand
+    st.markdown("**Spezialkonten (mit 1 Klick anlegen):**")
+
+    # Zeile 2: Spezialkonten
+    scol1, scol2, scol3 = st.columns(3)
+    with scol1:
+        st.button("📊 GuV-Konto eröffnen", use_container_width=True, on_click=add_special_konto,
+                  args=("GuV", "GuV", "Soll"))
+    with scol2:
+        st.button("📉 Vorsteuer eröffnen", use_container_width=True, on_click=add_special_konto,
+                  args=("Vorsteuer", "Aktiv", "Soll"))
+    with scol3:
+        st.button("📈 Umsatzsteuer eröffnen", use_container_width=True, on_click=add_special_konto,
+                  args=("Umsatzsteuer", "Passiv", "Haben"))
 
     if st.session_state.form_msg:
         if st.session_state.form_msg["type"] == "success":
@@ -181,7 +197,7 @@ with tab1:
                 with c_edit2:
                     new_k_ab = st.number_input("AB-Wert (€)", value=float(cur_ab), min_value=0.0, step=100.0)
                 with c_edit3:
-                    kat_options = ["Aktiv", "Passiv", "Aufwand", "Ertrag", "GuV", "Konto"]
+                    kat_options = ["Aktiv", "Passiv", "Aufwand", "Ertrag", "GuV"]
                     current_kat = k_daten.get("Kategorie", "Aktiv")
                     new_k_kat = st.selectbox("Kategorie", options=kat_options,
                                              index=kat_options.index(current_kat) if current_kat in kat_options else 0)
@@ -194,7 +210,7 @@ with tab1:
                         elif new_k_name != selected_kto and new_k_name in st.session_state.konten:
                             st.error("Konto existiert bereits!")
                         else:
-                            new_seite = "Soll" if new_k_kat in ["Aktiv", "Aufwand", "Konto"] else "Haben"
+                            new_seite = "Soll" if new_k_kat in ["Aktiv", "Aufwand", "GuV"] else "Haben"
                             if new_k_kat in ["Aufwand", "Ertrag", "GuV"]:
                                 new_k_ab = 0.0
 
@@ -236,7 +252,7 @@ with tab1:
 # TAB 2: JOURNAL (BUCHEN)
 # ==========================================
 with tab2:
-    st.subheader("Neuer Buchungssatz (Einfach oder Zusammengesetzt)")
+    st.subheader("Neuer Buchungssatz")
 
     kto_namen = list(st.session_state.konten.keys())
 
@@ -251,7 +267,7 @@ with tab2:
 
         col_soll, col_haben = st.columns(2)
 
-        # SOLLSEITE
+        # SOLL SEITE
         with col_soll:
             st.markdown("**Soll**")
             for i in range(st.session_state.soll_count):
@@ -267,7 +283,7 @@ with tab2:
 
             st.button("➕ Soll-Zeile hinzufügen", on_click=add_soll_row, use_container_width=True)
 
-        # HABENSEITE
+        # HABEN SEITE
         with col_haben:
             st.markdown("**an Haben**")
             for i in range(st.session_state.haben_count):
@@ -316,16 +332,13 @@ with tab2:
 
         st.dataframe(pd.DataFrame(journal_display), use_container_width=True, hide_index=True)
 
-        with st.expander("🗑️ Buchung löschen"):
-            # Buchungen für das Dropdown-Menü aufbereiten
+        with st.expander("🗑️ Buchung löschen (Stornieren)"):
             b_dict = {f"Nr. {entry['nr']}: {entry['soll'][0]['konto']} an {entry['haben'][0]['konto']}...": i for
                       i, entry in enumerate(st.session_state.journal)}
             selected_b = st.selectbox("Buchung auswählen:", options=list(b_dict.keys()))
 
             if selected_b:
                 idx = b_dict[selected_b]
-
-                # Habe dem Löschen-Button vorsichtshalber noch einen eindeutigen 'key' gegeben, damit er 100% sicher funktioniert
                 if st.button("🗑️ Gewählte Buchung endgültig löschen", use_container_width=True, type="primary",
                              key=f"del_btn_{idx}"):
                     st.session_state.journal.pop(idx)
@@ -342,9 +355,25 @@ with tab3:
         st.info("Bitte erst Konten anlegen.")
     else:
         st.subheader("Jahresabschluss vorbereiten")
-        st.markdown("Bevor das PDF erstellt wird, müssen die Erfolgskonten abgeschlossen werden.")
+        st.markdown(
+            "Hier definierst du die Logik für den Abschluss. Die entsprechenden Buchungssätze generiert das System beim Erstellen des PDFs automatisch mit.")
 
         konten_liste_namen = list(st.session_state.konten.keys())
+
+        # 1. Steuerkonten
+        st.markdown("**1. Steuerkonten abschließen**")
+        has_taxes = "Vorsteuer" in konten_liste_namen and "Umsatzsteuer" in konten_liste_namen
+        if has_taxes:
+            st.info(
+                "✅ Vorsteuer und Umsatzsteuer sind vorhanden. Die Vorsteuer wird automatisch über die Umsatzsteuer abgeschlossen.")
+        else:
+            st.warning(
+                "Steuerkonten (Vorsteuer / Umsatzsteuer) fehlen oder heißen anders. Automatischer Steuerabschluss ist nicht aktiv.")
+
+        st.write("")
+
+        # 2. Erfolgskonten
+        st.markdown("**2. Erfolgskonten & Eigenkapital**")
         default_guv_idx = konten_liste_namen.index("GuV") if "GuV" in konten_liste_namen else 0
         default_ek_idx = konten_liste_namen.index("Eigenkapital") if "Eigenkapital" in konten_liste_namen else 0
 
@@ -523,6 +552,22 @@ with tab3:
 
             original_journal_len = len(temp_journal)
 
+            # --- AUTOMATISCHE ABSCHLUSSBUCHUNGEN ---
+
+            # 1. Steuerkonten abschließen (Vorsteuer an Umsatzsteuer)
+            if "Vorsteuer" in temp_konten and "Umsatzsteuer" in temp_konten:
+                vst_s = sum(i[0] for i in temp_konten["Vorsteuer"]["Soll"])
+                vst_h = sum(i[0] for i in temp_konten["Vorsteuer"]["Haben"])
+                vst_saldo = vst_s - vst_h
+
+                if vst_saldo > 0:
+                    nr = len(temp_journal) + 1
+                    temp_journal.append({"nr": nr, "soll": [{"konto": "Umsatzsteuer", "betrag": vst_saldo}],
+                                         "haben": [{"konto": "Vorsteuer", "betrag": vst_saldo}]})
+                    temp_konten["Umsatzsteuer"]["Soll"].append((vst_saldo, str(nr), "Vorsteuer"))
+                    temp_konten["Vorsteuer"]["Haben"].append((vst_saldo, str(nr), "Umsatzsteuer"))
+
+            # 2. Erfolgskonten an GuV
             if erfolg_zu:
                 for k_name, k_data in list(temp_konten.items()):
                     kat = k_data.get("Kategorie", "")
@@ -543,6 +588,7 @@ with tab3:
                                 temp_konten[k_name]["Soll"].append((saldo, str(nr), erfolg_zu))
                                 temp_konten[erfolg_zu]["Haben"].append((saldo, str(nr), k_name))
 
+                # 3. GuV an Eigenkapital
                 if erfolg_zu in temp_konten and guv_zu:
                     guv_data = temp_konten[erfolg_zu]
                     g_s_sum = sum(i[0] for i in guv_data["Soll"])
@@ -551,11 +597,13 @@ with tab3:
                     if g_saldo > 0:
                         nr = len(temp_journal) + 1
                         if g_s_sum > g_h_sum:
+                            # Verlust
                             temp_journal.append({"nr": nr, "soll": [{"konto": guv_zu, "betrag": g_saldo}],
                                                  "haben": [{"konto": erfolg_zu, "betrag": g_saldo}]})
                             temp_konten[guv_zu]["Soll"].append((g_saldo, str(nr), erfolg_zu))
                             temp_konten[erfolg_zu]["Haben"].append((g_saldo, str(nr), guv_zu))
                         else:
+                            # Gewinn
                             temp_journal.append({"nr": nr, "soll": [{"konto": erfolg_zu, "betrag": g_saldo}],
                                                  "haben": [{"konto": guv_zu, "betrag": g_saldo}]})
                             temp_konten[erfolg_zu]["Soll"].append((g_saldo, str(nr), guv_zu))
@@ -623,6 +671,7 @@ with tab3:
             pdf.cell(0, 6, "(Steuerkonten zu Beginn, danach Aktiv- links & Passivkonten rechts)", ln=True)
             pdf.ln(4)
 
+            # Steuerkonten ausfiltern für die oberste Position
             vst_data = temp_konten.pop("Vorsteuer", None)
             ust_data = temp_konten.pop("Umsatzsteuer", None)
 
@@ -691,6 +740,7 @@ with tab3:
 
             sb_aktiv, sb_passiv = [], []
 
+            # Die vorher entnommenen Steuerkonten wieder reinholen für die Schlussbilanz
             if vst_data: temp_konten["Vorsteuer"] = vst_data
             if ust_data: temp_konten["Umsatzsteuer"] = ust_data
 
@@ -713,6 +763,6 @@ with tab3:
             with open(temp_pdf_path, "rb") as pdf_file:
                 PDFbyte = pdf_file.read()
 
-            st.success("PDF inkl. strukturierter Konten und getrenntem Journal wurde erfolgreich generiert!")
+            st.success("PDF inkl. Strukturierter Konten und automatischen Abschlussbuchungen generiert!")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,
                                file_name="Jahresabschluss_Komplett.pdf", mime='application/octet-stream')
