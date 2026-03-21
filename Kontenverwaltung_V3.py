@@ -251,7 +251,7 @@ with tab2:
 
         col_soll, col_haben = st.columns(2)
 
-        # SOLL SEITE
+        # SOLLSEITE
         with col_soll:
             st.markdown("**Soll**")
             for i in range(st.session_state.soll_count):
@@ -267,7 +267,7 @@ with tab2:
 
             st.button("➕ Soll-Zeile hinzufügen", on_click=add_soll_row, use_container_width=True)
 
-        # HABEN SEITE
+        # HABENSEITE
         with col_haben:
             st.markdown("**an Haben**")
             for i in range(st.session_state.haben_count):
