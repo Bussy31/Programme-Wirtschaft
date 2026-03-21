@@ -4,8 +4,7 @@ from fpdf import FPDF
 import os
 
 # --- SEITEN-KONFIGURATION ---
-st.set_page_config(page_title="Profi-Buchhaltungstrainer 2026 - Ultimate Edition", layout="wide")
-st.title("📊 Profi-Buchhaltungstrainer 2026 - Ultimate Edition")
+st.set_page_config(page_title="Buchhaltungstrainer 2026", layout="wide")
 
 # --- SESSION STATE (Das Gedächtnis der App) ---
 if "konten" not in st.session_state:
