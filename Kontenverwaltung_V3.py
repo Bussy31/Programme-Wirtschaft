@@ -356,19 +356,19 @@ with tab3:
     else:
         st.subheader("Jahresabschluss vorbereiten")
         st.markdown(
-            "Hier definierst du die Logik für den Abschluss. Die entsprechenden Buchungssätze generiert das System beim Erstellen des PDFs automatisch mit.")
+            "Hier definierst du die Logik für den Abschluss. Die Abschlussbuchungen (inkl. SBK) generiert das System automatisch in das PDF.")
 
         konten_liste_namen = list(st.session_state.konten.keys())
 
         # 1. Steuerkonten
-        st.markdown("**1. Steuerkonten abschließen**")
-        has_taxes = "Vorsteuer" in konten_liste_namen and "Umsatzsteuer" in konten_liste_namen
-        if has_taxes:
-            st.info(
-                "✅ Vorsteuer und Umsatzsteuer sind vorhanden. Die Vorsteuer wird automatisch über die Umsatzsteuer abgeschlossen.")
-        else:
-            st.warning(
-                "Steuerkonten (Vorsteuer / Umsatzsteuer) fehlen oder heißen anders. Automatischer Steuerabschluss ist nicht aktiv.")
+        st.markdown("**1. Steuerkonten abschließen (Buchungssatz manuell bilden)**")
+        st.write(
+            "Wähle die Konten so, dass das Konto mit dem **kleineren Saldo** ausgeglichen wird. Das System übernimmt den Betrag automatisch.")
+        col_t1, col_t2 = st.columns(2)
+        with col_t1:
+            tax_soll = st.selectbox("Steuerkonto im Soll:", options=["-"] + konten_liste_namen, index=0)
+        with col_t2:
+            tax_haben = st.selectbox("Steuerkonto im Haben:", options=["-"] + konten_liste_namen, index=0)
 
         st.write("")
 
@@ -554,18 +554,24 @@ with tab3:
 
             # --- AUTOMATISCHE ABSCHLUSSBUCHUNGEN ---
 
-            # 1. Steuerkonten abschließen (Vorsteuer an Umsatzsteuer)
-            if "Vorsteuer" in temp_konten and "Umsatzsteuer" in temp_konten:
-                vst_s = sum(i[0] for i in temp_konten["Vorsteuer"]["Soll"])
-                vst_h = sum(i[0] for i in temp_konten["Vorsteuer"]["Haben"])
-                vst_saldo = vst_s - vst_h
+            # 1. Steuerkonten manuell abschließen (übernimmt den kleineren Saldo)
+            if tax_soll != "-" and tax_haben != "-" and tax_soll in temp_konten and tax_haben in temp_konten:
+                s_s_sum = sum(i[0] for i in temp_konten[tax_soll]["Soll"])
+                s_h_sum = sum(i[0] for i in temp_konten[tax_soll]["Haben"])
+                saldo_soll_kto = abs(s_s_sum - s_h_sum)
 
-                if vst_saldo > 0:
+                h_s_sum = sum(i[0] for i in temp_konten[tax_haben]["Soll"])
+                h_h_sum = sum(i[0] for i in temp_konten[tax_haben]["Haben"])
+                saldo_haben_kto = abs(h_s_sum - h_h_sum)
+
+                betrag = min(saldo_soll_kto, saldo_haben_kto)
+
+                if betrag > 0:
                     nr = len(temp_journal) + 1
-                    temp_journal.append({"nr": nr, "soll": [{"konto": "Umsatzsteuer", "betrag": vst_saldo}],
-                                         "haben": [{"konto": "Vorsteuer", "betrag": vst_saldo}]})
-                    temp_konten["Umsatzsteuer"]["Soll"].append((vst_saldo, str(nr), "Vorsteuer"))
-                    temp_konten["Vorsteuer"]["Haben"].append((vst_saldo, str(nr), "Umsatzsteuer"))
+                    temp_journal.append({"nr": nr, "soll": [{"konto": tax_soll, "betrag": betrag}],
+                                         "haben": [{"konto": tax_haben, "betrag": betrag}]})
+                    temp_konten[tax_soll]["Soll"].append((betrag, str(nr), tax_haben))
+                    temp_konten[tax_haben]["Haben"].append((betrag, str(nr), tax_soll))
 
             # 2. Erfolgskonten an GuV
             if erfolg_zu:
@@ -596,18 +602,39 @@ with tab3:
                     g_saldo = abs(g_s_sum - g_h_sum)
                     if g_saldo > 0:
                         nr = len(temp_journal) + 1
-                        if g_s_sum > g_h_sum:
-                            # Verlust
+                        if g_s_sum > g_h_sum:  # Verlust
                             temp_journal.append({"nr": nr, "soll": [{"konto": guv_zu, "betrag": g_saldo}],
                                                  "haben": [{"konto": erfolg_zu, "betrag": g_saldo}]})
                             temp_konten[guv_zu]["Soll"].append((g_saldo, str(nr), erfolg_zu))
                             temp_konten[erfolg_zu]["Haben"].append((g_saldo, str(nr), guv_zu))
-                        else:
-                            # Gewinn
+                        else:  # Gewinn
                             temp_journal.append({"nr": nr, "soll": [{"konto": erfolg_zu, "betrag": g_saldo}],
                                                  "haben": [{"konto": guv_zu, "betrag": g_saldo}]})
                             temp_konten[erfolg_zu]["Soll"].append((g_saldo, str(nr), guv_zu))
                             temp_konten[guv_zu]["Haben"].append((g_saldo, str(nr), erfolg_zu))
+
+            # 4. NEU: Bestandskonten über SBK abschließen!
+            temp_konten["SBK"] = {"Kategorie": "Abschluss", "Seite": "Soll", "Soll": [], "Haben": []}
+            for k_name, k_data in list(temp_konten.items()):
+                if k_name == "SBK": continue
+                # Alles was nicht Aufwand, Ertrag oder GuV ist, geht ins SBK
+                if k_data.get("Kategorie") not in ["Aufwand", "Ertrag", "GuV"]:
+                    s_sum = sum(i[0] for i in k_data["Soll"])
+                    h_sum = sum(i[0] for i in k_data["Haben"])
+                    saldo = abs(s_sum - h_sum)
+
+                    if saldo > 0:
+                        nr = len(temp_journal) + 1
+                        if s_sum > h_sum:  # Aktiv-Konto -> SBK an Konto
+                            temp_journal.append({"nr": nr, "soll": [{"konto": "SBK", "betrag": saldo}],
+                                                 "haben": [{"konto": k_name, "betrag": saldo}]})
+                            temp_konten["SBK"]["Soll"].append((saldo, str(nr), k_name))
+                            temp_konten[k_name]["Haben"].append((saldo, str(nr), "SBK"))
+                        else:  # Passiv-Konto -> Konto an SBK
+                            temp_journal.append({"nr": nr, "soll": [{"konto": k_name, "betrag": saldo}],
+                                                 "haben": [{"konto": "SBK", "betrag": saldo}]})
+                            temp_konten[k_name]["Soll"].append((saldo, str(nr), "SBK"))
+                            temp_konten["SBK"]["Haben"].append((saldo, str(nr), k_name))
 
             # --- PDF ERSTELLUNG START ---
             pdf = FPDF()
@@ -671,9 +698,9 @@ with tab3:
             pdf.cell(0, 6, "(Steuerkonten zu Beginn, danach Aktiv- links & Passivkonten rechts)", ln=True)
             pdf.ln(4)
 
-            # Steuerkonten ausfiltern für die oberste Position
             vst_data = temp_konten.pop("Vorsteuer", None)
             ust_data = temp_konten.pop("Umsatzsteuer", None)
+            sbk_data = temp_konten.pop("SBK", None)  # SBK kurz raus für die normale T-Konten Schleife
 
             if vst_data or ust_data:
                 start_y = pdf.get_y()
@@ -732,28 +759,33 @@ with tab3:
                 pdf.set_y(max(y_left, y_right))
                 pdf.set_x(10)
 
-            # 5. Schlussbilanz
+            # 5. Schlussbilanzkonto (SBK)
+            if pdf.get_y() > 200:
+                pdf.add_page()
+            else:
+                pdf.ln(10)
+
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 8, "Schlussbilanzkonto (SBK)", ln=True)
+            pdf.ln(4)
+
+            if sbk_data:
+                next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), "Schlussbilanzkonto (SBK)", sbk_data)
+                pdf.set_y(next_y + 5)
+
+            # 6. Schlussbilanz aus dem SBK generieren
             if pdf.get_y() > 220:
                 pdf.add_page()
             else:
                 pdf.ln(10)
 
-            sb_aktiv, sb_passiv = [], []
+            sb_aktiv = []
+            sb_passiv = []
 
-            # Die vorher entnommenen Steuerkonten wieder reinholen für die Schlussbilanz
-            if vst_data: temp_konten["Vorsteuer"] = vst_data
-            if ust_data: temp_konten["Umsatzsteuer"] = ust_data
-
-            for name, daten in temp_konten.items():
-                if daten.get("Kategorie") in ["Aktiv", "Passiv", "Konto"]:
-                    s_sum = sum(i[0] for i in daten["Soll"])
-                    h_sum = sum(i[0] for i in daten["Haben"])
-                    saldo = abs(s_sum - h_sum)
-                    if saldo > 0:
-                        if s_sum > h_sum:
-                            sb_aktiv.append((name, saldo))
-                        else:
-                            sb_passiv.append((name, saldo))
+            if sbk_data:
+                # Die Schlussbilanz zieht sich jetzt exakt aus den Einträgen im SBK
+                sb_aktiv = [(gkto, val) for val, ref, gkto in sbk_data["Soll"]]
+                sb_passiv = [(gkto, val) for val, ref, gkto in sbk_data["Haben"]]
 
             draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv, sb_passiv)
 
@@ -763,6 +795,6 @@ with tab3:
             with open(temp_pdf_path, "rb") as pdf_file:
                 PDFbyte = pdf_file.read()
 
-            st.success("PDF inkl. Strukturierter Konten und automatischen Abschlussbuchungen generiert!")
+            st.success("PDF inkl. SBK, Strukturierter Konten und automatischen Abschlussbuchungen generiert!")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,
                                file_name="Jahresabschluss_Komplett.pdf", mime='application/octet-stream')
