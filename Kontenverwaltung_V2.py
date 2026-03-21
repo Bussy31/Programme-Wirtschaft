@@ -371,19 +371,21 @@ with tab3:
 
             s_sum = sum(i[0] for i in werte["Soll"]);
             h_sum = sum(i[0] for i in werte["Haben"])
-            sb = abs(s_sum - h_sum)
+            sb = round(abs(s_sum - h_sum), 2)
 
-            pdf.set_font("Helvetica", "I", 9)
-            if s_sum >= h_sum:
-                pdf.cell(45, 6, "", border="LR");
-                pdf.cell(20, 6, "SB", align="L");
-                pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R")
-            else:
-                pdf.cell(20, 6, "SB", border="L", align="L");
-                pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R");
-                pdf.cell(45, 6, "", border="R")
-            y += 6;
-            pdf.set_xy(x, y)
+            # SB nur zeichnen, wenn das Konto NICHT exakt aufgeht
+            if sb > 0:
+                pdf.set_font("Helvetica", "I", 9)
+                if s_sum >= h_sum:
+                    pdf.cell(45, 6, "", border="LR");
+                    pdf.cell(20, 6, "SB", align="L");
+                    pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R")
+                else:
+                    pdf.cell(20, 6, "SB", border="L", align="L");
+                    pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R");
+                    pdf.cell(45, 6, "", border="R")
+                y += 6;
+                pdf.set_xy(x, y)
 
             max_sum = max(s_sum, h_sum)
             pdf.set_font("Helvetica", "B", 9)
@@ -429,19 +431,21 @@ with tab3:
 
             s_sum = sum(i[0] for i in werte["Soll"]);
             h_sum = sum(i[0] for i in werte["Haben"])
-            sb = abs(s_sum - h_sum)
+            sb = round(abs(s_sum - h_sum), 2)
 
-            pdf.set_font("Helvetica", "I", 9)
-            if s_sum >= h_sum:
-                pdf.cell(90, 6, "", border="LR");
-                pdf.cell(60, 6, "SB", align="L");
-                pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R")
-            else:
-                pdf.cell(60, 6, "SB", border="L", align="L");
-                pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R");
-                pdf.cell(90, 6, "", border="R")
-            y += 6;
-            pdf.set_xy(x, y)
+            # SB nur zeichnen, wenn das Konto NICHT exakt aufgeht
+            if sb > 0:
+                pdf.set_font("Helvetica", "I", 9)
+                if s_sum >= h_sum:
+                    pdf.cell(90, 6, "", border="LR");
+                    pdf.cell(60, 6, "SB", align="L");
+                    pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R")
+                else:
+                    pdf.cell(60, 6, "SB", border="L", align="L");
+                    pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R");
+                    pdf.cell(90, 6, "", border="R")
+                y += 6;
+                pdf.set_xy(x, y)
 
             max_sum = max(s_sum, h_sum)
             pdf.set_font("Helvetica", "B", 9)
@@ -455,6 +459,9 @@ with tab3:
         if st.button("📄 Abschlussbuchungen & PDF generieren", type="primary"):
             temp_konten = copy.deepcopy(st.session_state.konten)
             temp_journal = copy.deepcopy(st.session_state.journal)
+
+            # Merken, wie viele Einträge vom Schüler stammen
+            original_journal_len = len(temp_journal)
 
             for k_name, k_data in list(temp_konten.items()):
                 kat = k_data.get("Kategorie", "")
@@ -502,12 +509,25 @@ with tab3:
                     eb_passiv.append((name, daten["Haben"][0][0]))
             draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv, eb_passiv)
 
-            # 2. Journal
+            # 2. Journal (Aufgeteilt in Manuell und Automatisch)
             pdf.set_font("Helvetica", "B", 12);
-            pdf.cell(0, 10, "Grundbuch (inkl. Abschlussbuchungen)", ln=True);
+            pdf.cell(0, 10, "Grundbuch (selbst gebuchte Geschäftsfälle)", ln=True);
             pdf.set_font("Helvetica", "", 10)
-            if not temp_journal: pdf.cell(0, 6, "(Keine Buchungen)", ln=True)
-            for nr, s, h, b in temp_journal: pdf.cell(0, 6, f"{nr}) {s} {b:,.2f} an {h} {b:,.2f}", ln=True)
+            if original_journal_len == 0:
+                pdf.cell(0, 6, "(Keine manuellen Buchungen)", ln=True)
+            for nr, s, h, b in temp_journal[:original_journal_len]:
+                pdf.cell(0, 6, f"{nr}) {s} {b:,.2f} an {h} {b:,.2f}", ln=True)
+
+            pdf.ln(5)
+
+            pdf.set_font("Helvetica", "B", 12);
+            pdf.cell(0, 10, "Abschlussbuchungen (automatisch erstellt)", ln=True);
+            pdf.set_font("Helvetica", "", 10)
+            if len(temp_journal) == original_journal_len:
+                pdf.cell(0, 6, "(Keine Abschlussbuchungen notwendig)", ln=True)
+            for nr, s, h, b in temp_journal[original_journal_len:]:
+                pdf.cell(0, 6, f"{nr}) {s} {b:,.2f} an {h} {b:,.2f}", ln=True)
+
             pdf.ln(10)
 
             # 3. Hauptbuch - Bestandskonten
@@ -593,6 +613,6 @@ with tab3:
             with open(temp_pdf_path, "rb") as pdf_file:
                 PDFbyte = pdf_file.read()
 
-            st.success("PDF inkl. strukturierter Konten wurde erfolgreich generiert!")
+            st.success("PDF inkl. strukturierter Konten und getrenntem Journal wurde erfolgreich generiert!")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,
                                file_name="Jahresabschluss_Komplett.pdf", mime='application/octet-stream')
