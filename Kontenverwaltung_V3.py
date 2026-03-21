@@ -74,10 +74,9 @@ tab1, tab2, tab3 = st.tabs(["1. Konten & Eröffnung", "2. Buchen (Grundbuch)", "
 with tab1:
     st.subheader("1. Konten anlegen")
     st.markdown(
-        "Leg hier die benötigten Konten an. **Hinweis:** Die Konten *Vorsteuer* und *Umsatzsteuer* werden beim ersten Eintrag automatisch vom System mit angelegt.")
+        "Leg hier die benötigten Konten an. **Hinweis:** *Vorsteuer*, *Umsatzsteuer* und *GuV* werden automatisch gestartet.")
 
     c1, c2, c3 = st.columns([2, 1, 1])
-    # HIER WURDE DER BEISPIELTEXT ENTFERNT
     konto_name = c1.text_input("Kontoname")
     kategorie = c2.selectbox("Kategorie", ["Aktiv", "Passiv", "Aufwand", "Ertrag"])
     start_saldo = c3.number_input("Anfangsbestand (nur bei Bestandskonten)", min_value=0.0, step=100.0, format="%.2f")
@@ -97,46 +96,28 @@ with tab1:
                     "Haben": []
                 }
 
-                # Anfangsbestand buchen, falls vorhanden
+                # Anfangsbestand buchen
                 if start_saldo > 0:
                     if kategorie in ["Aktiv", "Aufwand"]:
                         st.session_state.konten[konto_name]["Soll"].append((start_saldo, "AB", ""))
                     else:
                         st.session_state.konten[konto_name]["Haben"].append((start_saldo, "AB", ""))
 
-                # Wenn es das erste Konto war, Steuern automatisch ergänzen
+                # AUTOMATIK: Vorsteuer, Umsatzsteuer UND GuV beim ersten Mal anlegen
                 if is_first:
-                    if "Vorsteuer" not in st.session_state.konten:
-                        st.session_state.konten["Vorsteuer"] = {"Kategorie": "Aktiv", "Soll": [], "Haben": []}
-                    if "Umsatzsteuer" not in st.session_state.konten:
-                        st.session_state.konten["Umsatzsteuer"] = {"Kategorie": "Passiv", "Soll": [], "Haben": []}
-                    st.success(
-                        f"Konto '{konto_name}' erfolgreich angelegt! (Vorsteuer & Umsatzsteuer wurden automatisch hinzugefügt)")
+                    auto_ktos = [
+                        ("Vorsteuer", "Aktiv"),
+                        ("Umsatzsteuer", "Passiv"),
+                        ("GuV", "Ertrag")  # Kategorie Ertrag, damit es im Abschluss auftaucht
+                    ]
+                    for name, kat in auto_ktos:
+                        if name not in st.session_state.konten:
+                            st.session_state.konten[name] = {"Kategorie": kat, "Soll": [], "Haben": []}
+
+                    st.success(f"Konto '{konto_name}' angelegt. Steuern & GuV wurden vorbereitet!")
                 else:
                     st.success(f"Konto '{konto_name}' erfolgreich angelegt!")
                 st.rerun()
-        else:
-            st.warning("Bitte einen Kontonamen eingeben.")
-
-    st.divider()
-    st.subheader("Bisherige Konten")
-    if not st.session_state.konten:
-        st.write("Noch keine Konten angelegt.")
-    else:
-        # Tabellarische Übersicht der angelegten Konten
-        konten_liste_anzeige = []
-        for name, daten in st.session_state.konten.items():
-            soll_sum = sum([val[0] for val in daten["Soll"] if val[1] == "AB"])
-            haben_sum = sum([val[0] for val in daten["Haben"] if val[1] == "AB"])
-            ab = soll_sum if daten["Kategorie"] in ["Aktiv", "Aufwand"] else haben_sum
-            konten_liste_anzeige.append({"Konto": name, "Kategorie": daten["Kategorie"], "Anfangsbestand": ab})
-
-        st.dataframe(konten_liste_anzeige, use_container_width=True)
-
-        if st.button("Alle Konten löschen (Reset)", type="primary"):
-            st.session_state.konten = {}
-            st.session_state.journal = []
-            st.rerun()
 
 # ==========================================
 # TAB 2: BUCHUNGSSÄTZE (Dynamisch)
