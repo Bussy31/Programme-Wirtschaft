@@ -25,11 +25,30 @@ def rebuild_accounts():
         daten["Haben"] = [x for x in daten["Haben"] if x[1] == "AB"]
 
     new_journal = []
-    for idx, (old_nr, s, h, b) in enumerate(st.session_state.journal):
+    for idx, entry in enumerate(st.session_state.journal):
+        # Fallback, falls noch alte einfache Buchungen im Speicher sind
+        if isinstance(entry, tuple):
+            nr, s, h, b = entry
+            entry = {"nr": idx + 1, "soll": [{"konto": s, "betrag": b}], "haben": [{"konto": h, "betrag": b}]}
+
         nr = idx + 1
-        new_journal.append((nr, s, h, b))
-        st.session_state.konten[s]["Soll"].append((b, str(nr), h))
-        st.session_state.konten[h]["Haben"].append((b, str(nr), s))
+        entry["nr"] = nr
+        new_journal.append(entry)
+
+        soll_list = entry["soll"]
+        haben_list = entry["haben"]
+
+        # Gegenkonto bestimmen (bei zusammengesetzten Sätzen "Diverse")
+        gk_soll = haben_list[0]["konto"] if len(haben_list) == 1 else "Diverse"
+        gk_haben = soll_list[0]["konto"] if len(soll_list) == 1 else "Diverse"
+
+        for s in soll_list:
+            if s["konto"] in st.session_state.konten:
+                st.session_state.konten[s["konto"]]["Soll"].append((s["betrag"], str(nr), gk_soll))
+        for h in haben_list:
+            if h["konto"] in st.session_state.konten:
+                st.session_state.konten[h["konto"]]["Haben"].append((h["betrag"], str(nr), gk_haben))
+
     st.session_state.journal = new_journal
 
 
@@ -104,7 +123,6 @@ with tab1:
         s = sum(item[0] for item in werte["Soll"])
         h = sum(item[0] for item in werte["Haben"])
 
-        # Fallback für alte Speicherstände
         kat = werte.get("Kategorie", "Aktiv" if werte["Seite"] == "Soll" else "Passiv")
         konten_liste.append({"Konto": name, "Kategorie": kat, "Soll": s, "Haben": h, "Saldo": abs(s - h)})
 
@@ -116,11 +134,6 @@ with tab1:
     # Differenz für Laufende Buchungen
     sum_aktiv = sum_aktiv_ab
     sum_passiv = sum_passiv_ab
-    if len(st.session_state.journal) > 0:
-        sum_aktiv = sum(max(0, sum(i[0] for i in v["Soll"]) - sum(i[0] for i in v["Haben"])) for v in
-                        st.session_state.konten.values() if v.get("Kategorie") in ["Aktiv", "Konto"])
-        sum_passiv = sum(max(0, sum(i[0] for i in v["Haben"]) - sum(i[0] for i in v["Soll"])) for v in
-                         st.session_state.konten.values() if v.get("Kategorie") in ["Passiv", "Konto"])
 
     diff = abs(sum_aktiv_ab - sum_passiv_ab)
 
@@ -158,7 +171,8 @@ with tab1:
                 with c_edit3:
                     kat_options = ["Aktiv", "Passiv", "Aufwand", "Ertrag", "GuV", "Konto"]
                     current_kat = k_daten.get("Kategorie", "Aktiv")
-                    new_k_kat = st.selectbox("Kategorie", options=kat_options, index=kat_options.index(current_kat) if current_kat in kat_options else 0)
+                    new_k_kat = st.selectbox("Kategorie", options=kat_options,
+                                             index=kat_options.index(current_kat) if current_kat in kat_options else 0)
 
                 cb1, cb2 = st.columns(2)
                 with cb1:
@@ -172,11 +186,14 @@ with tab1:
                             if new_k_kat in ["Aufwand", "Ertrag", "GuV"]:
                                 new_k_ab = 0.0
 
+                            # Update im Journal bei Namensänderung
                             if new_k_name != selected_kto:
                                 st.session_state.konten[new_k_name] = st.session_state.konten.pop(selected_kto)
-                                for i, (nr, s, h, b) in enumerate(st.session_state.journal):
-                                    st.session_state.journal[i] = (nr, new_k_name if s == selected_kto else s,
-                                                                   new_k_name if h == selected_kto else h, b)
+                                for entry in st.session_state.journal:
+                                    for s in entry["soll"]:
+                                        if s["konto"] == selected_kto: s["konto"] = new_k_name
+                                    for h in entry["haben"]:
+                                        if h["konto"] == selected_kto: h["konto"] = new_k_name
 
                             st.session_state.konten[new_k_name]["Kategorie"] = new_k_kat
                             st.session_state.konten[new_k_name]["Seite"] = new_seite
@@ -195,7 +212,10 @@ with tab1:
 
                 with cb2:
                     if st.button("🗑️ Konto endgültig löschen", use_container_width=True):
-                        in_use = any(s == selected_kto or h == selected_kto for _, s, h, _ in st.session_state.journal)
+                        # Prüfen ob Konto in zusammengesetzten Buchungen genutzt wird
+                        in_use = any(any(s["konto"] == selected_kto for s in entry["soll"]) or
+                                     any(h["konto"] == selected_kto for h in entry["haben"])
+                                     for entry in st.session_state.journal)
                         if in_use:
                             st.error("Konto wird im Journal verwendet! Bitte zuerst die Buchungen löschen.")
                         else:
@@ -206,59 +226,121 @@ with tab1:
 # TAB 2: JOURNAL (BUCHEN)
 # ==========================================
 with tab2:
-    st.subheader("Neuer Buchungssatz")
+    st.subheader("Neuer Buchungssatz (Einfach oder Zusammengesetzt)")
 
     kto_namen = list(st.session_state.konten.keys())
 
     if not kto_namen:
         st.info("Bitte lege zuerst unter '1. Konten & Eröffnung' Konten an.")
     else:
+        st.write(
+            "Tipp: Klicke in die leere Zeile der Tabelle, um mehrere Soll- oder Haben-Konten für zusammengesetzte Buchungssätze hinzuzufügen.")
         with st.form("buchung_form", clear_on_submit=True):
-            col1, col2, col3, col4 = st.columns([2, 1, 2, 2])
-            with col1: b_soll = st.selectbox("Soll:", options=kto_namen)
-            with col2: st.markdown("<h4 style='text-align: center; margin-top: 30px;'>an</h4>", unsafe_allow_html=True)
-            with col3: b_haben = st.selectbox("Haben:", options=kto_namen)
-            with col4: b_betrag = st.number_input("Betrag (€):", min_value=0.01, value=100.0, step=10.0)
+            c1, c2 = st.columns(2)
+            with c1:
+                st.markdown("**Soll**")
+                df_soll_init = pd.DataFrame([{"Konto": kto_namen[0], "Betrag (€)": 0.0}])
+                edited_soll = st.data_editor(df_soll_init, num_rows="dynamic",
+                                             column_config={
+                                                 "Konto": st.column_config.SelectboxColumn(options=kto_namen)},
+                                             key="soll_editor", use_container_width=True, hide_index=True)
+            with c2:
+                st.markdown("**an Haben**")
+                df_haben_init = pd.DataFrame([{"Konto": kto_namen[0], "Betrag (€)": 0.0}])
+                edited_haben = st.data_editor(df_haben_init, num_rows="dynamic",
+                                              column_config={
+                                                  "Konto": st.column_config.SelectboxColumn(options=kto_namen)},
+                                              key="haben_editor", use_container_width=True, hide_index=True)
 
             if st.form_submit_button("Buchen", type="primary", use_container_width=True):
-                nr = len(st.session_state.journal) + 1
-                st.session_state.journal.append((nr, b_soll, b_haben, b_betrag))
-                rebuild_accounts()
-                st.success(f"Erfolgreich gebucht: {b_soll} an {b_haben} ({b_betrag} €)")
-                st.rerun()
+                soll_items, haben_items = [], []
+                s_sum, h_sum = 0.0, 0.0
+
+                for _, row in edited_soll.iterrows():
+                    kto, betrag = row["Konto"], float(row["Betrag (€)"])
+                    if pd.notna(kto) and betrag > 0:
+                        soll_items.append({"konto": kto, "betrag": betrag})
+                        s_sum += betrag
+
+                for _, row in edited_haben.iterrows():
+                    kto, betrag = row["Konto"], float(row["Betrag (€)"])
+                    if pd.notna(kto) and betrag > 0:
+                        haben_items.append({"konto": kto, "betrag": betrag})
+                        h_sum += betrag
+
+                if not soll_items or not haben_items:
+                    st.error("Bitte mindestens ein Soll- und ein Haben-Konto mit Betrag > 0 angeben.")
+                elif abs(s_sum - h_sum) > 0.01:
+                    st.error(f"Soll ({s_sum:.2f} €) und Haben ({h_sum:.2f} €) müssen ausgeglichen sein!")
+                else:
+                    nr = len(st.session_state.journal) + 1
+                    st.session_state.journal.append({"nr": nr, "soll": soll_items, "haben": haben_items})
+                    rebuild_accounts()
+                    st.success("Erfolgreich gebucht!")
+                    st.rerun()
 
     st.divider()
     st.subheader("Journal")
 
     if st.session_state.journal:
-        df_journal = pd.DataFrame(st.session_state.journal, columns=["Nr", "Soll", "Haben", "Betrag (€)"])
-        st.dataframe(df_journal, use_container_width=True, hide_index=True)
+        journal_display = []
+        for entry in st.session_state.journal:
+            soll_str = "\n".join([f"{s['konto']} ({s['betrag']:.2f} €)" for s in entry["soll"]])
+            haben_str = "\n".join([f"{h['konto']} ({h['betrag']:.2f} €)" for h in entry["haben"]])
+            journal_display.append({"Nr": entry["nr"], "Soll": soll_str, "Haben": haben_str})
+
+        st.dataframe(pd.DataFrame(journal_display), use_container_width=True, hide_index=True)
 
         with st.expander("✏️ Buchung bearbeiten oder löschen"):
-            b_dict = {f"Nr. {b[0]}: {b[1]} an {b[2]} ({b[3]:.2f} €)": i for i, b in enumerate(st.session_state.journal)}
+            b_dict = {f"Nr. {entry['nr']}: {entry['soll'][0]['konto']}...": i for i, entry in
+                      enumerate(st.session_state.journal)}
             selected_b = st.selectbox("Buchung auswählen:", options=list(b_dict.keys()))
 
             if selected_b:
                 idx = b_dict[selected_b]
-                b_nr, old_s, old_h, old_betrag = st.session_state.journal[idx]
+                entry = st.session_state.journal[idx]
 
-                c_edit1, c_edit2, c_edit3 = st.columns(3)
+                edit_df_soll = pd.DataFrame([{"Konto": s["konto"], "Betrag (€)": s["betrag"]} for s in entry["soll"]])
+                edit_df_haben = pd.DataFrame([{"Konto": h["konto"], "Betrag (€)": h["betrag"]} for h in entry["haben"]])
+
+                c_edit1, c_edit2 = st.columns(2)
                 with c_edit1:
-                    new_b_s = st.selectbox("Neues Soll-Konto", options=kto_namen,
-                                           index=kto_namen.index(old_s) if old_s in kto_namen else 0)
+                    st.markdown("**Soll bearbeiten**")
+                    edited_s_df = st.data_editor(edit_df_soll, num_rows="dynamic",
+                                                 column_config={
+                                                     "Konto": st.column_config.SelectboxColumn(options=kto_namen)},
+                                                 key=f"edit_s_{idx}", use_container_width=True, hide_index=True)
                 with c_edit2:
-                    new_b_h = st.selectbox("Neues Haben-Konto", options=kto_namen,
-                                           index=kto_namen.index(old_h) if old_h in kto_namen else 0)
-                with c_edit3:
-                    new_b_betrag = st.number_input("Neuer Betrag (€)", value=float(old_betrag), min_value=0.01,
-                                                   step=10.0)
+                    st.markdown("**Haben bearbeiten**")
+                    edited_h_df = st.data_editor(edit_df_haben, num_rows="dynamic",
+                                                 column_config={
+                                                     "Konto": st.column_config.SelectboxColumn(options=kto_namen)},
+                                                 key=f"edit_h_{idx}", use_container_width=True, hide_index=True)
 
                 cb1, cb2 = st.columns(2)
                 with cb1:
                     if st.button("💾 Buchung speichern", use_container_width=True, type="primary"):
-                        st.session_state.journal[idx] = (b_nr, new_b_s, new_b_h, new_b_betrag)
-                        rebuild_accounts()
-                        st.rerun()
+                        s_items, h_items = [], []
+                        s_sum, h_sum = 0.0, 0.0
+
+                        for _, row in edited_s_df.iterrows():
+                            if pd.notna(row["Konto"]) and float(row["Betrag (€)"]) > 0:
+                                s_items.append({"konto": row["Konto"], "betrag": float(row["Betrag (€)"])})
+                                s_sum += float(row["Betrag (€)"])
+                        for _, row in edited_h_df.iterrows():
+                            if pd.notna(row["Konto"]) and float(row["Betrag (€)"]) > 0:
+                                h_items.append({"konto": row["Konto"], "betrag": float(row["Betrag (€)"])})
+                                h_sum += float(row["Betrag (€)"])
+
+                        if not s_items or not h_items:
+                            st.error("Bitte mindestens ein Konto pro Seite angeben.")
+                        elif abs(s_sum - h_sum) > 0.01:
+                            st.error("Soll und Haben müssen ausgeglichen sein!")
+                        else:
+                            st.session_state.journal[idx]["soll"] = s_items
+                            st.session_state.journal[idx]["haben"] = h_items
+                            rebuild_accounts()
+                            st.rerun()
                 with cb2:
                     if st.button("🗑️ Buchung löschen", use_container_width=True):
                         st.session_state.journal.pop(idx)
@@ -329,7 +411,7 @@ with tab3:
             pdf.cell(60, 8, "Summe", border="TLB")
             pdf.cell(30, 8, f"{sum_links:,.2f}", border="TRB", align="R")
             pdf.cell(60, 8, "Summe", border="TLB")
-            pdf.cell(30, 8, f"{sum_rechts:,.2f}", border="TRB", align="R", ln=True);
+            pdf.cell(30, 8, f"{sum_rechts:,.2f}", border="TRB", align="R", ln=True)
             pdf.ln(10)
 
 
@@ -338,8 +420,8 @@ with tab3:
             pdf.set_font("Helvetica", "B", 10)
             pdf.cell(90, 8, f"S                            {name[:20]}                            H", border="B",
                      align="C")
-            y += 8;
-            pdf.set_xy(x, y);
+            y += 8
+            pdf.set_xy(x, y)
             pdf.set_font("Helvetica", "", 9)
             max_len = max(len(werte["Soll"]), len(werte["Haben"]))
 
@@ -358,36 +440,35 @@ with tab3:
                 else:
                     h_text, h_val = "", ""
 
-                pdf.cell(27, 6, s_text[:15], border="L");
+                pdf.cell(27, 6, s_text[:15], border="L")
                 pdf.cell(18, 6, s_val, border="R", align="R")
-                pdf.cell(27, 6, h_text[:15]);
+                pdf.cell(27, 6, h_text[:15])
                 pdf.cell(18, 6, h_val, border="R", align="R")
-                y += 6;
+                y += 6
                 pdf.set_xy(x, y)
 
-            s_sum = sum(i[0] for i in werte["Soll"]);
+            s_sum = sum(i[0] for i in werte["Soll"])
             h_sum = sum(i[0] for i in werte["Haben"])
             sb = round(abs(s_sum - h_sum), 2)
 
-            # SB nur zeichnen, wenn das Konto NICHT exakt aufgeht
             if sb > 0:
                 pdf.set_font("Helvetica", "I", 9)
                 if s_sum >= h_sum:
-                    pdf.cell(45, 6, "", border="LR");
-                    pdf.cell(20, 6, "SB", align="L");
+                    pdf.cell(45, 6, "", border="LR")
+                    pdf.cell(20, 6, "SB", align="L")
                     pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R")
                 else:
-                    pdf.cell(20, 6, "SB", border="L", align="L");
-                    pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R");
+                    pdf.cell(20, 6, "SB", border="L", align="L")
+                    pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R")
                     pdf.cell(45, 6, "", border="R")
-                y += 6;
+                y += 6
                 pdf.set_xy(x, y)
 
             max_sum = max(s_sum, h_sum)
             pdf.set_font("Helvetica", "B", 9)
-            pdf.cell(20, 6, "", border="TLB");
+            pdf.cell(20, 6, "", border="TLB")
             pdf.cell(25, 6, f"{max_sum:,.2f}", border="TRB", align="R")
-            pdf.cell(20, 6, "", border="TLB");
+            pdf.cell(20, 6, "", border="TLB")
             pdf.cell(25, 6, f"{max_sum:,.2f}", border="TRB", align="R")
             return y + 10
 
@@ -398,8 +479,8 @@ with tab3:
             pdf.cell(180, 8,
                      f"Soll                                                    {name[:40]}                                                    Haben",
                      border="B", align="C")
-            y += 8;
-            pdf.set_xy(x, y);
+            y += 8
+            pdf.set_xy(x, y)
             pdf.set_font("Helvetica", "", 9)
             max_len = max(len(werte["Soll"]), len(werte["Haben"]))
 
@@ -418,36 +499,35 @@ with tab3:
                 else:
                     h_text, h_val = "", ""
 
-                pdf.cell(60, 6, s_text[:35], border="L");
+                pdf.cell(60, 6, s_text[:35], border="L")
                 pdf.cell(30, 6, s_val, border="R", align="R")
-                pdf.cell(60, 6, h_text[:35]);
+                pdf.cell(60, 6, h_text[:35])
                 pdf.cell(30, 6, h_val, border="R", align="R")
-                y += 6;
+                y += 6
                 pdf.set_xy(x, y)
 
-            s_sum = sum(i[0] for i in werte["Soll"]);
+            s_sum = sum(i[0] for i in werte["Soll"])
             h_sum = sum(i[0] for i in werte["Haben"])
             sb = round(abs(s_sum - h_sum), 2)
 
-            # SB nur zeichnen, wenn das Konto NICHT exakt aufgeht
             if sb > 0:
                 pdf.set_font("Helvetica", "I", 9)
                 if s_sum >= h_sum:
-                    pdf.cell(90, 6, "", border="LR");
-                    pdf.cell(60, 6, "SB", align="L");
+                    pdf.cell(90, 6, "", border="LR")
+                    pdf.cell(60, 6, "SB", align="L")
                     pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R")
                 else:
-                    pdf.cell(60, 6, "SB", border="L", align="L");
-                    pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R");
+                    pdf.cell(60, 6, "SB", border="L", align="L")
+                    pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R")
                     pdf.cell(90, 6, "", border="R")
-                y += 6;
+                y += 6
                 pdf.set_xy(x, y)
 
             max_sum = max(s_sum, h_sum)
             pdf.set_font("Helvetica", "B", 9)
-            pdf.cell(60, 6, "", border="TLB");
+            pdf.cell(60, 6, "", border="TLB")
             pdf.cell(30, 6, f"{max_sum:,.2f}", border="TRB", align="R")
-            pdf.cell(60, 6, "", border="TLB");
+            pdf.cell(60, 6, "", border="TLB")
             pdf.cell(30, 6, f"{max_sum:,.2f}", border="TRB", align="R")
             return y + 10
 
@@ -456,40 +536,43 @@ with tab3:
             temp_konten = copy.deepcopy(st.session_state.konten)
             temp_journal = copy.deepcopy(st.session_state.journal)
 
-            # Merken, wie viele Einträge vom Schüler stammen
             original_journal_len = len(temp_journal)
 
             if erfolg_zu:
                 for k_name, k_data in list(temp_konten.items()):
                     kat = k_data.get("Kategorie", "")
                     if kat in ["Aufwand", "Ertrag"]:
-                        s_sum = sum(i[0] for i in k_data["Soll"]);
+                        s_sum = sum(i[0] for i in k_data["Soll"])
                         h_sum = sum(i[0] for i in k_data["Haben"])
                         saldo = abs(s_sum - h_sum)
                         if saldo > 0:
                             nr = len(temp_journal) + 1
                             if s_sum > h_sum:
-                                temp_journal.append((nr, erfolg_zu, k_name, saldo))
+                                temp_journal.append({"nr": nr, "soll": [{"konto": erfolg_zu, "betrag": saldo}],
+                                                     "haben": [{"konto": k_name, "betrag": saldo}]})
                                 temp_konten[erfolg_zu]["Soll"].append((saldo, str(nr), k_name))
                                 temp_konten[k_name]["Haben"].append((saldo, str(nr), erfolg_zu))
                             else:
-                                temp_journal.append((nr, k_name, erfolg_zu, saldo))
+                                temp_journal.append({"nr": nr, "soll": [{"konto": k_name, "betrag": saldo}],
+                                                     "haben": [{"konto": erfolg_zu, "betrag": saldo}]})
                                 temp_konten[k_name]["Soll"].append((saldo, str(nr), erfolg_zu))
                                 temp_konten[erfolg_zu]["Haben"].append((saldo, str(nr), k_name))
 
                 if erfolg_zu in temp_konten and guv_zu:
                     guv_data = temp_konten[erfolg_zu]
-                    g_s_sum = sum(i[0] for i in guv_data["Soll"]);
+                    g_s_sum = sum(i[0] for i in guv_data["Soll"])
                     g_h_sum = sum(i[0] for i in guv_data["Haben"])
                     g_saldo = abs(g_s_sum - g_h_sum)
                     if g_saldo > 0:
                         nr = len(temp_journal) + 1
                         if g_s_sum > g_h_sum:
-                            temp_journal.append((nr, guv_zu, erfolg_zu, g_saldo))
+                            temp_journal.append({"nr": nr, "soll": [{"konto": guv_zu, "betrag": g_saldo}],
+                                                 "haben": [{"konto": erfolg_zu, "betrag": g_saldo}]})
                             temp_konten[guv_zu]["Soll"].append((g_saldo, str(nr), erfolg_zu))
                             temp_konten[erfolg_zu]["Haben"].append((g_saldo, str(nr), guv_zu))
                         else:
-                            temp_journal.append((nr, erfolg_zu, guv_zu, g_saldo))
+                            temp_journal.append({"nr": nr, "soll": [{"konto": erfolg_zu, "betrag": g_saldo}],
+                                                 "haben": [{"konto": guv_zu, "betrag": g_saldo}]})
                             temp_konten[erfolg_zu]["Soll"].append((g_saldo, str(nr), guv_zu))
                             temp_konten[guv_zu]["Haben"].append((g_saldo, str(nr), erfolg_zu))
 
@@ -506,49 +589,83 @@ with tab3:
                     eb_passiv.append((name, daten["Haben"][0][0]))
             draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv, eb_passiv)
 
-            # 2. Journal (Aufgeteilt in Manuell und Automatisch)
-            pdf.set_font("Helvetica", "B", 12);
-            pdf.cell(0, 10, "Grundbuch (selbst gebuchte Geschäftsfälle)", ln=True);
+            # 2. Journal
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 10, "Grundbuch (selbst gebuchte Geschäftsfälle)", ln=True)
             pdf.set_font("Helvetica", "", 10)
             if original_journal_len == 0:
                 pdf.cell(0, 6, "(Keine manuellen Buchungen)", ln=True)
-            for nr, s, h, b in temp_journal[:original_journal_len]:
-                pdf.cell(0, 6, f"{nr}) {s} {b:,.2f} an {h} {b:,.2f}", ln=True)
+            for entry in temp_journal[:original_journal_len]:
+                s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in entry["soll"]]
+                h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in entry["haben"]]
+
+                pdf.cell(0, 6, f"{entry['nr']}) " + s_lines[0], ln=True)
+                for s in s_lines[1:]:
+                    pdf.cell(8, 6, "")
+                    pdf.cell(0, 6, s, ln=True)
+                for h in h_lines:
+                    pdf.cell(15, 6, "")
+                    pdf.cell(0, 6, h, ln=True)
+                pdf.ln(2)
 
             pdf.ln(5)
 
-            pdf.set_font("Helvetica", "B", 12);
-            pdf.cell(0, 10, "Abschlussbuchungen (automatisch erstellt)", ln=True);
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 10, "Abschlussbuchungen (automatisch erstellt)", ln=True)
             pdf.set_font("Helvetica", "", 10)
             if len(temp_journal) == original_journal_len:
                 pdf.cell(0, 6, "(Keine Abschlussbuchungen notwendig)", ln=True)
-            for nr, s, h, b in temp_journal[original_journal_len:]:
-                pdf.cell(0, 6, f"{nr}) {s} {b:,.2f} an {h} {b:,.2f}", ln=True)
+            for entry in temp_journal[original_journal_len:]:
+                s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in entry["soll"]]
+                h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in entry["haben"]]
+
+                pdf.cell(0, 6, f"{entry['nr']}) " + s_lines[0], ln=True)
+                for s in s_lines[1:]:
+                    pdf.cell(8, 6, "")
+                    pdf.cell(0, 6, s, ln=True)
+                for h in h_lines:
+                    pdf.cell(15, 6, "")
+                    pdf.cell(0, 6, h, ln=True)
+                pdf.ln(2)
 
             pdf.ln(10)
 
             # 3. Hauptbuch - Bestandskonten
             if pdf.get_y() > 240: pdf.add_page()
-            pdf.set_font("Helvetica", "B", 12);
+            pdf.set_font("Helvetica", "B", 12)
             pdf.cell(0, 8, "Hauptbuch - Bestandskonten", ln=True)
-            pdf.set_font("Helvetica", "I", 10);
-            pdf.cell(0, 6, "(Aktiv- und neutrale Konten links, Passivkonten rechts)", ln=True);
+            pdf.set_font("Helvetica", "I", 10)
+            pdf.cell(0, 6, "(Steuerkonten zu Beginn, danach Aktiv- links & Passivkonten rechts)", ln=True)
             pdf.ln(4)
 
-            # Hier werden die "neutralen Konten" links bei den Aktiva mit gedruckt
+            # === STEUERKONTEN NEBENEINANDER (Vorsteuer Links, Umsatzsteuer Rechts) ===
+            vst_data = temp_konten.pop("Vorsteuer", None)
+            ust_data = temp_konten.pop("Umsatzsteuer", None)
+
+            if vst_data or ust_data:
+                start_y = pdf.get_y()
+                if start_y > 230: pdf.add_page(); start_y = pdf.get_y()
+                y_left = start_y
+                y_right = start_y
+                if vst_data: y_left = draw_single_t_konto(pdf, 10, start_y, "Vorsteuer", vst_data)
+                if ust_data: y_right = draw_single_t_konto(pdf, 105, start_y, "Umsatzsteuer", ust_data)
+                pdf.set_y(max(y_left, y_right) + 5)
+                pdf.set_x(10)
+
+            # Restliche Bestandskonten iterieren
             aktiv_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") in ["Aktiv", "Konto"]]
             passiv_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Passiv"]
 
             for i in range(max(len(aktiv_konten), len(passiv_konten))):
                 start_y = pdf.get_y()
                 if start_y > 230: pdf.add_page(); start_y = pdf.get_y()
-                y_left = start_y;
+                y_left = start_y
                 y_right = start_y
                 if i < len(aktiv_konten): y_left = draw_single_t_konto(pdf, 10, start_y, aktiv_konten[i][0],
                                                                        aktiv_konten[i][1])
                 if i < len(passiv_konten): y_right = draw_single_t_konto(pdf, 105, start_y, passiv_konten[i][0],
                                                                          passiv_konten[i][1])
-                pdf.set_y(max(y_left, y_right));
+                pdf.set_y(max(y_left, y_right))
                 pdf.set_x(10)
 
             # 4. Hauptbuch - Erfolgskonten
@@ -557,32 +674,30 @@ with tab3:
             else:
                 pdf.ln(10)
 
-            pdf.set_font("Helvetica", "B", 12);
+            pdf.set_font("Helvetica", "B", 12)
             pdf.cell(0, 8, "Hauptbuch - Erfolgskonten", ln=True)
-            pdf.set_font("Helvetica", "I", 10);
-            pdf.cell(0, 6, "(GuV oben, Aufwandskonten links, Ertragskonten rechts)", ln=True);
+            pdf.set_font("Helvetica", "I", 10)
+            pdf.cell(0, 6, "(GuV oben, Aufwandskonten links, Ertragskonten rechts)", ln=True)
             pdf.ln(4)
 
-            # GuV über die ganze Breite
             if erfolg_zu and erfolg_zu in temp_konten:
                 if pdf.get_y() > 200: pdf.add_page()
                 next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), erfolg_zu, temp_konten[erfolg_zu])
                 pdf.set_y(next_y + 5)
 
-            # Aufwand & Ertrag darunter
             aufwand_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Aufwand"]
             ertrag_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Ertrag"]
 
             for i in range(max(len(aufwand_konten), len(ertrag_konten))):
                 start_y = pdf.get_y()
                 if start_y > 230: pdf.add_page(); start_y = pdf.get_y()
-                y_left = start_y;
+                y_left = start_y
                 y_right = start_y
                 if i < len(aufwand_konten): y_left = draw_single_t_konto(pdf, 10, start_y, aufwand_konten[i][0],
                                                                          aufwand_konten[i][1])
                 if i < len(ertrag_konten): y_right = draw_single_t_konto(pdf, 105, start_y, ertrag_konten[i][0],
                                                                          ertrag_konten[i][1])
-                pdf.set_y(max(y_left, y_right));
+                pdf.set_y(max(y_left, y_right))
                 pdf.set_x(10)
 
             # 5. Schlussbilanz
@@ -592,9 +707,14 @@ with tab3:
                 pdf.ln(10)
 
             sb_aktiv, sb_passiv = [], []
+
+            # Die vorhin für das Layout herausgenommenen Steuerkonten wieder zur Bilanz-Prüfung hinzuziehen
+            if vst_data: temp_konten["Vorsteuer"] = vst_data
+            if ust_data: temp_konten["Umsatzsteuer"] = ust_data
+
             for name, daten in temp_konten.items():
                 if daten.get("Kategorie") in ["Aktiv", "Passiv", "Konto"]:
-                    s_sum = sum(i[0] for i in daten["Soll"]);
+                    s_sum = sum(i[0] for i in daten["Soll"])
                     h_sum = sum(i[0] for i in daten["Haben"])
                     saldo = abs(s_sum - h_sum)
                     if saldo > 0:
