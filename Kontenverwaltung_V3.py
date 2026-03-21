@@ -320,13 +320,25 @@ with tab2:
                 st.error(
                     f"Fehler: Soll ({s_sum:,.2f} €) und Haben ({h_sum:,.2f} €) stimmen nicht überein! (Differenz: {abs(s_sum - h_sum):,.2f} €)")
             else:
+                # 1. Buchung ins Journal schreiben
                 nr = len(st.session_state.journal) + 1
                 st.session_state.journal.append({"nr": nr, "soll": soll_items, "haben": haben_items})
                 rebuild_accounts()
-                st.success("Erfolgreich gebucht!")
-                reset_buchung()
-                st.rerun()
 
+                # 2. Die Anzahl der Zeilen sofort wieder auf 1 setzen
+                st.session_state.soll_count = 1
+                st.session_state.haben_count = 1
+
+                # 3. Die Beträge der ERSTEN Zeile aus dem Speicher löschen
+                # Dadurch werden sie beim nächsten Laden der Seite wieder auf 0.0 gesetzt
+                if "s_val_1" in st.session_state:
+                    del st.session_state["s_val_1"]
+                if "h_val_1" in st.session_state:
+                    del st.session_state["h_val_1"]
+
+                st.success("Erfolgreich gebucht!")
+                # 4. Seite neu laden, damit die Löschung oben aktiv wird
+                st.rerun()
     st.divider()
     st.subheader("Journal")
 
