@@ -25,9 +25,17 @@ if "haben_count" not in st.session_state:
 def add_soll_row():
     st.session_state.soll_count += 1
 
-
 def add_haben_row():
     st.session_state.haben_count += 1
+
+
+def remove_soll_row():
+    if st.session_state.soll_count > 1:
+        st.session_state.soll_count -= 1
+
+def remove_haben_row():
+    if st.session_state.haben_count > 1:
+        st.session_state.haben_count -= 1
 
 
 def reset_buchung():
@@ -288,7 +296,13 @@ with tab2:
                 if betrag > 0:
                     soll_items.append({"konto": kto, "betrag": betrag})
 
-            st.button("➕ Soll-Zeile hinzufügen", on_click=add_soll_row, use_container_width=True)
+            # Buttons für Soll: Hinzufügen & Löschen
+            btn_col_s1, btn_col_s2 = st.columns(2)
+            with btn_col_s1:
+                st.button("➕ Zeile", on_click=add_soll_row, use_container_width=True, key="add_soll_btn")
+            with btn_col_s2:
+                st.button("🗑️ Zeile", on_click=remove_soll_row, use_container_width=True,
+                          key="rem_soll_btn", disabled=st.session_state.soll_count <= 1)
 
         # HABEN SEITE
         with col_haben:
@@ -305,7 +319,13 @@ with tab2:
                 if betrag > 0:
                     haben_items.append({"konto": kto, "betrag": betrag})
 
-            st.button("➕ Haben-Zeile hinzufügen", on_click=add_haben_row, use_container_width=True)
+            # Buttons für Haben: Hinzufügen & Löschen
+            btn_col_h1, btn_col_h2 = st.columns(2)
+            with btn_col_h1:
+                st.button("➕ Zeile", on_click=add_haben_row, use_container_width=True, key="add_haben_btn")
+            with btn_col_h2:
+                st.button("🗑️ Zeile", on_click=remove_haben_row, use_container_width=True,
+                          key="rem_haben_btn", disabled=st.session_state.haben_count <= 1)
 
         st.write("")  # Abstand
 
