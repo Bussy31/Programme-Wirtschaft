@@ -394,42 +394,97 @@ with tab3:
             return y + 10
 
 
+        def draw_wide_t_konto(pdf, x, y, name, werte):
+            pdf.set_xy(x, y)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.cell(180, 8,
+                     f"Soll                                                    {name[:40]}                                                    Haben",
+                     border="B", align="C")
+            y += 8;
+            pdf.set_xy(x, y);
+            pdf.set_font("Helvetica", "", 9)
+            max_len = max(len(werte["Soll"]), len(werte["Haben"]))
+
+            for i in range(max_len):
+                if i < len(werte["Soll"]):
+                    val, ref, gkto = werte["Soll"][i]
+                    s_text = f"{ref}) {gkto}" if gkto else str(ref)
+                    s_val = f"{val:,.2f}"
+                else:
+                    s_text, s_val = "", ""
+
+                if i < len(werte["Haben"]):
+                    val, ref, gkto = werte["Haben"][i]
+                    h_text = f"{ref}) {gkto}" if gkto else str(ref)
+                    h_val = f"{val:,.2f}"
+                else:
+                    h_text, h_val = "", ""
+
+                pdf.cell(60, 6, s_text[:35], border="L");
+                pdf.cell(30, 6, s_val, border="R", align="R")
+                pdf.cell(60, 6, h_text[:35]);
+                pdf.cell(30, 6, h_val, border="R", align="R")
+                y += 6;
+                pdf.set_xy(x, y)
+
+            s_sum = sum(i[0] for i in werte["Soll"]);
+            h_sum = sum(i[0] for i in werte["Haben"])
+            sb = abs(s_sum - h_sum)
+
+            pdf.set_font("Helvetica", "I", 9)
+            if s_sum >= h_sum:
+                pdf.cell(90, 6, "", border="LR");
+                pdf.cell(60, 6, "SB", align="L");
+                pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R")
+            else:
+                pdf.cell(60, 6, "SB", border="L", align="L");
+                pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R");
+                pdf.cell(90, 6, "", border="R")
+            y += 6;
+            pdf.set_xy(x, y)
+
+            max_sum = max(s_sum, h_sum)
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.cell(60, 6, "", border="TLB");
+            pdf.cell(30, 6, f"{max_sum:,.2f}", border="TRB", align="R")
+            pdf.cell(60, 6, "", border="TLB");
+            pdf.cell(30, 6, f"{max_sum:,.2f}", border="TRB", align="R")
+            return y + 10
+
+
         if st.button("📄 Abschlussbuchungen & PDF generieren", type="primary"):
-            # 1. Daten kopieren (damit das Original für die Schüler editierbar bleibt)
             temp_konten = copy.deepcopy(st.session_state.konten)
             temp_journal = copy.deepcopy(st.session_state.journal)
 
-            # 2. Virtuelle Abschlussbuchungen für Aufwand/Ertrag
             for k_name, k_data in list(temp_konten.items()):
                 kat = k_data.get("Kategorie", "")
                 if kat in ["Aufwand", "Ertrag"]:
-                    s_sum = sum(i[0] for i in k_data["Soll"])
+                    s_sum = sum(i[0] for i in k_data["Soll"]);
                     h_sum = sum(i[0] for i in k_data["Haben"])
                     saldo = abs(s_sum - h_sum)
                     if saldo > 0:
                         nr = len(temp_journal) + 1
-                        if s_sum > h_sum:  # Aufwand an GuV
+                        if s_sum > h_sum:
                             temp_journal.append((nr, erfolg_zu, k_name, saldo))
                             temp_konten[erfolg_zu]["Soll"].append((saldo, str(nr), k_name))
                             temp_konten[k_name]["Haben"].append((saldo, str(nr), erfolg_zu))
-                        else:  # Ertrag an GuV
+                        else:
                             temp_journal.append((nr, k_name, erfolg_zu, saldo))
                             temp_konten[k_name]["Soll"].append((saldo, str(nr), erfolg_zu))
                             temp_konten[erfolg_zu]["Haben"].append((saldo, str(nr), k_name))
 
-            # 3. Virtuelle Abschlussbuchung für GuV
             if erfolg_zu in temp_konten:
                 guv_data = temp_konten[erfolg_zu]
-                g_s_sum = sum(i[0] for i in guv_data["Soll"])
+                g_s_sum = sum(i[0] for i in guv_data["Soll"]);
                 g_h_sum = sum(i[0] for i in guv_data["Haben"])
                 g_saldo = abs(g_s_sum - g_h_sum)
                 if g_saldo > 0:
                     nr = len(temp_journal) + 1
-                    if g_s_sum > g_h_sum:  # Verlust (EK an GuV)
+                    if g_s_sum > g_h_sum:
                         temp_journal.append((nr, guv_zu, erfolg_zu, g_saldo))
                         temp_konten[guv_zu]["Soll"].append((g_saldo, str(nr), erfolg_zu))
                         temp_konten[erfolg_zu]["Haben"].append((g_saldo, str(nr), guv_zu))
-                    else:  # Gewinn (GuV an EK)
+                    else:
                         temp_journal.append((nr, erfolg_zu, guv_zu, g_saldo))
                         temp_konten[erfolg_zu]["Soll"].append((g_saldo, str(nr), guv_zu))
                         temp_konten[guv_zu]["Haben"].append((g_saldo, str(nr), erfolg_zu))
@@ -438,16 +493,16 @@ with tab3:
             pdf = FPDF()
             pdf.add_page()
 
-            # Eröffnungsbilanz
+            # 1. Eröffnungsbilanz
             eb_aktiv, eb_passiv = [], []
             for name, daten in temp_konten.items():
-                if daten["Seite"] == "Soll" and daten["Soll"] and daten["Soll"][0][1] == "AB":
+                if daten.get("Kategorie") == "Aktiv" and daten["Soll"] and daten["Soll"][0][1] == "AB":
                     eb_aktiv.append((name, daten["Soll"][0][0]))
-                if daten["Seite"] == "Haben" and daten["Haben"] and daten["Haben"][0][1] == "AB":
+                if daten.get("Kategorie") == "Passiv" and daten["Haben"] and daten["Haben"][0][1] == "AB":
                     eb_passiv.append((name, daten["Haben"][0][0]))
             draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv, eb_passiv)
 
-            # Journal (inkl. Abschlussbuchungen)
+            # 2. Journal
             pdf.set_font("Helvetica", "B", 12);
             pdf.cell(0, 10, "Grundbuch (inkl. Abschlussbuchungen)", ln=True);
             pdf.set_font("Helvetica", "", 10)
@@ -455,26 +510,64 @@ with tab3:
             for nr, s, h, b in temp_journal: pdf.cell(0, 6, f"{nr}) {s} {b:,.2f} an {h} {b:,.2f}", ln=True)
             pdf.ln(10)
 
-            # Hauptbuch
+            # 3. Hauptbuch - Bestandskonten
+            if pdf.get_y() > 240: pdf.add_page()
             pdf.set_font("Helvetica", "B", 12);
-            pdf.cell(0, 10, "Hauptbuch (Soll-Konten links, Haben-Konten rechts)", ln=True)
-            # Aufwand/Aktiv nach links, Ertrag/Passiv/GuV nach rechts
-            links_konten = [(k, v) for k, v in temp_konten.items() if v["Seite"] == "Soll"]
-            rechts_konten = [(k, v) for k, v in temp_konten.items() if v["Seite"] == "Haben"]
+            pdf.cell(0, 8, "Hauptbuch - Bestandskonten", ln=True)
+            pdf.set_font("Helvetica", "I", 10);
+            pdf.cell(0, 6, "(Aktivkonten links, Passivkonten rechts)", ln=True);
+            pdf.ln(4)
 
-            for i in range(max(len(links_konten), len(rechts_konten))):
+            aktiv_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Aktiv"]
+            passiv_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Passiv"]
+
+            for i in range(max(len(aktiv_konten), len(passiv_konten))):
                 start_y = pdf.get_y()
                 if start_y > 230: pdf.add_page(); start_y = pdf.get_y()
                 y_left = start_y;
                 y_right = start_y
-                if i < len(links_konten): y_left = draw_single_t_konto(pdf, 10, start_y, links_konten[i][0],
-                                                                       links_konten[i][1])
-                if i < len(rechts_konten): y_right = draw_single_t_konto(pdf, 105, start_y, rechts_konten[i][0],
-                                                                         rechts_konten[i][1])
+                if i < len(aktiv_konten): y_left = draw_single_t_konto(pdf, 10, start_y, aktiv_konten[i][0],
+                                                                       aktiv_konten[i][1])
+                if i < len(passiv_konten): y_right = draw_single_t_konto(pdf, 105, start_y, passiv_konten[i][0],
+                                                                         passiv_konten[i][1])
                 pdf.set_y(max(y_left, y_right));
                 pdf.set_x(10)
 
-            # Schlussbilanz (nur noch Konten mit Saldo > 0, also Bestandskonten)
+            # 4. Hauptbuch - Erfolgskonten
+            if pdf.get_y() > 220:
+                pdf.add_page()
+            else:
+                pdf.ln(10)
+
+            pdf.set_font("Helvetica", "B", 12);
+            pdf.cell(0, 8, "Hauptbuch - Erfolgskonten", ln=True)
+            pdf.set_font("Helvetica", "I", 10);
+            pdf.cell(0, 6, "(GuV oben, Aufwandskonten links, Ertragskonten rechts)", ln=True);
+            pdf.ln(4)
+
+            # GuV über die ganze Breite
+            if erfolg_zu in temp_konten:
+                if pdf.get_y() > 200: pdf.add_page()
+                next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), erfolg_zu, temp_konten[erfolg_zu])
+                pdf.set_y(next_y + 5)
+
+            # Aufwand & Ertrag darunter
+            aufwand_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Aufwand"]
+            ertrag_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Ertrag"]
+
+            for i in range(max(len(aufwand_konten), len(ertrag_konten))):
+                start_y = pdf.get_y()
+                if start_y > 230: pdf.add_page(); start_y = pdf.get_y()
+                y_left = start_y;
+                y_right = start_y
+                if i < len(aufwand_konten): y_left = draw_single_t_konto(pdf, 10, start_y, aufwand_konten[i][0],
+                                                                         aufwand_konten[i][1])
+                if i < len(ertrag_konten): y_right = draw_single_t_konto(pdf, 105, start_y, ertrag_konten[i][0],
+                                                                         ertrag_konten[i][1])
+                pdf.set_y(max(y_left, y_right));
+                pdf.set_x(10)
+
+            # 5. Schlussbilanz
             if pdf.get_y() > 220:
                 pdf.add_page()
             else:
@@ -482,15 +575,15 @@ with tab3:
 
             sb_aktiv, sb_passiv = [], []
             for name, daten in temp_konten.items():
-                s_sum = sum(i[0] for i in daten["Soll"]);
-                h_sum = sum(i[0] for i in daten["Haben"])
-                saldo = abs(s_sum - h_sum)
-                # Da Erfolgskonten jetzt Saldo 0 haben, tauchen sie hier automatisch nicht mehr auf!
-                if saldo > 0:
-                    if s_sum > h_sum:
-                        sb_aktiv.append((name, saldo))
-                    else:
-                        sb_passiv.append((name, saldo))
+                if daten.get("Kategorie") in ["Aktiv", "Passiv"]:
+                    s_sum = sum(i[0] for i in daten["Soll"]);
+                    h_sum = sum(i[0] for i in daten["Haben"])
+                    saldo = abs(s_sum - h_sum)
+                    if saldo > 0:
+                        if s_sum > h_sum:
+                            sb_aktiv.append((name, saldo))
+                        else:
+                            sb_passiv.append((name, saldo))
 
             draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv, sb_passiv)
 
@@ -500,6 +593,6 @@ with tab3:
             with open(temp_pdf_path, "rb") as pdf_file:
                 PDFbyte = pdf_file.read()
 
-            st.success("PDF inkl. Abschlussbuchungen wurde erfolgreich generiert!")
+            st.success("PDF inkl. strukturierter Konten wurde erfolgreich generiert!")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,
                                file_name="Jahresabschluss_Komplett.pdf", mime='application/octet-stream')
