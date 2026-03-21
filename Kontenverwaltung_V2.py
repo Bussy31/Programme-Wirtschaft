@@ -296,7 +296,7 @@ with tab3:
             erfolg_zu = st.selectbox("Erfolgskonten abschließen über:", options=konten_liste_namen,
                                      index=default_guv_idx)
         with col_a2:
-            guv_zu = st.selectbox("Das Konto oben abschließen über (z.B. Eigenkapital):", options=konten_liste_namen,
+            guv_zu = st.selectbox("Gewinn- und Verlustkonto abschließen über:", options=konten_liste_namen,
                                   index=default_ek_idx)
 
         st.divider()
