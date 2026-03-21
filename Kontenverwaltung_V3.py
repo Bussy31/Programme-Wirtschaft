@@ -351,7 +351,7 @@ with tab2:
         st.write("Noch keine Buchungen vorhanden.")
 
 ## ==========================================
-# TAB 3: ABSCHLUSS & PDF
+# TAB 3: ABSCHLUSS & PDFs
 # ==========================================
 with tab3:
     if not st.session_state.konten:
