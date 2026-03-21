@@ -21,14 +21,15 @@ preis = st.sidebar.number_input("Regulärer Verkaufspreis je Stück (in €)", m
 
 st.sidebar.markdown("---")
 
-# --- NEU: Erweiterte Optionen ---
+# --- Erweiterte Optionen ---
 st.sidebar.header("🚀 Erweiterte Optionen")
 rabatt = st.sidebar.slider("Kundenrabatt (in %)", min_value=0, max_value=80, value=0, step=1)
 zielgewinn = st.sidebar.number_input("Wunsch-Zielgewinn (in €)", min_value=0.0, value=0.0, step=500.0)
 
 st.sidebar.markdown("---")
-max_menge = st.sidebar.slider("Betrachtete Maximalmenge (Kapazitätsgrenze)", min_value=100, max_value=5000, value=1000,
-                              step=100)
+
+# NEU: number_input statt slider, damit keine Grenze mehr existiert!
+max_menge = st.sidebar.number_input("Betrachtete Maximalmenge (Kapazitätsgrenze)", min_value=100, value=1000, step=100)
 
 # --- Berechnungen (BWL Logik) ---
 # Rabatt abziehen
@@ -63,7 +64,9 @@ if deckungsbeitrag > 0:
         col3.metric("Break-Even-Umsatz", f"{bep_umsatz:.2f} €")
 
     # --- Daten für das Diagramm generieren ---
-    mengen = list(range(0, max_menge + 1, max(1, max_menge // 50)))
+    # Wir passen die Schrittweite dynamisch an, damit das Programm bei riesigen Zahlen (z.B. 1 Million) nicht abstürzt
+    schrittweite = max(1, int(max_menge // 50))
+    mengen = list(range(0, int(max_menge) + 1, schrittweite))
 
     df = pd.DataFrame({
         "Menge": mengen,
