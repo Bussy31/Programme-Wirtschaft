@@ -77,7 +77,8 @@ with tab1:
         "Leg hier die benötigten Konten an. **Hinweis:** Die Konten *Vorsteuer* und *Umsatzsteuer* werden beim ersten Eintrag automatisch vom System mit angelegt.")
 
     c1, c2, c3 = st.columns([2, 1, 1])
-    konto_name = c1.text_input("Kontoname (z.B. Kasse, Bank, Umsatzerlöse)")
+    # HIER WURDE DER BEISPIELTEXT ENTFERNT
+    konto_name = c1.text_input("Kontoname")
     kategorie = c2.selectbox("Kategorie", ["Aktiv", "Passiv", "Aufwand", "Ertrag"])
     start_saldo = c3.number_input("Anfangsbestand (nur bei Bestandskonten)", min_value=0.0, step=100.0, format="%.2f")
 
@@ -197,7 +198,6 @@ with tab2:
         else:
             if st.button("✅ Buchungssatz eintragen", type="primary"):
                 nr = len(st.session_state.journal) + 1
-                # Neues Journal-Format: (nr, soll_liste, haben_liste)
                 st.session_state.journal.append((nr, soll_clean, haben_clean))
 
                 soll_gegen_str = haben_clean[0][0] if len(haben_clean) == 1 else "Diverse"
@@ -209,9 +209,15 @@ with tab2:
                     st.session_state.konten[k]["Haben"].append((b, str(nr), haben_gegen_str))
 
                 st.success(f"Buchungssatz {nr} erfolgreich eingetragen!")
-                # Reset der Zeilen nach erfolgreicher Buchung
+
+                # --- RESET LOGIK ---
                 st.session_state.soll_lines = 1
                 st.session_state.haben_lines = 1
+                # Löscht alle Eingabewerte aus dem Zwischenspeicher
+                for key in list(st.session_state.keys()):
+                    if key.startswith("soll_k_") or key.startswith("soll_b_") or key.startswith(
+                            "haben_k_") or key.startswith("haben_b_"):
+                        del st.session_state[key]
                 st.rerun()
 
         st.divider()
@@ -220,9 +226,20 @@ with tab2:
             st.write("Noch keine Buchungen vorhanden.")
         else:
             for nr, soll_list, haben_list in st.session_state.journal:
-                s_str = " + ".join([f"{k} {b:,.2f}" for k, b in soll_list])
-                h_str = " + ".join([f"{k} {b:,.2f}" for k, b in haben_list])
-                st.write(f"**{nr})** {s_str} **an** {h_str}")
+                # HTML-Formatierung für bündige Darstellung
+                s_html = "<br>".join([f"{k} {b:,.2f} €" for k, b in soll_list])
+                h_html = "<br>".join([f"{k} {b:,.2f} €" for k, b in haben_list])
+
+                st.markdown(f"""
+                <table style="width:100%; border:none; margin-bottom: 10px;">
+                    <tr style="background-color:transparent;">
+                        <td style="width:5%; vertical-align:top; border:none;"><b>{nr})</b></td>
+                        <td style="width:40%; vertical-align:top; border:none;">{s_html}</td>
+                        <td style="width:5%; vertical-align:top; text-align:center; border:none;"><b>an</b></td>
+                        <td style="width:50%; vertical-align:top; border:none;">{h_html}</td>
+                    </tr>
+                </table>
+                """, unsafe_allow_html=True)
 
 # ==========================================
 # TAB 3: ABSCHLUSS & PDF
