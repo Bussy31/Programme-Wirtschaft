@@ -33,12 +33,16 @@ def add_haben_row():
 def reset_buchung():
     st.session_state.soll_count = 1
     st.session_state.haben_count = 1
-    # Setzt die Beträge hart auf 0.0 und zwingt die Dropdowns zurück auf Start
-    for key in list(st.session_state.keys()):
-        if key.startswith("s_val_") or key.startswith("h_val_"):
-            st.session_state[key] = 0.0
-        elif key.startswith("s_kto_") or key.startswith("h_kto_"):
-            del st.session_state[key]
+
+    # Wir suchen uns erst alle Keys zusammen, die zu den Eingabefeldern gehören
+    keys_to_delete = [
+        key for key in st.session_state.keys()
+        if key.startswith("s_val_") or key.startswith("h_val_") or key.startswith("s_kto_") or key.startswith("h_kto_")
+    ]
+
+    # ... und löschen sie dann sicher. Beim Neuladen nehmen die Widgets wieder ihren Standardwert an.
+    for key in keys_to_delete:
+        del st.session_state[key]
 
 
 # --- DATEN-MANAGER ---
