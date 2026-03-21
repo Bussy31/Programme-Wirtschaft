@@ -6,7 +6,6 @@ import copy
 # ---  SEITEN-KONFIGURATION  ---
 st.set_page_config(page_title="Buchhaltungstrainer 2026", layout="wide")
 
-
 # --- SESSION STATE (Das Gedächtnis der App) ---
 if "konten" not in st.session_state:
     st.session_state.konten = {}
