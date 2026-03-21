@@ -582,7 +582,7 @@ with tab3:
                         pdf.cell(col_width - 13, 6, h, ln=True)
                     pdf.ln(1)
 
-            # Cursor auf den niedrigsten Punkt setzen, damit der Rest (z.B. T-Konten) darunter weitergeht
+            # Cursor auf den niedrigsten Punkt setzen, damit der Rest (z.B. Konten) darunter weitergeht
             pdf.set_y(max(y_end_left, pdf.get_y()) + 10)
 
             # 3. Hauptbuch - Bestandskonten
