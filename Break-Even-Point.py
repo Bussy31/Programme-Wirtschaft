@@ -81,6 +81,6 @@ if deckungsbeitrag > 0:
     st.plotly_chart(fig, use_container_width=True)
 
 else:
-    # Warnung, falls Preis < Variable Kosten
+    # Warnung, falls Preis < Variable Kosten sind
     st.error(
         "⚠️ **Achtung:** Der Verkaufspreis muss höher sein als die variablen Kosten, da sonst ein negativer Deckungsbeitrag entsteht. Der Break-Even-Point kann so niemals erreicht werden!")
