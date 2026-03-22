@@ -70,23 +70,26 @@ st.sidebar.divider()
 # --- LADEN (Upload) ---
 uploaded_file = st.sidebar.file_uploader("⬆️ Speicherstand laden", type=["json"])
 
-if uploaded_file is not None:
-    try:
-        # Datei lesen und zurückübersetzen
-        loaded_data = json.load(uploaded_file)
+# --- LADEN (Upload) ---
+uploaded_file = st.sidebar.file_uploader("⬆️ Speicherstand laden", type=["json"])
 
-        # Die aktuellen Daten im System überschreiben
-        st.session_state.konten = loaded_data.get("konten", {})
-        st.session_state.journal = loaded_data.get("journal", [])
+# NEU: Ein extra Button, damit das Laden nur GENAU EINMAL beim Klick passiert!
+if st.sidebar.button("🔄 Daten aus Datei jetzt laden", use_container_width=True):
+    if uploaded_file is not None:
+        try:
+            # Datei lesen und zurückübersetzen
+            loaded_data = json.load(uploaded_file)
 
-        st.sidebar.success("✅ Spielstand erfolgreich geladen!")
+            # Die aktuellen Daten im System überschreiben
+            st.session_state.konten = loaded_data.get("konten", {})
+            st.session_state.journal = loaded_data.get("journal", [])
 
-        # Den Upload-Puffer leeren und die Seite neu aufbauen, damit die neuen Daten sofort sichtbar sind
-        if st.sidebar.button("🔄 Ansicht aktualisieren", use_container_width=True, type="primary"):
-            st.rerun()
+            st.sidebar.success("✅ Spielstand erfolgreich geladen! Du kannst jetzt weiterarbeiten.")
 
-    except Exception as e:
-        st.sidebar.error("❌ Fehler beim Laden der Datei. Ist es die richtige Datei?")
+        except Exception as e:
+            st.sidebar.error("❌ Fehler beim Laden der Datei. Ist es die richtige Datei?")
+    else:
+        st.sidebar.warning("Bitte ziehe zuerst eine Datei in das Feld oben.")
 
 
 def add_soll_row():
