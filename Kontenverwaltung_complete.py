@@ -124,7 +124,8 @@ with tab1:
     with col_w:
         st.number_input("AB-Wert (€) (Nur für Bestandskonten):", min_value=0.0, step=100.0, key="kto_wert_input")
 
-    col1, col2, col3, col4 = st.columns(4)
+    # NEU: 5 Spalten statt 4 für den Spezialfall-Button
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         st.button("🟢 Aktivkonto", use_container_width=True, on_click=add_konto, args=("Aktiv", "Soll"))
     with col2:
@@ -133,6 +134,11 @@ with tab1:
         st.button("🔴 Aufwandskonto", use_container_width=True, on_click=add_konto, args=("Aufwand", "Soll"))
     with col4:
         st.button("🟡 Ertragskonto", use_container_width=True, on_click=add_konto, args=("Ertrag", "Haben"))
+    with col5:
+        st.button("⚪ Konto (Spezialfall)", use_container_width=True, on_click=add_konto, args=("Spezialkonto", "Soll"))
+        st.markdown(
+            "<p style='text-align: center; font-size: 12px; color: gray; margin-top: -10px;'>Wird im Normalfall nicht gebraucht</p>",
+            unsafe_allow_html=True)
 
     st.write("")
     st.markdown("**Spezialkonten (mit 1 Klick anlegen):**")
@@ -167,9 +173,9 @@ with tab1:
         kat = werte.get("Kategorie", "Aktiv" if werte["Seite"] == "Soll" else "Passiv")
         konten_liste.append({"Konto": name, "Kategorie": kat, "Soll": s, "Haben": h, "Saldo": abs(s - h)})
 
-        if kat in ["Aktiv", "Konto"] and werte["Soll"] and werte["Soll"][0][1] == "AB":
+        if kat in ["Aktiv", "Konto", "Spezialkonto"] and werte["Soll"] and werte["Soll"][0][1] == "AB":
             sum_aktiv_ab += werte["Soll"][0][0]
-        if kat in ["Passiv", "Konto"] and werte["Haben"] and werte["Haben"][0][1] == "AB":
+        if kat in ["Passiv", "Konto", "Spezialkonto"] and werte["Haben"] and werte["Haben"][0][1] == "AB":
             sum_passiv_ab += werte["Haben"][0][0]
 
     diff = abs(sum_aktiv_ab - sum_passiv_ab)
@@ -206,7 +212,7 @@ with tab1:
                 with c_edit2:
                     new_k_ab = st.number_input("AB-Wert (€)", value=float(cur_ab), min_value=0.0, step=100.0)
                 with c_edit3:
-                    kat_options = ["Aktiv", "Passiv", "Aufwand", "Ertrag", "GuV", "Abschluss"]
+                    kat_options = ["Aktiv", "Passiv", "Aufwand", "Ertrag", "GuV", "Abschluss", "Spezialkonto"]
                     current_kat = k_daten.get("Kategorie", "Aktiv")
                     new_k_kat = st.selectbox("Kategorie", options=kat_options,
                                              index=kat_options.index(current_kat) if current_kat in kat_options else 0)
@@ -219,7 +225,8 @@ with tab1:
                         elif new_k_name != selected_kto and new_k_name in st.session_state.konten:
                             st.error("Konto existiert bereits!")
                         else:
-                            new_seite = "Soll" if new_k_kat in ["Aktiv", "Aufwand", "GuV", "Abschluss"] else "Haben"
+                            new_seite = "Soll" if new_k_kat in ["Aktiv", "Aufwand", "GuV", "Abschluss",
+                                                                "Spezialkonto"] else "Haben"
                             if new_k_kat in ["Aufwand", "Ertrag", "GuV"]:
                                 new_k_ab = 0.0
 
@@ -388,37 +395,44 @@ with tab3:
             s_sum = sum(item[0] for item in soll_entries)
             h_sum = sum(item[0] for item in haben_entries)
 
-            # --- T-Konto mit angeglichener Höhe zeichnen ---
             max_len = max(len(soll_entries), len(haben_entries))
 
+            # NEU: Flexbox-Layout für tabellarische, saubere Ausrichtung der Beträge
             with col_s:
                 st.markdown("**Soll**")
+                html_s = ""
                 for i in range(max_len):
                     if i < len(soll_entries):
                         val, ref, gkto = soll_entries[i]
                         text = f"{ref}) {gkto}" if gkto else str(ref)
-                        st.write(f"{text}: **{val:,.2f} €**")
+                        html_s += f"<div style='display: flex; justify-content: space-between;'><span>{text}</span><span><b>{val:,.2f} €</b></span></div>"
                     else:
-                        st.markdown("&nbsp;")  # Leerzeile für korrekte Höhe
+                        html_s += "<div style='display: flex; justify-content: space-between;'><span>&nbsp;</span><span>&nbsp;</span></div>"
+                st.markdown(html_s, unsafe_allow_html=True)
                 st.markdown("---")
-                st.markdown(f"**Summe: {s_sum:,.2f} €**")
+                st.markdown(
+                    f"<div style='display: flex; justify-content: space-between;'><span><b>Summe:</b></span><span><b>{s_sum:,.2f} €</b></span></div>",
+                    unsafe_allow_html=True)
 
             with col_h:
                 st.markdown("**Haben**")
+                html_h = ""
                 for i in range(max_len):
                     if i < len(haben_entries):
                         val, ref, gkto = haben_entries[i]
                         text = f"{ref}) {gkto}" if gkto else str(ref)
-                        st.write(f"{text}: **{val:,.2f} €**")
+                        html_h += f"<div style='display: flex; justify-content: space-between;'><span>{text}</span><span><b>{val:,.2f} €</b></span></div>"
                     else:
-                        st.markdown("&nbsp;")  # Leerzeile für korrekte Höhe
+                        html_h += "<div style='display: flex; justify-content: space-between;'><span>&nbsp;</span><span>&nbsp;</span></div>"
+                st.markdown(html_h, unsafe_allow_html=True)
                 st.markdown("---")
-                st.markdown(f"**Summe: {h_sum:,.2f} €**")
+                st.markdown(
+                    f"<div style='display: flex; justify-content: space-between;'><span><b>Summe:</b></span><span><b>{h_sum:,.2f} €</b></span></div>",
+                    unsafe_allow_html=True)
 
             st.write("")
             saldo = abs(s_sum - h_sum)
 
-            # --- Manueller Kontoabschluss ---
             st.divider()
             st.markdown("### 🔒 Konto manuell abschließen")
 
@@ -437,7 +451,6 @@ with tab3:
                     abs_betrag = st.number_input("Abschlussbetrag (€):", min_value=0.0, step=10.0, format="%.2f")
 
                 with c_abs3:
-                    # Intelligente Vorauswahl des Gegenkontos
                     kat = k_daten.get("Kategorie", "")
                     default_g = "GuV" if kat in ["Aufwand", "Ertrag"] else "SBK"
 
@@ -464,7 +477,6 @@ with tab3:
                         st.error(
                             f"Falsche Seite! Der Saldo muss im {expected_seite} gebucht werden, um das Konto auszugleichen.")
                     else:
-                        # Wenn das Gegenkonto neu ist, legen wir es verdeckt an
                         if abs_gegenkonto not in st.session_state.konten:
                             neue_kat = "Abschluss" if abs_gegenkonto == "SBK" else (
                                 "GuV" if abs_gegenkonto == "GuV" else "Passiv")
@@ -475,14 +487,12 @@ with tab3:
                         nr = len(st.session_state.journal) + 1
 
                         if abs_seite == "Haben":
-                            # Aktuelles Konto im Haben -> Gegenkonto im Soll
                             st.session_state.journal.append({
                                 "nr": nr,
                                 "soll": [{"konto": abs_gegenkonto, "betrag": abs_betrag}],
                                 "haben": [{"konto": selected_t_kto, "betrag": abs_betrag}]
                             })
                         else:
-                            # Aktuelles Konto im Soll -> Gegenkonto im Haben
                             st.session_state.journal.append({
                                 "nr": nr,
                                 "soll": [{"konto": selected_t_kto, "betrag": abs_betrag}],
@@ -572,27 +582,13 @@ with tab4:
 
             s_sum = sum(i[0] for i in werte["Soll"])
             h_sum = sum(i[0] for i in werte["Haben"])
-            sb = round(abs(s_sum - h_sum), 2)
 
-            if sb > 0:
-                pdf.set_font("Helvetica", "I", 9)
-                if s_sum >= h_sum:
-                    pdf.cell(45, 6, "", border="LR")
-                    pdf.cell(20, 6, "SB", align="L")
-                    pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R")
-                else:
-                    pdf.cell(20, 6, "SB", border="L", align="L")
-                    pdf.cell(25, 6, f"{sb:,.2f}", border="R", align="R")
-                    pdf.cell(45, 6, "", border="R")
-                y += 6
-                pdf.set_xy(x, y)
-
-            max_sum = max(s_sum, h_sum)
+            # OHNE automatischen "SB" - wir zeigen nur exakt das, was gebucht wurde an.
             pdf.set_font("Helvetica", "B", 9)
-            pdf.cell(20, 6, "", border="TLB")
-            pdf.cell(25, 6, f"{max_sum:,.2f}", border="TRB", align="R")
-            pdf.cell(20, 6, "", border="TLB")
-            pdf.cell(25, 6, f"{max_sum:,.2f}", border="TRB", align="R")
+            pdf.cell(27, 6, "", border="TLB")
+            pdf.cell(18, 6, f"{s_sum:,.2f}", border="TRB", align="R")
+            pdf.cell(27, 6, "", border="TLB")
+            pdf.cell(18, 6, f"{h_sum:,.2f}", border="TRB", align="R")
             return y + 10
 
 
@@ -631,27 +627,13 @@ with tab4:
 
             s_sum = sum(i[0] for i in werte["Soll"])
             h_sum = sum(i[0] for i in werte["Haben"])
-            sb = round(abs(s_sum - h_sum), 2)
 
-            if sb > 0:
-                pdf.set_font("Helvetica", "I", 9)
-                if s_sum >= h_sum:
-                    pdf.cell(90, 6, "", border="LR")
-                    pdf.cell(60, 6, "SB", align="L")
-                    pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R")
-                else:
-                    pdf.cell(60, 6, "SB", border="L", align="L")
-                    pdf.cell(30, 6, f"{sb:,.2f}", border="R", align="R")
-                    pdf.cell(90, 6, "", border="R")
-                y += 6
-                pdf.set_xy(x, y)
-
-            max_sum = max(s_sum, h_sum)
+            # OHNE automatischen "SB" - wir zeigen nur exakt das, was gebucht wurde an.
             pdf.set_font("Helvetica", "B", 9)
             pdf.cell(60, 6, "", border="TLB")
-            pdf.cell(30, 6, f"{max_sum:,.2f}", border="TRB", align="R")
+            pdf.cell(30, 6, f"{s_sum:,.2f}", border="TRB", align="R")
             pdf.cell(60, 6, "", border="TLB")
-            pdf.cell(30, 6, f"{max_sum:,.2f}", border="TRB", align="R")
+            pdf.cell(30, 6, f"{h_sum:,.2f}", border="TRB", align="R")
             return y + 10
 
 
@@ -730,7 +712,7 @@ with tab4:
                 pdf.set_x(10)
 
             aktiv_konten = [(k, v) for k, v in temp_konten.items() if
-                            v.get("Kategorie") in ["Aktiv", "Konto", "Abschluss"]]
+                            v.get("Kategorie") in ["Aktiv", "Konto", "Abschluss", "Spezialkonto"]]
             passiv_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Passiv"]
 
             for i in range(max(len(aktiv_konten), len(passiv_konten))):
