@@ -14,7 +14,6 @@ if "journal" not in st.session_state:
 if "form_msg" not in st.session_state:
     st.session_state.form_msg = None
 
-# Für dynamische Buchungssätze
 if "soll_count" not in st.session_state:
     st.session_state.soll_count = 1
 if "haben_count" not in st.session_state:
@@ -42,14 +41,10 @@ def remove_haben_row():
 def reset_buchung():
     st.session_state.soll_count = 1
     st.session_state.haben_count = 1
-
-    # Wir suchen uns erst alle Keys zusammen, die zu den Eingabefeldern gehören
     keys_to_delete = [
         key for key in st.session_state.keys()
         if key.startswith("s_val_") or key.startswith("h_val_") or key.startswith("s_kto_") or key.startswith("h_kto_")
     ]
-
-    # ... und löschen sie dann sicher. Beim Neuladen nehmen die Widgets wieder ihren Standardwert an.
     for key in keys_to_delete:
         del st.session_state[key]
 
@@ -114,9 +109,8 @@ def add_special_konto(name, kategorie, seite):
 
 
 # --- TABS ERSTELLEN ---
-# NEU: Wir haben jetzt 4 Tabs!
 tab1, tab2, tab3, tab4 = st.tabs(
-    ["1. Konten & Eröffnung", "2. Buchen (Grundbuch)", "3. T-Konten Ansicht", "4. Abschluss & PDF"])
+    ["1. Konten & Eröffnung", "2. Buchen (Grundbuch)", "3. T-Konten & Abschluss", "4. PDF Export"])
 
 # ==========================================
 # TAB 1: KONTEN & ERÖFFNUNG
@@ -130,7 +124,6 @@ with tab1:
     with col_w:
         st.number_input("AB-Wert (€) (Nur für Bestandskonten):", min_value=0.0, step=100.0, key="kto_wert_input")
 
-    # Zeile 1: Normale Konten
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.button("🟢 Aktivkonto", use_container_width=True, on_click=add_konto, args=("Aktiv", "Soll"))
@@ -141,10 +134,9 @@ with tab1:
     with col4:
         st.button("🟡 Ertragskonto", use_container_width=True, on_click=add_konto, args=("Ertrag", "Haben"))
 
-    st.write("")  # Abstand
+    st.write("")
     st.markdown("**Spezialkonten (mit 1 Klick anlegen):**")
 
-    # Zeile 2: Spezialkonten
     scol1, scol2, scol3 = st.columns(3)
     with scol1:
         st.button("📊 GuV-Konto eröffnen", use_container_width=True, on_click=add_special_konto,
@@ -172,7 +164,6 @@ with tab1:
     for name, werte in st.session_state.konten.items():
         s = sum(item[0] for item in werte["Soll"])
         h = sum(item[0] for item in werte["Haben"])
-
         kat = werte.get("Kategorie", "Aktiv" if werte["Seite"] == "Soll" else "Passiv")
         konten_liste.append({"Konto": name, "Kategorie": kat, "Soll": s, "Haben": h, "Saldo": abs(s - h)})
 
@@ -215,7 +206,7 @@ with tab1:
                 with c_edit2:
                     new_k_ab = st.number_input("AB-Wert (€)", value=float(cur_ab), min_value=0.0, step=100.0)
                 with c_edit3:
-                    kat_options = ["Aktiv", "Passiv", "Aufwand", "Ertrag", "GuV"]
+                    kat_options = ["Aktiv", "Passiv", "Aufwand", "Ertrag", "GuV", "Abschluss"]
                     current_kat = k_daten.get("Kategorie", "Aktiv")
                     new_k_kat = st.selectbox("Kategorie", options=kat_options,
                                              index=kat_options.index(current_kat) if current_kat in kat_options else 0)
@@ -228,7 +219,7 @@ with tab1:
                         elif new_k_name != selected_kto and new_k_name in st.session_state.konten:
                             st.error("Konto existiert bereits!")
                         else:
-                            new_seite = "Soll" if new_k_kat in ["Aktiv", "Aufwand", "GuV"] else "Haben"
+                            new_seite = "Soll" if new_k_kat in ["Aktiv", "Aufwand", "GuV", "Abschluss"] else "Haben"
                             if new_k_kat in ["Aufwand", "Ertrag", "GuV"]:
                                 new_k_ab = 0.0
 
@@ -279,13 +270,10 @@ with tab2:
     else:
         st.write("Wähle Konten aus. Für zusammengesetzte Buchungssätze klicke auf '➕ Zeile hinzufügen'.")
 
-        # --- EINGABEBEREICH ---
         soll_items = []
         haben_items = []
-
         col_soll, col_haben = st.columns(2)
 
-        # SOLL SEITE
         with col_soll:
             st.markdown("**Soll**")
             for i in range(st.session_state.soll_count):
@@ -295,19 +283,16 @@ with tab2:
                 with c2:
                     betrag = st.number_input(f"Betrag {i + 1}", min_value=0.0, step=10.0, key=f"s_val_{i}",
                                              label_visibility="collapsed")
-
                 if betrag > 0:
                     soll_items.append({"konto": kto, "betrag": betrag})
 
-            # Buttons für Soll: Hinzufügen & Löschen
             btn_col_s1, btn_col_s2 = st.columns(2)
             with btn_col_s1:
                 st.button("➕ Zeile", on_click=add_soll_row, use_container_width=True, key="add_soll_btn")
             with btn_col_s2:
-                st.button("🗑️ Zeile", on_click=remove_soll_row, use_container_width=True,
-                          key="rem_soll_btn", disabled=st.session_state.soll_count <= 1)
+                st.button("🗑️ Zeile", on_click=remove_soll_row, use_container_width=True, key="rem_soll_btn",
+                          disabled=st.session_state.soll_count <= 1)
 
-        # HABEN SEITE
         with col_haben:
             st.markdown("**an Haben**")
             for i in range(st.session_state.haben_count):
@@ -318,21 +303,18 @@ with tab2:
                 with c2:
                     betrag = st.number_input(f"Betrag {i + 1}", min_value=0.0, step=10.0, key=f"h_val_{i}",
                                              label_visibility="collapsed")
-
                 if betrag > 0:
                     haben_items.append({"konto": kto, "betrag": betrag})
 
-            # Buttons für Haben: Hinzufügen & Löschen
             btn_col_h1, btn_col_h2 = st.columns(2)
             with btn_col_h1:
                 st.button("➕ Zeile", on_click=add_haben_row, use_container_width=True, key="add_haben_btn")
             with btn_col_h2:
-                st.button("🗑️ Zeile", on_click=remove_haben_row, use_container_width=True,
-                          key="rem_haben_btn", disabled=st.session_state.haben_count <= 1)
+                st.button("🗑️ Zeile", on_click=remove_haben_row, use_container_width=True, key="rem_haben_btn",
+                          disabled=st.session_state.haben_count <= 1)
 
-        st.write("")  # Abstand
+        st.write("")
 
-        # BUCHEN BUTTON
         if st.button("💾 Buchen", type="primary", use_container_width=True):
             s_sum = sum(item["betrag"] for item in soll_items)
             h_sum = sum(item["betrag"] for item in haben_items)
@@ -378,15 +360,15 @@ with tab2:
         st.write("Noch keine Buchungen vorhanden.")
 
 # ==========================================
-# TAB 3: NEU - T-KONTEN ANSICHT
+# TAB 3: T-KONTEN ANSICHT & ABSCHLUSS
 # ==========================================
 with tab3:
-    st.subheader("Aktuelle T-Konten Übersicht")
+    st.subheader("Aktuelle T-Konten & Abschluss")
 
     if not st.session_state.konten:
         st.info("Bitte lege zuerst unter '1. Konten & Eröffnung' Konten an.")
     else:
-        st.write("Hier kannst du dir jederzeit den aktuellen Stand deiner Konten ansehen.")
+        st.write("Wähle ein Konto aus, um die Buchungen zu überprüfen und es manuell abzuschließen.")
         kto_namen_t = list(st.session_state.konten.keys())
         selected_t_kto = st.selectbox("Wähle ein Konto aus:", options=kto_namen_t)
 
@@ -406,83 +388,123 @@ with tab3:
             s_sum = sum(item[0] for item in soll_entries)
             h_sum = sum(item[0] for item in haben_entries)
 
+            # --- T-Konto mit angeglichener Höhe zeichnen ---
+            max_len = max(len(soll_entries), len(haben_entries))
+
             with col_s:
                 st.markdown("**Soll**")
-                for val, ref, gkto in soll_entries:
-                    # Gegenkonto und Referenz schön anzeigen
-                    text = f"{ref}) {gkto}" if gkto else str(ref)
-                    st.write(f"{text}: **{val:,.2f} €**")
+                for i in range(max_len):
+                    if i < len(soll_entries):
+                        val, ref, gkto = soll_entries[i]
+                        text = f"{ref}) {gkto}" if gkto else str(ref)
+                        st.write(f"{text}: **{val:,.2f} €**")
+                    else:
+                        st.markdown("&nbsp;")  # Leerzeile für korrekte Höhe
                 st.markdown("---")
                 st.markdown(f"**Summe: {s_sum:,.2f} €**")
 
             with col_h:
                 st.markdown("**Haben**")
-                for val, ref, gkto in haben_entries:
-                    text = f"{ref}) {gkto}" if gkto else str(ref)
-                    st.write(f"{text}: **{val:,.2f} €**")
+                for i in range(max_len):
+                    if i < len(haben_entries):
+                        val, ref, gkto = haben_entries[i]
+                        text = f"{ref}) {gkto}" if gkto else str(ref)
+                        st.write(f"{text}: **{val:,.2f} €**")
+                    else:
+                        st.markdown("&nbsp;")  # Leerzeile für korrekte Höhe
                 st.markdown("---")
                 st.markdown(f"**Summe: {h_sum:,.2f} €**")
 
             st.write("")
             saldo = abs(s_sum - h_sum)
 
-            # Saldo schön formatiert unten anzeigen
-            if s_sum > h_sum:
-                st.info(f"**Aktueller Saldo:** {saldo:,.2f} € (Sollsaldo)")
-            elif h_sum > s_sum:
-                st.info(f"**Aktueller Saldo:** {saldo:,.2f} € (Habensaldo)")
+            # --- Manueller Kontoabschluss ---
+            st.divider()
+            st.markdown("### 🔒 Konto manuell abschließen")
+
+            if saldo == 0:
+                st.success("✅ Dieses Konto ist ausgeglichen und somit bereits abgeschlossen!")
             else:
-                st.success("**Das Konto ist aktuell ausgeglichen (Saldo: 0,00 €).**")
+                st.info(
+                    f"Dieses Konto hat einen Saldo von **{saldo:,.2f} €**. Bestimme die Abschlussseite und das Gegenkonto.")
+
+                c_abs1, c_abs2, c_abs3 = st.columns(3)
+
+                with c_abs1:
+                    abs_seite = st.selectbox("Abschlussbuchung auf Seite:", ["Soll", "Haben"])
+
+                with c_abs2:
+                    abs_betrag = st.number_input("Abschlussbetrag (€):", min_value=0.0, step=10.0, format="%.2f")
+
+                with c_abs3:
+                    # Intelligente Vorauswahl des Gegenkontos
+                    kat = k_daten.get("Kategorie", "")
+                    default_g = "GuV" if kat in ["Aufwand", "Ertrag"] else "SBK"
+
+                    mögliche_gegenkonten = list(st.session_state.konten.keys())
+                    for missing in ["SBK", "GuV", "Eigenkapital"]:
+                        if missing not in mögliche_gegenkonten:
+                            mögliche_gegenkonten.append(missing)
+
+                    mögliche_gegenkonten = [k for k in mögliche_gegenkonten if k != selected_t_kto]
+
+                    try:
+                        def_idx = mögliche_gegenkonten.index(default_g)
+                    except ValueError:
+                        def_idx = 0
+
+                    abs_gegenkonto = st.selectbox("Gegenkonto (z.B. SBK, GuV):", mögliche_gegenkonten, index=def_idx)
+
+                if st.button("Abschlussbuchung eintragen", type="primary"):
+                    expected_seite = "Haben" if s_sum > h_sum else "Soll"
+
+                    if abs_betrag != saldo:
+                        st.error(f"Falscher Betrag! Der auszugleichende Saldo beträgt exakt {saldo:,.2f} €.")
+                    elif abs_seite != expected_seite:
+                        st.error(
+                            f"Falsche Seite! Der Saldo muss im {expected_seite} gebucht werden, um das Konto auszugleichen.")
+                    else:
+                        # Wenn das Gegenkonto neu ist, legen wir es verdeckt an
+                        if abs_gegenkonto not in st.session_state.konten:
+                            neue_kat = "Abschluss" if abs_gegenkonto == "SBK" else (
+                                "GuV" if abs_gegenkonto == "GuV" else "Passiv")
+                            st.session_state.konten[abs_gegenkonto] = {"Kategorie": neue_kat,
+                                                                       "Seite": "Soll" if neue_kat == "GuV" else "Haben",
+                                                                       "Soll": [], "Haben": []}
+
+                        nr = len(st.session_state.journal) + 1
+
+                        if abs_seite == "Haben":
+                            # Aktuelles Konto im Haben -> Gegenkonto im Soll
+                            st.session_state.journal.append({
+                                "nr": nr,
+                                "soll": [{"konto": abs_gegenkonto, "betrag": abs_betrag}],
+                                "haben": [{"konto": selected_t_kto, "betrag": abs_betrag}]
+                            })
+                        else:
+                            # Aktuelles Konto im Soll -> Gegenkonto im Haben
+                            st.session_state.journal.append({
+                                "nr": nr,
+                                "soll": [{"konto": selected_t_kto, "betrag": abs_betrag}],
+                                "haben": [{"konto": abs_gegenkonto, "betrag": abs_betrag}]
+                            })
+
+                        rebuild_accounts()
+                        st.success(f"Erfolgreich gebucht! Das Konto '{selected_t_kto}' ist nun abgeschlossen.")
+                        st.rerun()
 
 # ==========================================
-# TAB 4: ABSCHLUSS & PDFs (Ehemals Tab 3)
+# TAB 4: PDF EXPORT (Ohne automatischen Abschluss)
 # ==========================================
 with tab4:
     if not st.session_state.konten:
         st.info("Bitte erst Konten anlegen.")
     else:
-        st.subheader("Jahresabschluss vorbereiten")
+        st.subheader("Jahresabschluss als PDF exportieren")
         st.markdown(
-            "Hier definierst du die Logik für den Abschluss. Die Abschlussbuchungen (inkl. SBK) generiert das System automatisch in das PDF.")
-
-        konten_liste_namen = list(st.session_state.konten.keys())
-
-        # 1. Steuerkonten
-        st.markdown("**1. Steuerkonten abschließen (Buchungssatz manuell bilden)**")
-        st.write(
-            "Wähle die Konten so, dass das Konto mit dem **kleineren Saldo** ausgeglichen wird. Das System übernimmt den Betrag automatisch.")
-        col_t1, col_t2 = st.columns(2)
-        with col_t1:
-            tax_soll = st.selectbox("Steuerkonto im Soll:", konten_liste_namen, index=0)
-        with col_t2:
-            tax_haben = st.selectbox("Steuerkonto im Haben:", konten_liste_namen, index=0)
-
-        st.write("")
-
-        # 2. Erfolgskonten
-        st.markdown("**2. Erfolgskonten & Eigenkapital**")
-        default_guv_idx = konten_liste_namen.index("GuV") if "GuV" in konten_liste_namen else 0
-        default_ek_idx = konten_liste_namen.index("Eigenkapital") if "Eigenkapital" in konten_liste_namen else 0
-
-        col_a1, col_a2 = st.columns(2)
-        with col_a1:
-            if konten_liste_namen:
-                erfolg_zu = st.selectbox("Erfolgskonten abschließen über:", options=konten_liste_namen,
-                                         index=default_guv_idx)
-            else:
-                erfolg_zu = None
-        with col_a2:
-            if konten_liste_namen:
-                guv_zu = st.selectbox("Gewinn- und Verlustkonto abschließen über:", options=konten_liste_namen,
-                                      index=default_ek_idx)
-            else:
-                guv_zu = None
-
-        st.divider()
-        st.subheader("PDF Lösung generieren")
+            "Das System druckt nun den genauen Stand deiner Buchhaltung aus. **Denke daran, dass du vorher unter Tab 3 alle Konten manuell abschließen musst**, damit eine vollständige Schlussbilanz erzeugt wird.")
 
 
-        # --- PDF FUNKTIONEN ---
         def draw_bilanz_pdf(pdf, title, links, rechts):
             pdf.set_font("Helvetica", "B", 14)
             pdf.cell(180, 10, title, ln=True, align="C")
@@ -633,94 +655,9 @@ with tab4:
             return y + 10
 
 
-        if st.button("📄 Abschlussbuchungen & PDF generieren", type="primary"):
+        if st.button("📄 PDF generieren", type="primary"):
             temp_konten = copy.deepcopy(st.session_state.konten)
             temp_journal = copy.deepcopy(st.session_state.journal)
-
-            original_journal_len = len(temp_journal)
-
-            # --- AUTOMATISCHE ABSCHLUSSBUCHUNGEN ---
-
-            # 1. Steuerkonten manuell abschließen (übernimmt den kleineren Saldo)
-            if tax_soll != "-" and tax_haben != "-" and tax_soll in temp_konten and tax_haben in temp_konten:
-                s_s_sum = sum(i[0] for i in temp_konten[tax_soll]["Soll"])
-                s_h_sum = sum(i[0] for i in temp_konten[tax_soll]["Haben"])
-                saldo_soll_kto = abs(s_s_sum - s_h_sum)
-
-                h_s_sum = sum(i[0] for i in temp_konten[tax_haben]["Soll"])
-                h_h_sum = sum(i[0] for i in temp_konten[tax_haben]["Haben"])
-                saldo_haben_kto = abs(h_s_sum - h_h_sum)
-
-                betrag = min(saldo_soll_kto, saldo_haben_kto)
-
-                if betrag > 0:
-                    nr = len(temp_journal) + 1
-                    temp_journal.append({"nr": nr, "soll": [{"konto": tax_soll, "betrag": betrag}],
-                                         "haben": [{"konto": tax_haben, "betrag": betrag}]})
-                    temp_konten[tax_soll]["Soll"].append((betrag, str(nr), tax_haben))
-                    temp_konten[tax_haben]["Haben"].append((betrag, str(nr), tax_soll))
-
-            # 2. Erfolgskonten an GuV
-            if erfolg_zu:
-                for k_name, k_data in list(temp_konten.items()):
-                    kat = k_data.get("Kategorie", "")
-                    if kat in ["Aufwand", "Ertrag"]:
-                        s_sum = sum(i[0] for i in k_data["Soll"])
-                        h_sum = sum(i[0] for i in k_data["Haben"])
-                        saldo = abs(s_sum - h_sum)
-                        if saldo > 0:
-                            nr = len(temp_journal) + 1
-                            if s_sum > h_sum:
-                                temp_journal.append({"nr": nr, "soll": [{"konto": erfolg_zu, "betrag": saldo}],
-                                                     "haben": [{"konto": k_name, "betrag": saldo}]})
-                                temp_konten[erfolg_zu]["Soll"].append((saldo, str(nr), k_name))
-                                temp_konten[k_name]["Haben"].append((saldo, str(nr), erfolg_zu))
-                            else:
-                                temp_journal.append({"nr": nr, "soll": [{"konto": k_name, "betrag": saldo}],
-                                                     "haben": [{"konto": erfolg_zu, "betrag": saldo}]})
-                                temp_konten[k_name]["Soll"].append((saldo, str(nr), erfolg_zu))
-                                temp_konten[erfolg_zu]["Haben"].append((saldo, str(nr), k_name))
-
-                # 3. GuV an Eigenkapital
-                if erfolg_zu in temp_konten and guv_zu:
-                    guv_data = temp_konten[erfolg_zu]
-                    g_s_sum = sum(i[0] for i in guv_data["Soll"])
-                    g_h_sum = sum(i[0] for i in guv_data["Haben"])
-                    g_saldo = abs(g_s_sum - g_h_sum)
-                    if g_saldo > 0:
-                        nr = len(temp_journal) + 1
-                        if g_s_sum > g_h_sum:  # Verlust
-                            temp_journal.append({"nr": nr, "soll": [{"konto": guv_zu, "betrag": g_saldo}],
-                                                 "haben": [{"konto": erfolg_zu, "betrag": g_saldo}]})
-                            temp_konten[guv_zu]["Soll"].append((g_saldo, str(nr), erfolg_zu))
-                            temp_konten[erfolg_zu]["Haben"].append((g_saldo, str(nr), guv_zu))
-                        else:  # Gewinn
-                            temp_journal.append({"nr": nr, "soll": [{"konto": erfolg_zu, "betrag": g_saldo}],
-                                                 "haben": [{"konto": guv_zu, "betrag": g_saldo}]})
-                            temp_konten[erfolg_zu]["Soll"].append((g_saldo, str(nr), guv_zu))
-                            temp_konten[guv_zu]["Haben"].append((g_saldo, str(nr), erfolg_zu))
-
-            # 4. Bestandskonten über SBK abschließen
-            temp_konten["SBK"] = {"Kategorie": "Abschluss", "Seite": "Soll", "Soll": [], "Haben": []}
-            for k_name, k_data in list(temp_konten.items()):
-                if k_name == "SBK": continue
-                if k_data.get("Kategorie") not in ["Aufwand", "Ertrag", "GuV"]:
-                    s_sum = sum(i[0] for i in k_data["Soll"])
-                    h_sum = sum(i[0] for i in k_data["Haben"])
-                    saldo = abs(s_sum - h_sum)
-
-                    if saldo > 0:
-                        nr = len(temp_journal) + 1
-                        if s_sum > h_sum:  # Aktiv-Konto -> SBK an Konto
-                            temp_journal.append({"nr": nr, "soll": [{"konto": "SBK", "betrag": saldo}],
-                                                 "haben": [{"konto": k_name, "betrag": saldo}]})
-                            temp_konten["SBK"]["Soll"].append((saldo, str(nr), k_name))
-                            temp_konten[k_name]["Haben"].append((saldo, str(nr), "SBK"))
-                        else:  # Passiv-Konto -> Konto an SBK
-                            temp_journal.append({"nr": nr, "soll": [{"konto": k_name, "betrag": saldo}],
-                                                 "haben": [{"konto": "SBK", "betrag": saldo}]})
-                            temp_konten[k_name]["Soll"].append((saldo, str(nr), "SBK"))
-                            temp_konten["SBK"]["Haben"].append((saldo, str(nr), k_name))
 
             # --- PDF ERSTELLUNG START ---
             pdf = FPDF()
@@ -735,84 +672,43 @@ with tab4:
                     eb_passiv.append((name, daten["Haben"][0][0]))
             draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv, eb_passiv)
 
-            # --- 2. Journal & Abschluss (Zwei Spalten Layout) ---
+            # 2. Journal
             pdf.set_font("Helvetica", "B", 12)
-            y_start_journal = pdf.get_y()
-            col_width = 90  # Breite einer Spalte
-
-            # --- LINKE SPALTE: Grundbuch (Manuelle Buchungen) ---
-            pdf.set_xy(10, y_start_journal)
-            pdf.cell(col_width, 10, "Grundbuch (Manuell)", ln=False)
+            pdf.cell(0, 10, "Journal", ln=True)
             pdf.set_font("Helvetica", "", 9)
-            pdf.set_xy(10, y_start_journal + 10)
 
-            if original_journal_len == 0:
-                pdf.cell(col_width, 6, "(Keine manuellen Buchungen)", ln=True)
+            if len(temp_journal) == 0:
+                pdf.cell(0, 6, "(Keine Buchungen vorhanden)", ln=True)
             else:
-                for entry in temp_journal[:original_journal_len]:
-                    if pdf.get_y() > 260:  # Seitenumbruch-Check
-                        pdf.add_page()
-                        pdf.set_xy(10, 20)
-
-                    s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in entry["soll"]]
-                    h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in entry["haben"]]
-
-                    curr_x = 10
-                    pdf.set_x(curr_x)
-                    pdf.set_font("Helvetica", "B", 9)
-                    pdf.cell(8, 6, f"{entry['nr']})")
-                    pdf.set_font("Helvetica", "", 9)
-                    pdf.cell(col_width - 8, 6, s_lines[0], ln=True)
-
-                    for s in s_lines[1:]:
-                        pdf.set_x(curr_x + 8)
-                        pdf.cell(col_width - 8, 6, s, ln=True)
-
-                    for h in h_lines:
-                        pdf.set_x(curr_x + 13)
-                        pdf.cell(col_width - 13, 6, h, ln=True)
-                    pdf.ln(1)
-
-            y_end_left = pdf.get_y()
-
-            # --- RECHTE SPALTE: Abschlussbuchungen ---
-            pdf.set_font("Helvetica", "B", 12)
-            pdf.set_xy(110, y_start_journal)  # Start rechts bei X=110
-            pdf.cell(col_width, 10, "Abschlussbuchungen", ln=False)
-            pdf.set_font("Helvetica", "", 9)
-            pdf.set_xy(110, y_start_journal + 10)
-
-            if len(temp_journal) == original_journal_len:
-                pdf.cell(col_width, 6, "(Keine Abschlussbuchungen notwendig)", ln=True)
-            else:
-                for entry in temp_journal[original_journal_len:]:
+                for entry in temp_journal:
                     if pdf.get_y() > 260:
-                        pdf.set_xy(110, 20)
+                        pdf.add_page()
 
                     s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in entry["soll"]]
                     h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in entry["haben"]]
 
-                    curr_x = 110
-                    pdf.set_x(curr_x)
                     pdf.set_font("Helvetica", "B", 9)
-                    pdf.cell(8, 6, f"{entry['nr']})")
+                    pdf.cell(10, 6, f"{entry['nr']})")
                     pdf.set_font("Helvetica", "", 9)
-                    pdf.cell(col_width - 8, 6, s_lines[0], ln=True)
+
+                    curr_x = pdf.get_x()
+                    pdf.cell(170, 6, s_lines[0], ln=True)
 
                     for s in s_lines[1:]:
-                        pdf.set_x(curr_x + 8)
-                        pdf.cell(col_width - 8, 6, s, ln=True)
+                        pdf.set_x(curr_x)
+                        pdf.cell(170, 6, s, ln=True)
 
                     for h in h_lines:
-                        pdf.set_x(curr_x + 13)
-                        pdf.cell(col_width - 13, 6, h, ln=True)
-                    pdf.ln(1)
-
-            # Cursor auf den niedrigsten Punkt setzen, damit der Rest (z.B. T-Konten) darunter weitergeht
-            pdf.set_y(max(y_end_left, pdf.get_y()) + 10)
+                        pdf.set_x(curr_x + 10)
+                        pdf.cell(160, 6, h, ln=True)
+                    pdf.ln(2)
 
             # 3. Hauptbuch - Bestandskonten
-            if pdf.get_y() > 240: pdf.add_page()
+            if pdf.get_y() > 240:
+                pdf.add_page()
+            else:
+                pdf.ln(10)
+
             pdf.set_font("Helvetica", "B", 12)
             pdf.cell(0, 8, "Hauptbuch - Bestandskonten", ln=True)
             pdf.set_font("Helvetica", "I", 10)
@@ -833,7 +729,8 @@ with tab4:
                 pdf.set_y(max(y_left, y_right) + 5)
                 pdf.set_x(10)
 
-            aktiv_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") in ["Aktiv", "Konto"]]
+            aktiv_konten = [(k, v) for k, v in temp_konten.items() if
+                            v.get("Kategorie") in ["Aktiv", "Konto", "Abschluss"]]
             passiv_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Passiv"]
 
             for i in range(max(len(aktiv_konten), len(passiv_konten))):
@@ -856,13 +753,12 @@ with tab4:
 
             pdf.set_font("Helvetica", "B", 12)
             pdf.cell(0, 8, "Hauptbuch - Erfolgskonten", ln=True)
-            pdf.set_font("Helvetica", "I", 10)
-            pdf.cell(0, 6, "(GuV oben, Aufwandskonten links, Ertragskonten rechts)", ln=True)
             pdf.ln(4)
 
-            if erfolg_zu and erfolg_zu in temp_konten:
+            guv_data = temp_konten.pop("GuV", None)
+            if guv_data:
                 if pdf.get_y() > 200: pdf.add_page()
-                next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), erfolg_zu, temp_konten[erfolg_zu])
+                next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), "Gewinn- und Verlustkonto (GuV)", guv_data)
                 pdf.set_y(next_y + 5)
 
             aufwand_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Aufwand"]
@@ -893,21 +789,23 @@ with tab4:
             if sbk_data:
                 next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), "Schlussbilanzkonto (SBK)", sbk_data)
                 pdf.set_y(next_y + 5)
+            else:
+                pdf.set_font("Helvetica", "I", 10)
+                pdf.cell(0, 6,
+                         "(Kein Schlussbilanzkonto vorhanden. Es wurden noch keine Konten manuell über das SBK abgeschlossen.)",
+                         ln=True)
 
             # 6. Schlussbilanz aus dem SBK generieren
-            if pdf.get_y() > 220:
-                pdf.add_page()
-            else:
-                pdf.ln(10)
-
-            sb_aktiv = []
-            sb_passiv = []
-
             if sbk_data:
+                if pdf.get_y() > 220:
+                    pdf.add_page()
+                else:
+                    pdf.ln(10)
+
                 sb_aktiv = [(gkto, val) for val, ref, gkto in sbk_data["Soll"]]
                 sb_passiv = [(gkto, val) for val, ref, gkto in sbk_data["Haben"]]
 
-            draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv, sb_passiv)
+                draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv, sb_passiv)
 
             temp_pdf_path = "temp_loesung.pdf"
             pdf.output(temp_pdf_path)
@@ -915,6 +813,6 @@ with tab4:
             with open(temp_pdf_path, "rb") as pdf_file:
                 PDFbyte = pdf_file.read()
 
-            st.success("PDF inkl. SBK, Strukturierter Konten und automatischen Abschlussbuchungen generiert!")
+            st.success("PDF erfolgreich generiert! Dein aktueller Arbeitsstand wurde gedruckt.")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,
-                               file_name="Jahresabschluss_Komplett.pdf", mime='application/octet-stream')
+                               file_name="Jahresabschluss_Schueler.pdf", mime='application/octet-stream')
