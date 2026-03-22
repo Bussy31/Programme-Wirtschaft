@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 import copy
+import json
 
 # ---  SEITEN-KONFIGURATION  ---
 st.set_page_config(page_title="Buchhaltungstrainer 2026", layout="wide")
@@ -40,6 +41,52 @@ if "soll_count" not in st.session_state:
     st.session_state.soll_count = 1
 if "haben_count" not in st.session_state:
     st.session_state.haben_count = 1
+
+# ==========================================
+# SEITENLEISTE: SPEICHERN & LADEN
+# ==========================================
+st.sidebar.header("💾 Speichern & Laden")
+st.sidebar.write("Sichere hier deinen aktuellen Stand, um später weiterzuarbeiten.")
+
+# --- SPEICHERN (Download) ---
+# Wir packen Konten und Journal in ein Paket
+save_data = {
+    "konten": st.session_state.konten,
+    "journal": st.session_state.journal
+}
+# Wandeln das Paket in einen speicherbaren Text um
+json_string = json.dumps(save_data, indent=4)
+
+st.sidebar.download_button(
+    label="⬇️ Aktuellen Stand herunterladen",
+    file_name="buchhaltung_speicherstand.json",
+    mime="application/json",
+    data=json_string,
+    use_container_width=True
+)
+
+st.sidebar.divider()
+
+# --- LADEN (Upload) ---
+uploaded_file = st.sidebar.file_uploader("⬆️ Speicherstand laden", type=["json"])
+
+if uploaded_file is not None:
+    try:
+        # Datei lesen und zurückübersetzen
+        loaded_data = json.load(uploaded_file)
+
+        # Die aktuellen Daten im System überschreiben
+        st.session_state.konten = loaded_data.get("konten", {})
+        st.session_state.journal = loaded_data.get("journal", [])
+
+        st.sidebar.success("✅ Spielstand erfolgreich geladen!")
+
+        # Den Upload-Puffer leeren und die Seite neu aufbauen, damit die neuen Daten sofort sichtbar sind
+        if st.sidebar.button("🔄 Ansicht aktualisieren", use_container_width=True, type="primary"):
+            st.rerun()
+
+    except Exception as e:
+        st.sidebar.error("❌ Fehler beim Laden der Datei. Ist es die richtige Datei?")
 
 
 def add_soll_row():
