@@ -124,7 +124,6 @@ with tab1:
     with col_w:
         st.number_input("AB-Wert (€) (Nur für Bestandskonten):", min_value=0.0, step=100.0, key="kto_wert_input")
 
-    # NEU: 5 Spalten statt 4 für den Spezialfall-Button
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         st.button("🟢 Aktivkonto", use_container_width=True, on_click=add_konto, args=("Aktiv", "Soll"))
@@ -397,7 +396,6 @@ with tab3:
 
             max_len = max(len(soll_entries), len(haben_entries))
 
-            # NEU: Flexbox-Layout für tabellarische, saubere Ausrichtung der Beträge
             with col_s:
                 st.markdown("**Soll**")
                 html_s = ""
@@ -504,15 +502,14 @@ with tab3:
                         st.rerun()
 
 # ==========================================
-# TAB 4: PDF EXPORT (Ohne automatischen Abschluss)
+# TAB 4: PDF EXPORT (Angepasst: EBK, Grundbuch-Layout)
 # ==========================================
 with tab4:
     if not st.session_state.konten:
         st.info("Bitte erst Konten anlegen.")
     else:
         st.subheader("Jahresabschluss als PDF exportieren")
-        st.markdown(
-            "Das System druckt nun den genauen Stand deiner Buchhaltung aus. **Denke daran, dass du vorher unter Tab 3 alle Konten manuell abschließen musst**, damit eine vollständige Schlussbilanz erzeugt wird.")
+        st.markdown("Das System druckt nun den genauen Stand deiner Buchhaltung aus.")
 
 
         def draw_bilanz_pdf(pdf, title, links, rechts):
@@ -561,14 +558,22 @@ with tab4:
             for i in range(max_len):
                 if i < len(werte["Soll"]):
                     val, ref, gkto = werte["Soll"][i]
-                    s_text = f"{ref}) {gkto}" if gkto else str(ref)
+                    # NEU: "EBK" statt "AB"
+                    if ref == "AB":
+                        s_text = "EBK"
+                    else:
+                        s_text = f"{ref}) {gkto}" if gkto else str(ref)
                     s_val = f"{val:,.2f}"
                 else:
                     s_text, s_val = "", ""
 
                 if i < len(werte["Haben"]):
                     val, ref, gkto = werte["Haben"][i]
-                    h_text = f"{ref}) {gkto}" if gkto else str(ref)
+                    # NEU: "EBK" statt "AB"
+                    if ref == "AB":
+                        h_text = "EBK"
+                    else:
+                        h_text = f"{ref}) {gkto}" if gkto else str(ref)
                     h_val = f"{val:,.2f}"
                 else:
                     h_text, h_val = "", ""
@@ -583,7 +588,6 @@ with tab4:
             s_sum = sum(i[0] for i in werte["Soll"])
             h_sum = sum(i[0] for i in werte["Haben"])
 
-            # OHNE automatischen "SB" - wir zeigen nur exakt das, was gebucht wurde an.
             pdf.set_font("Helvetica", "B", 9)
             pdf.cell(27, 6, "", border="TLB")
             pdf.cell(18, 6, f"{s_sum:,.2f}", border="TRB", align="R")
@@ -606,14 +610,22 @@ with tab4:
             for i in range(max_len):
                 if i < len(werte["Soll"]):
                     val, ref, gkto = werte["Soll"][i]
-                    s_text = f"{ref}) {gkto}" if gkto else str(ref)
+                    # NEU: "EBK" statt "AB"
+                    if ref == "AB":
+                        s_text = "EBK"
+                    else:
+                        s_text = f"{ref}) {gkto}" if gkto else str(ref)
                     s_val = f"{val:,.2f}"
                 else:
                     s_text, s_val = "", ""
 
                 if i < len(werte["Haben"]):
                     val, ref, gkto = werte["Haben"][i]
-                    h_text = f"{ref}) {gkto}" if gkto else str(ref)
+                    # NEU: "EBK" statt "AB"
+                    if ref == "AB":
+                        h_text = "EBK"
+                    else:
+                        h_text = f"{ref}) {gkto}" if gkto else str(ref)
                     h_val = f"{val:,.2f}"
                 else:
                     h_text, h_val = "", ""
@@ -628,7 +640,6 @@ with tab4:
             s_sum = sum(i[0] for i in werte["Soll"])
             h_sum = sum(i[0] for i in werte["Haben"])
 
-            # OHNE automatischen "SB" - wir zeigen nur exakt das, was gebucht wurde an.
             pdf.set_font("Helvetica", "B", 9)
             pdf.cell(60, 6, "", border="TLB")
             pdf.cell(30, 6, f"{s_sum:,.2f}", border="TRB", align="R")
@@ -652,38 +663,93 @@ with tab4:
                     eb_aktiv.append((name, daten["Soll"][0][0]))
                 if daten.get("Kategorie") in ["Passiv", "Konto"] and daten["Haben"] and daten["Haben"][0][1] == "AB":
                     eb_passiv.append((name, daten["Haben"][0][0]))
+
             draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv, eb_passiv)
 
-            # 2. Journal
+            # 1.5 Eröffnungsbilanzkonto (EBK) generieren (Seitenverkehrt zur EB)
+            if eb_aktiv or eb_passiv:
+                if pdf.get_y() > 220:
+                    pdf.add_page()
+                else:
+                    pdf.ln(10)
+
+                ebk_data = {"Soll": [], "Haben": []}
+                # Passiva ins Soll des EBK
+                for name, val in eb_passiv:
+                    ebk_data["Soll"].append((val, "", name))
+                # Aktiva ins Haben des EBK
+                for name, val in eb_aktiv:
+                    ebk_data["Haben"].append((val, "", name))
+
+                next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), "Eröffnungsbilanzkonto (EBK)", ebk_data)
+                pdf.set_y(next_y + 5)
+
+            # 2. Grundbuch (Ehemals Journal - jetzt im dynamischen 2-Spalten-Layout)
+            if pdf.get_y() > 240:
+                pdf.add_page()
+            else:
+                pdf.ln(10)
+
             pdf.set_font("Helvetica", "B", 12)
-            pdf.cell(0, 10, "Journal", ln=True)
+            pdf.cell(0, 10, "Grundbuch", ln=True)
             pdf.set_font("Helvetica", "", 9)
 
             if len(temp_journal) == 0:
                 pdf.cell(0, 6, "(Keine Buchungen vorhanden)", ln=True)
             else:
-                for entry in temp_journal:
+                # Wir teilen das Journal in zwei Hälften für links und rechts
+                half_idx = (len(temp_journal) + 1) // 2
+
+                for i in range(half_idx):
                     if pdf.get_y() > 260:
                         pdf.add_page()
 
-                    s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in entry["soll"]]
-                    h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in entry["haben"]]
+                    l_entry = temp_journal[i]
+                    r_entry = temp_journal[half_idx + i] if (half_idx + i) < len(temp_journal) else None
 
+                    l_s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in l_entry["soll"]]
+                    l_h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in l_entry["haben"]]
+
+                    r_s_lines, r_h_lines = [], []
+                    if r_entry:
+                        r_s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in r_entry["soll"]]
+                        r_h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in r_entry["haben"]]
+
+                    start_y = pdf.get_y()
+
+                    # LINKE SPALTE (x = 10)
+                    pdf.set_xy(10, start_y)
                     pdf.set_font("Helvetica", "B", 9)
-                    pdf.cell(10, 6, f"{entry['nr']})")
+                    pdf.cell(8, 6, f"{l_entry['nr']})")
                     pdf.set_font("Helvetica", "", 9)
+                    y_left = start_y
+                    for s in l_s_lines:
+                        pdf.set_xy(18, y_left)
+                        pdf.cell(85, 6, s)
+                        y_left += 6
+                    for h in l_h_lines:
+                        pdf.set_xy(25, y_left)
+                        pdf.cell(78, 6, h)
+                        y_left += 6
 
-                    curr_x = pdf.get_x()
-                    pdf.cell(170, 6, s_lines[0], ln=True)
+                    # RECHTE SPALTE (x = 105)
+                    y_right = start_y
+                    if r_entry:
+                        pdf.set_xy(105, start_y)
+                        pdf.set_font("Helvetica", "B", 9)
+                        pdf.cell(8, 6, f"{r_entry['nr']})")
+                        pdf.set_font("Helvetica", "", 9)
+                        for s in r_s_lines:
+                            pdf.set_xy(113, y_right)
+                            pdf.cell(85, 6, s)
+                            y_right += 6
+                        for h in r_h_lines:
+                            pdf.set_xy(120, y_right)
+                            pdf.cell(78, 6, h)
+                            y_right += 6
 
-                    for s in s_lines[1:]:
-                        pdf.set_x(curr_x)
-                        pdf.cell(170, 6, s, ln=True)
-
-                    for h in h_lines:
-                        pdf.set_x(curr_x + 10)
-                        pdf.cell(160, 6, h, ln=True)
-                    pdf.ln(2)
+                    # Y-Cursor für die nächste Zeile setzen
+                    pdf.set_y(max(y_left, y_right) + 2)
 
             # 3. Hauptbuch - Bestandskonten
             if pdf.get_y() > 240:
