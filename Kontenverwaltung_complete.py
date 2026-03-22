@@ -6,9 +6,6 @@ import copy
 # ---  SEITEN-KONFIGURATION  ---
 st.set_page_config(page_title="Buchhaltungstrainer 2026", layout="wide")
 
-# Copyright in der Sidebar anzeigen
-st.sidebar.markdown("---")
-st.sidebar.markdown("© Philipp Bußmann")
 
 # --- HILFSFUNKTION FÜR DEUTSCHE ZAHLENFORMATIERUNG ---
 def format_german_num(value):
