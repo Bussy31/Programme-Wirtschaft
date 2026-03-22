@@ -402,7 +402,11 @@ with tab3:
                 for i in range(max_len):
                     if i < len(soll_entries):
                         val, ref, gkto = soll_entries[i]
-                        text = f"{ref}) {gkto}" if gkto else str(ref)
+                        # HIER EBK STATT AB
+                        if ref == "AB":
+                            text = "EBK"
+                        else:
+                            text = f"{ref}) {gkto}" if gkto else str(ref)
                         html_s += f"<div style='display: flex; justify-content: space-between;'><span>{text}</span><span><b>{val:,.2f} €</b></span></div>"
                     else:
                         html_s += "<div style='display: flex; justify-content: space-between;'><span>&nbsp;</span><span>&nbsp;</span></div>"
@@ -418,7 +422,11 @@ with tab3:
                 for i in range(max_len):
                     if i < len(haben_entries):
                         val, ref, gkto = haben_entries[i]
-                        text = f"{ref}) {gkto}" if gkto else str(ref)
+                        # HIER EBK STATT AB
+                        if ref == "AB":
+                            text = "EBK"
+                        else:
+                            text = f"{ref}) {gkto}" if gkto else str(ref)
                         html_h += f"<div style='display: flex; justify-content: space-between;'><span>{text}</span><span><b>{val:,.2f} €</b></span></div>"
                     else:
                         html_h += "<div style='display: flex; justify-content: space-between;'><span>&nbsp;</span><span>&nbsp;</span></div>"
