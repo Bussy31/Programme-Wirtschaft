@@ -70,9 +70,6 @@ st.sidebar.divider()
 # --- LADEN (Upload) ---
 uploaded_file = st.sidebar.file_uploader("⬆️ Speicherstand laden", type=["json"])
 
-# --- LADEN (Upload) ---
-uploaded_file = st.sidebar.file_uploader("⬆️ Speicherstand laden", type=["json"])
-
 # NEU: Ein extra Button, damit das Laden nur GENAU EINMAL beim Klick passiert!
 if st.sidebar.button("🔄 Daten aus Datei jetzt laden", use_container_width=True):
     if uploaded_file is not None:
