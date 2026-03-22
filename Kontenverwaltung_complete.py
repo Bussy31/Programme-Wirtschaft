@@ -6,6 +6,21 @@ import copy
 # ---  SEITEN-KONFIGURATION  ---
 st.set_page_config(page_title="Buchhaltungstrainer 2026", layout="wide")
 
+# --- COPYRIGHT FOOTER (Unten rechts) ---
+footer_html = """
+<style>
+.footer {
+    position: fixed;
+    bottom: 10px;
+    right: 15px;
+    font-size: 12px;
+    color: #888888;
+    z-index: 100;
+}
+</style>
+<div class="footer">© Philipp Bußmann</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
 
 # --- HILFSFUNKTION FÜR DEUTSCHE ZAHLENFORMATIERUNG ---
 def format_german_num(value):
@@ -321,9 +336,9 @@ with tab2:
 
             btn_col_h1, btn_col_h2 = st.columns(2)
             with btn_col_h1:
-                st.button("➕ Zeile", on_click=add_haben_row, use_container_width=True, key="add_haben_btn")
+                st.button("➕ Zeile hinzufügen", on_click=add_haben_row, use_container_width=True, key="add_haben_btn")
             with btn_col_h2:
-                st.button("🗑️ Zeile", on_click=remove_haben_row, use_container_width=True, key="rem_haben_btn",
+                st.button("🗑️ Zeile entfernen", on_click=remove_haben_row, use_container_width=True, key="rem_haben_btn",
                           disabled=st.session_state.haben_count <= 1)
 
         st.write("")
