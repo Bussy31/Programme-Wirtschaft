@@ -45,11 +45,14 @@ if "haben_count" not in st.session_state:
 # ==========================================
 # SEITENLEISTE: SPEICHERN & LADEN
 # ==========================================
+# NEU: Ein kleiner Zähler im Gedächtnis, um das Upload-Feld nach dem Laden zu leeren
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = 0
+
 st.sidebar.header("💾 Speichern & Laden")
 st.sidebar.write("Sichere hier deinen aktuellen Stand, um später weiterzuarbeiten.")
 
 # --- SPEICHERN (Download) ---
-# Wir packen Konten und Journal in ein Paket
 save_data = {
     "konten": st.session_state.konten,
     "journal": st.session_state.journal
@@ -68,9 +71,13 @@ st.sidebar.download_button(
 st.sidebar.divider()
 
 # --- LADEN (Upload) ---
-uploaded_file = st.sidebar.file_uploader("⬆️ Speicherstand laden", type=["json"])
+# NEU: Der Zähler ist an den Schlüssel (Key) des Uploaders gebunden
+uploaded_file = st.sidebar.file_uploader(
+    "⬆️ Speicherstand laden",
+    type=["json"],
+    key=f"file_uploader_{st.session_state.uploader_key}"
+)
 
-# NEU: Ein extra Button, damit das Laden nur GENAU EINMAL beim Klick passiert!
 if st.sidebar.button("🔄 Daten aus Datei jetzt laden", use_container_width=True):
     if uploaded_file is not None:
         try:
@@ -81,7 +88,12 @@ if st.sidebar.button("🔄 Daten aus Datei jetzt laden", use_container_width=Tru
             st.session_state.konten = loaded_data.get("konten", {})
             st.session_state.journal = loaded_data.get("journal", [])
 
-            st.sidebar.success("✅ Spielstand erfolgreich geladen! Du kannst jetzt weiterarbeiten.")
+            # NEU: Wir erhöhen den Zähler um 1.
+            # Dadurch wirft Streamlit das alte Upload-Feld (inklusive Datei) weg und macht ein leeres hin!
+            st.session_state.uploader_key += 1
+
+            # Seite sofort neu laden, um die T-Konten zu zeigen und das Feld zu leeren
+            st.rerun()
 
         except Exception as e:
             st.sidebar.error("❌ Fehler beim Laden der Datei. Ist es die richtige Datei?")
