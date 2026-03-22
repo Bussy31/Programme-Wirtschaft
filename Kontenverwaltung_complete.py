@@ -676,10 +676,10 @@ with tab4:
                 ebk_data = {"Soll": [], "Haben": []}
                 # Passiva ins Soll des EBK
                 for name, val in eb_passiv:
-                    ebk_data["Soll"].append((val, "", name))
+                    ebk_data["Soll"].append(val, "", name)
                 # Aktiva ins Haben des EBK
                 for name, val in eb_aktiv:
-                    ebk_data["Haben"].append((val, "", name))
+                    ebk_data["Haben"].append(val, "", name)
 
                 next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), "Eröffnungsbilanzkonto (EBK)", ebk_data)
                 pdf.set_y(next_y + 5)
