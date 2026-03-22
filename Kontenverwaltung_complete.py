@@ -6,6 +6,16 @@ import copy
 # ---  SEITEN-KONFIGURATION  ---
 st.set_page_config(page_title="Buchhaltungstrainer 2026", layout="wide")
 
+# Copyright in der Sidebar anzeigen
+st.sidebar.markdown("---")
+st.sidebar.markdown("© Philipp Bußmann")
+
+# --- HILFSFUNKTION FÜR DEUTSCHE ZAHLENFORMATIERUNG ---
+def format_german_num(value):
+    """Wandelt US-Zahlenformat (1,000.00) in deutsches Format (1.000,00) um."""
+    return f"{value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
 # --- SESSION STATE (Das Gedächtnis der App) ---
 if "konten" not in st.session_state:
     st.session_state.konten = {}
@@ -181,12 +191,12 @@ with tab1:
 
     st.subheader("Eröffnungsbilanz-Check")
     m1, m2, m3 = st.columns(3)
-    m1.metric("Summe Aktiv (AB)", f"{sum_aktiv_ab:,.2f} €")
-    m2.metric("Summe Passiv (AB)", f"{sum_passiv_ab:,.2f} €")
-    m3.metric("Differenz", f"{diff:,.2f} €")
+    m1.metric("Summe Aktiv (AB)", f"{format_german_num(sum_aktiv_ab)} €")
+    m2.metric("Summe Passiv (AB)", f"{format_german_num(sum_passiv_ab)} €")
+    m3.metric("Differenz", f"{format_german_num(diff)} €")
 
     if diff > 0.01:
-        st.error(f"⚠️ Achtung: Die Eröffnungsbilanz ist nicht ausgeglichen! (Differenz: {diff:,.2f} €)")
+        st.error(f"⚠️ Achtung: Die Eröffnungsbilanz ist nicht ausgeglichen! (Differenz: {format_german_num(diff)} €)")
     elif sum_aktiv_ab > 0:
         st.success("✅ Die Eröffnungsbilanz ist perfekt ausgeglichen!")
 
@@ -329,7 +339,7 @@ with tab2:
                 st.error("Bitte mindestens ein Soll- und ein Haben-Konto mit Betrag > 0 angeben.")
             elif abs(s_sum - h_sum) > 0.01:
                 st.error(
-                    f"Fehler: Soll ({s_sum:,.2f} €) und Haben ({h_sum:,.2f} €) stimmen nicht überein! (Differenz: {abs(s_sum - h_sum):,.2f} €)")
+                    f"Fehler: Soll ({format_german_num(s_sum)} €) und Haben ({format_german_num(h_sum)} €) stimmen nicht überein! (Differenz: {format_german_num(abs(s_sum - h_sum))} €)")
             else:
                 nr = len(st.session_state.journal) + 1
                 st.session_state.journal.append({"nr": nr, "soll": soll_items, "haben": haben_items})
@@ -344,8 +354,8 @@ with tab2:
     if st.session_state.journal:
         journal_display = []
         for entry in st.session_state.journal:
-            soll_str = "\n".join([f"{s['konto']} ({s['betrag']:,.2f} €)" for s in entry["soll"]])
-            haben_str = "\n".join([f"{h['konto']} ({h['betrag']:,.2f} €)" for h in entry["haben"]])
+            soll_str = "\n".join([f"{s['konto']} ({format_german_num(s['betrag'])} €)" for s in entry["soll"]])
+            haben_str = "\n".join([f"{h['konto']} ({format_german_num(h['betrag'])} €)" for h in entry["haben"]])
             journal_display.append({"Nr": entry["nr"], "Soll": soll_str, "Haben": haben_str})
 
         st.dataframe(pd.DataFrame(journal_display), use_container_width=True, hide_index=True)
@@ -407,13 +417,13 @@ with tab3:
                             text = "EBK"
                         else:
                             text = f"{ref}) {gkto}" if gkto else str(ref)
-                        html_s += f"<div style='display: flex; justify-content: space-between;'><span>{text}</span><span><b>{val:,.2f} €</b></span></div>"
+                        html_s += f"<div style='display: flex; justify-content: space-between;'><span>{text}</span><span><b>{format_german_num(val)} €</b></span></div>"
                     else:
                         html_s += "<div style='display: flex; justify-content: space-between;'><span>&nbsp;</span><span>&nbsp;</span></div>"
                 st.markdown(html_s, unsafe_allow_html=True)
                 st.markdown("---")
                 st.markdown(
-                    f"<div style='display: flex; justify-content: space-between;'><span><b>Summe:</b></span><span><b>{s_sum:,.2f} €</b></span></div>",
+                    f"<div style='display: flex; justify-content: space-between;'><span><b>Summe:</b></span><span><b>{format_german_num(s_sum)} €</b></span></div>",
                     unsafe_allow_html=True)
 
             with col_h:
@@ -427,13 +437,13 @@ with tab3:
                             text = "EBK"
                         else:
                             text = f"{ref}) {gkto}" if gkto else str(ref)
-                        html_h += f"<div style='display: flex; justify-content: space-between;'><span>{text}</span><span><b>{val:,.2f} €</b></span></div>"
+                        html_h += f"<div style='display: flex; justify-content: space-between;'><span>{text}</span><span><b>{format_german_num(val)} €</b></span></div>"
                     else:
                         html_h += "<div style='display: flex; justify-content: space-between;'><span>&nbsp;</span><span>&nbsp;</span></div>"
                 st.markdown(html_h, unsafe_allow_html=True)
                 st.markdown("---")
                 st.markdown(
-                    f"<div style='display: flex; justify-content: space-between;'><span><b>Summe:</b></span><span><b>{h_sum:,.2f} €</b></span></div>",
+                    f"<div style='display: flex; justify-content: space-between;'><span><b>Summe:</b></span><span><b>{format_german_num(h_sum)} €</b></span></div>",
                     unsafe_allow_html=True)
 
             st.write("")
@@ -446,7 +456,7 @@ with tab3:
                 st.success("✅ Dieses Konto ist ausgeglichen und somit bereits abgeschlossen!")
             else:
                 st.info(
-                    f"Dieses Konto hat einen Saldo von **{saldo:,.2f} €**. Bestimme die Abschlussseite und das Gegenkonto.")
+                    f"Dieses Konto hat einen Saldo von **{format_german_num(saldo)} €**. Bestimme die Abschlussseite und das Gegenkonto.")
 
                 c_abs1, c_abs2, c_abs3 = st.columns(3)
 
@@ -478,7 +488,7 @@ with tab3:
                     expected_seite = "Haben" if s_sum > h_sum else "Soll"
 
                     if abs_betrag != saldo:
-                        st.error(f"Falscher Betrag! Der auszugleichende Saldo beträgt exakt {saldo:,.2f} €.")
+                        st.error(f"Falscher Betrag! Der auszugleichende Saldo beträgt exakt {format_german_num(saldo)} €.")
                     elif abs_seite != expected_seite:
                         st.error(
                             f"Falsche Seite! Der Saldo muss im {expected_seite} gebucht werden, um das Konto auszugleichen.")
@@ -535,21 +545,21 @@ with tab4:
             for i in range(max_len):
                 if i < len(links):
                     pdf.cell(60, 6, links[i][0][:25], border="L")
-                    pdf.cell(30, 6, f"{links[i][1]:,.2f}", border="R", align="R")
+                    pdf.cell(30, 6, format_german_num(links[i][1]), border="R", align="R")
                 else:
                     pdf.cell(90, 6, "", border="LR")
 
                 if i < len(rechts):
                     pdf.cell(60, 6, rechts[i][0][:25])
-                    pdf.cell(30, 6, f"{rechts[i][1]:,.2f}", border="R", align="R", ln=True)
+                    pdf.cell(30, 6, format_german_num(rechts[i][1]), border="R", align="R", ln=True)
                 else:
                     pdf.cell(90, 6, "", border="R", ln=True)
 
             pdf.set_font("Helvetica", "B", 10)
             pdf.cell(60, 8, "Summe", border="TLB")
-            pdf.cell(30, 8, f"{sum_links:,.2f}", border="TRB", align="R")
+            pdf.cell(30, 8, format_german_num(sum_links), border="TRB", align="R")
             pdf.cell(60, 8, "Summe", border="TLB")
-            pdf.cell(30, 8, f"{sum_rechts:,.2f}", border="TRB", align="R", ln=True)
+            pdf.cell(30, 8, format_german_num(sum_rechts), border="TRB", align="R", ln=True)
             pdf.ln(10)
 
 
@@ -570,7 +580,7 @@ with tab4:
                         s_text = "EBK"
                     else:
                         s_text = f"{ref}) {gkto}" if gkto else str(ref)
-                    s_val = f"{val:,.2f}"
+                    s_val = format_german_num(val)
                 else:
                     s_text, s_val = "", ""
 
@@ -580,7 +590,7 @@ with tab4:
                         h_text = "EBK"
                     else:
                         h_text = f"{ref}) {gkto}" if gkto else str(ref)
-                    h_val = f"{val:,.2f}"
+                    h_val = format_german_num(val)
                 else:
                     h_text, h_val = "", ""
 
@@ -596,9 +606,9 @@ with tab4:
 
             pdf.set_font("Helvetica", "B", 9)
             pdf.cell(27, 6, "", border="TLB")
-            pdf.cell(18, 6, f"{s_sum:,.2f}", border="TRB", align="R")
+            pdf.cell(18, 6, format_german_num(s_sum), border="TRB", align="R")
             pdf.cell(27, 6, "", border="TLB")
-            pdf.cell(18, 6, f"{h_sum:,.2f}", border="TRB", align="R")
+            pdf.cell(18, 6, format_german_num(h_sum), border="TRB", align="R")
             return y + 10
 
 
@@ -620,7 +630,7 @@ with tab4:
                         s_text = "EBK"
                     else:
                         s_text = f"{ref}) {gkto}" if gkto else str(ref)
-                    s_val = f"{val:,.2f}"
+                    s_val = format_german_num(val)
                 else:
                     s_text, s_val = "", ""
 
@@ -630,7 +640,7 @@ with tab4:
                         h_text = "EBK"
                     else:
                         h_text = f"{ref}) {gkto}" if gkto else str(ref)
-                    h_val = f"{val:,.2f}"
+                    h_val = format_german_num(val)
                 else:
                     h_text, h_val = "", ""
 
@@ -646,9 +656,9 @@ with tab4:
 
             pdf.set_font("Helvetica", "B", 9)
             pdf.cell(60, 6, "", border="TLB")
-            pdf.cell(30, 6, f"{s_sum:,.2f}", border="TRB", align="R")
+            pdf.cell(30, 6, format_german_num(s_sum), border="TRB", align="R")
             pdf.cell(60, 6, "", border="TLB")
-            pdf.cell(30, 6, f"{h_sum:,.2f}", border="TRB", align="R")
+            pdf.cell(30, 6, format_german_num(h_sum), border="TRB", align="R")
             return y + 10
 
 
@@ -710,13 +720,13 @@ with tab4:
                     l_entry = temp_journal[i]
                     r_entry = temp_journal[half_idx + i] if (half_idx + i) < len(temp_journal) else None
 
-                    l_s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in l_entry["soll"]]
-                    l_h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in l_entry["haben"]]
+                    l_s_lines = [f"{s['konto']} {format_german_num(s['betrag'])}" for s in l_entry["soll"]]
+                    l_h_lines = [f"an {h['konto']} {format_german_num(h['betrag'])}" for h in l_entry["haben"]]
 
                     r_s_lines, r_h_lines = [], []
                     if r_entry:
-                        r_s_lines = [f"{s['konto']} {s['betrag']:,.2f}" for s in r_entry["soll"]]
-                        r_h_lines = [f"an {h['konto']} {h['betrag']:,.2f}" for h in r_entry["haben"]]
+                        r_s_lines = [f"{s['konto']} {format_german_num(s['betrag'])}" for s in r_entry["soll"]]
+                        r_h_lines = [f"an {h['konto']} {format_german_num(h['betrag'])}" for h in r_entry["haben"]]
 
                     start_y = pdf.get_y()
 
