@@ -122,7 +122,7 @@ with tab1:
     with col_n:
         st.text_input("Kontoname:", key="kto_name_input")
     with col_w:
-        st.number_input("AB-Wert (€) (Nur für Bestandskonten):", min_value=0.0, step=100.0, key="kto_wert_input")
+        st.number_input("AB-Wert (€):", min_value=0.0, step=100.0, key="kto_wert_input")
 
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
@@ -294,9 +294,9 @@ with tab2:
 
             btn_col_s1, btn_col_s2 = st.columns(2)
             with btn_col_s1:
-                st.button("➕ Zeile", on_click=add_soll_row, use_container_width=True, key="add_soll_btn")
+                st.button("➕ Zeile hinzufügen", on_click=add_soll_row, use_container_width=True, key="add_soll_btn")
             with btn_col_s2:
-                st.button("🗑️ Zeile", on_click=remove_soll_row, use_container_width=True, key="rem_soll_btn",
+                st.button("🗑️ Zeile entfernen", on_click=remove_soll_row, use_container_width=True, key="rem_soll_btn",
                           disabled=st.session_state.soll_count <= 1)
 
         with col_haben:
@@ -339,7 +339,7 @@ with tab2:
                 st.rerun()
 
     st.divider()
-    st.subheader("Journal")
+    st.subheader("Grundbuch")
 
     if st.session_state.journal:
         journal_display = []
@@ -374,7 +374,7 @@ with tab3:
     if not st.session_state.konten:
         st.info("Bitte lege zuerst unter '1. Konten & Eröffnung' Konten an.")
     else:
-        st.write("Wähle ein Konto aus, um die Buchungen zu überprüfen und es manuell abzuschließen.")
+        st.write("Wähle ein Konto aus, um die Buchungen zu überprüfen und es manuell abzuschließen. Abschlussbuchungen können Sie im Grundbuch wieder löschen")
         kto_namen_t = list(st.session_state.konten.keys())
         selected_t_kto = st.selectbox("Wähle ein Konto aus:", options=kto_namen_t)
 
@@ -865,4 +865,4 @@ with tab4:
 
             st.success("PDF erfolgreich generiert! Dein aktueller Arbeitsstand wurde gedruckt.")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,
-                               file_name="Jahresabschluss_Schueler.pdf", mime='application/octet-stream')
+                               file_name="Jahresabschluss_export.pdf", mime='application/octet-stream')
