@@ -287,7 +287,7 @@ with tab2:
                 with c1:
                     kto = st.selectbox(f"Soll-Konto {i + 1}", kto_namen, key=f"s_kto_{i}", label_visibility="collapsed")
                 with c2:
-                    betrag = st.number_input(f"Betrag {i + 1}", min_value=0.0, step=10.0, key=f"s_val_{i}",
+                    betrag = st.number_input(f"Betrag {i + 1}", min_value=0.0, step=100.0, key=f"s_val_{i}",
                                              label_visibility="collapsed")
                 if betrag > 0:
                     soll_items.append({"konto": kto, "betrag": betrag})
@@ -307,7 +307,7 @@ with tab2:
                     kto = st.selectbox(f"Haben-Konto {i + 1}", kto_namen, key=f"h_kto_{i}",
                                        label_visibility="collapsed")
                 with c2:
-                    betrag = st.number_input(f"Betrag {i + 1}", min_value=0.0, step=10.0, key=f"h_val_{i}",
+                    betrag = st.number_input(f"Betrag {i + 1}", min_value=0.0, step=100.0, key=f"h_val_{i}",
                                              label_visibility="collapsed")
                 if betrag > 0:
                     haben_items.append({"konto": kto, "betrag": betrag})
@@ -446,7 +446,7 @@ with tab3:
                     abs_seite = st.selectbox("Abschlussbuchung auf Seite:", ["Soll", "Haben"])
 
                 with c_abs2:
-                    abs_betrag = st.number_input("Abschlussbetrag (€):", min_value=0.0, step=10.0, format="%.2f")
+                    abs_betrag = st.number_input("Abschlussbetrag (€):", min_value=0.0, step=100.0, format="%.2f")
 
                 with c_abs3:
                     kat = k_daten.get("Kategorie", "")
@@ -502,7 +502,7 @@ with tab3:
                         st.rerun()
 
 # ==========================================
-# TAB 4: PDF EXPORT (Angepasst: EBK, Grundbuch-Layout)
+# TAB 4: PDF EXPORT
 # ==========================================
 with tab4:
     if not st.session_state.konten:
@@ -558,7 +558,6 @@ with tab4:
             for i in range(max_len):
                 if i < len(werte["Soll"]):
                     val, ref, gkto = werte["Soll"][i]
-                    # NEU: "EBK" statt "AB"
                     if ref == "AB":
                         s_text = "EBK"
                     else:
@@ -569,7 +568,6 @@ with tab4:
 
                 if i < len(werte["Haben"]):
                     val, ref, gkto = werte["Haben"][i]
-                    # NEU: "EBK" statt "AB"
                     if ref == "AB":
                         h_text = "EBK"
                     else:
@@ -610,7 +608,6 @@ with tab4:
             for i in range(max_len):
                 if i < len(werte["Soll"]):
                     val, ref, gkto = werte["Soll"][i]
-                    # NEU: "EBK" statt "AB"
                     if ref == "AB":
                         s_text = "EBK"
                     else:
@@ -621,7 +618,6 @@ with tab4:
 
                 if i < len(werte["Haben"]):
                     val, ref, gkto = werte["Haben"][i]
-                    # NEU: "EBK" statt "AB"
                     if ref == "AB":
                         h_text = "EBK"
                     else:
@@ -674,17 +670,17 @@ with tab4:
                     pdf.ln(10)
 
                 ebk_data = {"Soll": [], "Haben": []}
-                # Passiva ins Soll des EBK
+                # Passiva ins Soll des EBK (Wir übergeben den Namen als 'ref' und lassen 'gkto' leer, um die Klammer zu vermeiden)
                 for name, val in eb_passiv:
-                    ebk_data["Soll"].append((val, "", name))
+                    ebk_data["Soll"].append((val, name, ""))
                 # Aktiva ins Haben des EBK
                 for name, val in eb_aktiv:
-                    ebk_data["Haben"].append((val, "", name))
+                    ebk_data["Haben"].append((val, name, ""))
 
                 next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), "Eröffnungsbilanzkonto (EBK)", ebk_data)
                 pdf.set_y(next_y + 5)
 
-            # 2. Grundbuch (Ehemals Journal - jetzt im dynamischen 2-Spalten-Layout)
+            # 2. Grundbuch
             if pdf.get_y() > 240:
                 pdf.add_page()
             else:
@@ -697,7 +693,6 @@ with tab4:
             if len(temp_journal) == 0:
                 pdf.cell(0, 6, "(Keine Buchungen vorhanden)", ln=True)
             else:
-                # Wir teilen das Journal in zwei Hälften für links und rechts
                 half_idx = (len(temp_journal) + 1) // 2
 
                 for i in range(half_idx):
@@ -748,7 +743,6 @@ with tab4:
                             pdf.cell(78, 6, h)
                             y_right += 6
 
-                    # Y-Cursor für die nächste Zeile setzen
                     pdf.set_y(max(y_left, y_right) + 2)
 
             # 3. Hauptbuch - Bestandskonten
