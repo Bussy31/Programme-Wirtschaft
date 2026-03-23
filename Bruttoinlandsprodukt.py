@@ -155,9 +155,16 @@ def erstelle_pdf():
     pdf.cell(0, 10, f"Stand: Jahr {st.session_state.jahr}", ln=True, align='C')
     pdf.ln(5)
 
-    # 1. Aktuelle Zahlen
+    # --- NEU: 1. Startbedingungen ---
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, "Aktuelle Wirtschaftslage:", ln=True)
+    pdf.cell(0, 10, "1. Startbedingungen (Jahr 1):", ln=True)
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 8, f"Anfangs-BIP: {st.session_state.start_bip} {waehrung}", ln=True)
+    pdf.ln(5)
+
+    # 2. Aktuelle Zahlen
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, "2. Aktuelle Wirtschaftslage:", ln=True)
     pdf.set_font("Arial", '', 12)
     bip = berechne_bip()
     pdf.cell(0, 8, f"BIP Gesamt: {bip} {waehrung}", ln=True)
@@ -172,7 +179,7 @@ def erstelle_pdf():
              ln=True)
     pdf.ln(5)
 
-    # 2. Graph generieren
+    # 3. Graph generieren
     if len(st.session_state.bip_historie) > 0:
         jahre = [d["Jahr"] for d in st.session_state.bip_historie] + [st.session_state.jahr]
         bips = [d["BIP"] for d in st.session_state.bip_historie] + [bip]
@@ -182,18 +189,15 @@ def erstelle_pdf():
         ax.set_title("BIP Entwicklung")
         ax.grid(True)
 
-        # --- FIX: Bild kurz als echte Datei speichern ---
-        import tempfile
-        import os
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png", bbox_inches='tight')
+        plt.close(fig)
+        pdf.image(buf, x=10, w=150)
+        pdf.ln(5)
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
-            plt.savefig(tmpfile.name, format="png", bbox_inches='tight')
-            plt.close(fig)
-
-    # 3. Historie der Entscheidungen
+    # 4. Historie der Entscheidungen (MIT AUSWIRKUNGEN)
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, "Chronik der Ereignisse:", ln=True)
-    pdf.set_font("Arial", '', 11)
+    pdf.cell(0, 10, "4. Chronik der Ereignisse (Auswirkungen auf das BIP):", ln=True)
 
     letztes_jahr = 0
     for eintrag in st.session_state.alle_entscheidungen:
@@ -201,11 +205,37 @@ def erstelle_pdf():
             pdf.ln(3)
             pdf.set_font("Arial", 'B', 11)
             pdf.cell(0, 8, f"--- Jahr {eintrag['jahr']} ---", ln=True)
-            pdf.set_font("Arial", '', 11)
             letztes_jahr = eintrag['jahr']
 
+        # Titel fett drucken
         titel_sauber = clean_text(eintrag['log']['titel'])
-        pdf.cell(0, 6, f"- {titel_sauber}", ln=True)
+        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(0, 6, f"> {titel_sauber}", ln=True)
+        pdf.set_font("Arial", '', 10)
+
+        # Hilfsfunktion, um die Dictionaries (z.B. {"industrie": 500}) in sauberen Text umzuwandeln
+        def format_dict(d):
+            teile = []
+            for k, v in d.items():
+                if v != 0:
+                    vorzeichen = "+" if v > 0 else ""
+                    teile.append(f"{k} ({vorzeichen}{v})")
+            return ", ".join(teile) if teile else "Keine"
+
+        # Auslesen der Werte aus dem Logbuch
+        log = eintrag['log']
+        ent_str = clean_text(format_dict(log['ent']))
+        ver_str = clean_text(format_dict(log['ver']))
+        vert_str = clean_text(format_dict(log['vert']))
+
+        # Eingerückt in das PDF schreiben (10mm Abstand von links)
+        pdf.set_x(20)
+        pdf.cell(0, 5, f"Entstehung: {ent_str}", ln=True)
+        pdf.set_x(20)
+        pdf.cell(0, 5, f"Verwendung: {ver_str}", ln=True)
+        pdf.set_x(20)
+        pdf.cell(0, 5, f"Verteilung: {vert_str}", ln=True)
+        pdf.ln(2)  # Kleine Lücke zwischen den Ereignissen
 
     return bytes(pdf.output(dest='S'), encoding='latin1')
 
@@ -267,6 +297,7 @@ if "setup" not in st.session_state:
     st.session_state.entscheidungen_getroffen = []
     st.session_state.ereignis_logbuch = []
     st.session_state.alle_entscheidungen = []
+    st.session_state.start_bip = 0
 
     st.session_state.ent = {"landwirtschaft": 0, "industrie": 0, "dienstleistung": 0}
     st.session_state.ver = {"konsum": 0, "investitionen": 0, "staat": 0, "export": 0}
@@ -300,6 +331,7 @@ with st.sidebar:
                                         "staat": int(bip * 0.2), "export": int(bip * 0.1)}
                 st.session_state.vert = {"loehne": int(bip * 0.65), "gewinne": int(bip * 0.35)}
 
+                st.session_state.start_bip = bip
                 sichere_vorjahr()
                 st.session_state.aktuelle_szenarien = ziehe_3_szenarien()
                 st.session_state.entscheidungen_getroffen = [False] * len(st.session_state.aktuelle_szenarien)
