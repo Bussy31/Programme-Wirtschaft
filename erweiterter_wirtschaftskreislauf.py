@@ -113,7 +113,7 @@ else:
     else:
         st.info("⚖️ **Normalphase:** Die Wirtschaft wächst in einem normalen, gesunden Tempo.")
 
-    # Mathe-Magie für die Animationsgeschwindigkeit
+    # --- Mathe-Magie für die Animationsgeschwindigkeit ---
     # Bei Regler=1: 6 Sekunden (langsam) | Bei Regler=5: 4 Sekunden (normal) | Bei Regler=10: 1.5 Sekunden (schnell)
     dauer = 6.5 - (konjunktur * 0.5)
     verzogerung = dauer / 2  # Damit das zweite Emoji immer genau auf halber Strecke startet
