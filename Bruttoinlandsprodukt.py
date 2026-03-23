@@ -7,7 +7,7 @@ from fpdf import FPDF
 
 st.set_page_config(page_title="Musterland Simulation", layout="wide", initial_sidebar_state="expanded")
 
-# --- 1. DATENBANK DER SZENARIEN (Prozentuale Logik) ---
+# --- 1. DATENBANK DER SZENARIEN (Prozentuale Logik) ----
 alle_szenarien = [
     {
         "id": "1", "titel": "🚨 Globale Rezession",
