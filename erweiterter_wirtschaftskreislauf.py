@@ -46,7 +46,7 @@ with col2:
     u_h_gut = st.selectbox("Unternehmen ➔ Haushalte (Güterstrom):", optionen, key="uhg")
 
     u_h_geld = st.selectbox("Unternehmen ➔ Haushalte (Geldstrom für Arbeit):", optionen, key="uhl")
-    h_u_gut = st.selectbox("Haushalte ➔ Unternehmen (Faktoren: Arbeit etc.):", optionen, key="hua")
+    h_u_gut = st.selectbox("Haushalte ➔ Unternehmen (Faktoren: Arbeit):", optionen, key="hua")
 
     kern_correct = (
             h_u_geld == "Konsumausgaben" and u_h_gut == "Konsumgüter" and
