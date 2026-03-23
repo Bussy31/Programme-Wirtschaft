@@ -97,8 +97,8 @@ else:
     st.info(
         "❕ Einige Beschriftungen in den Feldern oben fehlen noch oder sind nicht korrekt. Orientier dich am Wirtschaftskreislauf.")
 
-    # --- NEU: PDF Export der Lösungen ---
-    from fpdf import FPDF
+# --- NEU: PDF Export der Lösungen ---
+from fpdf import FPDF
 
 
 def generiere_loesungs_pdf():
@@ -155,26 +155,27 @@ st.download_button(
 )
 st.divider()
 
+
 # --- NEU: Konjunktur-Regler ---
-    st.subheader("📈 Steuere die Konjunktur!")
-    st.markdown("Was passiert in einer Wirtschaftskrise? Und was in einem Boom?")
+st.subheader("📈 Steuere die Konjunktur!")
+st.markdown("Was passiert in einer Wirtschaftskrise? Und was in einem Boom?")
 
-    # Der Slider geht von 1 (Krise) bis 10 (Boom)
-    konjunktur = st.slider("Wirtschaftslage (1 = Schwere Rezession, 10 = Starker Boom)", min_value=1, max_value=10,
-                           value=5)
+# Der Slider geht von 1 (Krise) bis 10 (Boom)
+konjunktur = st.slider("Wirtschaftslage (1 = Schwere Rezession, 10 = Starker Boom)", min_value=1, max_value=10,
+                       value=5)
 
-    # Dynamische Anzeige der aktuellen Phase
-    if konjunktur <= 3:
-        st.error("📉 **Rezession:** Die Wirtschaft lahmt. Die Arbeitslosigkeit steigt, es fließt weniger Geld.")
-    elif konjunktur >= 8:
-        st.success("🚀 **Hochkonjunktur (Boom):** Die Wirtschaft brummt! Vollbeschäftigung und hoher Konsum.")
-    else:
-        st.info("⚖️ **Normalphase:** Die Wirtschaft wächst in einem normalen, gesunden Tempo.")
+# Dynamische Anzeige der aktuellen Phase
+if konjunktur <= 3:
+    st.error("📉 **Rezession:** Die Wirtschaft lahmt. Die Arbeitslosigkeit steigt, es fließt weniger Geld.")
+elif konjunktur >= 8:
+    st.success("🚀 **Hochkonjunktur (Boom):** Die Wirtschaft brummt! Vollbeschäftigung und hoher Konsum.")
+else:
+    st.info("⚖️ **Normalphase:** Die Wirtschaft wächst in einem normalen, gesunden Tempo.")
 
-    # --- Mathe-Magie für die Animationsgeschwindigkeit ---
-    # Bei Regler=1: 6 Sekunden (langsam) | Bei Regler=5: 4 Sekunden (normal) | Bei Regler=10: 1.5 Sekunden (schnell)
-    dauer = 8.0 - (konjunktur * 0.6)  # Das hast du schon
-    verzogerung = dauer / 2  # HIER: Genau die Hälfte der Zeit als Verzögerung
+# --- Mathe-Magie für die Animationsgeschwindigkeit ---
+# Bei Regler=1: 6 Sekunden (langsam) | Bei Regler=5: 4 Sekunden (normal) | Bei Regler=10: 1.5 Sekunden (schnell)
+dauer = 8.0 - (konjunktur * 0.6)  # Das hast du schon
+verzogerung = dauer / 2  # HIER: Genau die Hälfte der Zeit als Verzögerung
 
 # --- HTML & CSS für das neue, verbesserte Design & Animation ---
 html_code = f"""
