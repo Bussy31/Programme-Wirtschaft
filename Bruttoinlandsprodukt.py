@@ -182,11 +182,13 @@ def erstelle_pdf():
         ax.set_title("BIP Entwicklung")
         ax.grid(True)
 
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches='tight')
-        plt.close(fig)
-        pdf.image(buf, x=10, w=150)
-        pdf.ln(5)
+        # --- FIX: Bild kurz als echte Datei speichern ---
+        import tempfile
+        import os
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
+            plt.savefig(tmpfile.name, format="png", bbox_inches='tight')
+            plt.close(fig)
 
     # 3. Historie der Entscheidungen
     pdf.set_font("Arial", 'B', 14)
