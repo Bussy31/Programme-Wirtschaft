@@ -180,6 +180,7 @@ def anwenden(option, titel, index):
 if "setup" not in st.session_state:
     st.session_state.setup = False
     st.session_state.jahr = 1
+    st.session_state.ziel_jahre = 5  # Standardwert
     st.session_state.bip_historie = []
 
     st.session_state.uebrige_szenarien = alle_szenarien.copy()
@@ -199,6 +200,7 @@ with st.sidebar:
     if not st.session_state.setup:
         st.session_state.land_name = st.text_input("Landesname:", "Fantasia")
         st.session_state.waehrung = st.text_input("Währung:", "Taler")
+        ziel_jahre_input = st.number_input("Dauer der Simulation (Jahre):", min_value=1, max_value=20, value=5)
 
         st.write("---")
         st.write("**Arbeitskräfte verteilen:**")
@@ -212,6 +214,7 @@ with st.sidebar:
             st.success(f"Summe: {summe}% - Perfekt!")
             if st.button("Simulation starten", type="primary"):
                 st.session_state.setup = True
+                st.session_state.ziel_jahre = ziel_jahre_input  # Speichert die Dauer
                 st.session_state.ent = {"landwirtschaft": anteil_agrar * 100, "industrie": anteil_industrie * 100,
                                         "dienstleistung": anteil_dienst * 100}
                 bip = berechne_bip()
@@ -227,45 +230,57 @@ with st.sidebar:
             st.error(f"Achtung: Die Summe muss exakt 100% ergeben! (Aktuell: {summe}%)")
     else:
         st.success(f"Regierung von {st.session_state.land_name}")
-        st.metric("Aktuelles Jahr", st.session_state.jahr)
+        st.metric("Aktuelles Jahr", f"{st.session_state.jahr} von {st.session_state.ziel_jahre}")
         if st.button("Neustart / Reset"):
             st.session_state.clear()
             st.rerun()
 
 # --- 5. UI: HAUPTBEREICH (SIMULATION) ---
 if st.session_state.setup:
-    st.title(f"🌍 {st.session_state.land_name} - Jahr {st.session_state.jahr}")
+    st.title(f"🌍 {st.session_state.land_name}")
 
-    if len(st.session_state.aktuelle_szenarien) > 0:
-        alle_fertig = all(st.session_state.entscheidungen_getroffen)
-
-        if not alle_fertig:
-            st.markdown("Treffe eine Entscheidung für anstehende Ereignisse. **Sie verschwinden nach dem Klick!**")
-            # Zeige nur die Ereignisse, die noch NICHT entschieden wurden
-            for i, sz in enumerate(st.session_state.aktuelle_szenarien):
-                if not st.session_state.entscheidungen_getroffen[i]:
-                    st.markdown(f"### ⚡ {sz['titel']}")
-                    st.write(sz["text"])
-
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        if st.button(sz["option_a"]["text"], key=f"a_{st.session_state.jahr}_{sz['id']}",
-                                     use_container_width=True):
-                            anwenden(sz["option_a"], sz["titel"], i)
-                            st.rerun()
-                    with c2:
-                        if st.button(sz["option_b"]["text"], key=f"b_{st.session_state.jahr}_{sz['id']}",
-                                     use_container_width=True):
-                            anwenden(sz["option_b"], sz["titel"], i)
-                            st.rerun()
-                    st.divider()
-        else:
-            # Alle Entscheidungen getroffen
-            st.success("✅ Du hast alle Entscheidungen für dieses Jahr getroffen. Schau dir unten die Veränderungen an!")
-            if st.button("➡️ Jahr abschließen & Nächstes Jahr starten", type="primary"):
-                naechstes_jahr()
+    # Prüfen, ob wir das Limit der Jahre überschritten haben (Spielende)
+    if st.session_state.jahr > st.session_state.ziel_jahre:
+        st.balloons()
+        st.success(
+            f"🏁 **Simulation beendet!** Du hast dein Land erfolgreich {st.session_state.ziel_jahre} Jahre lang regiert.")
+        st.markdown("Schau dir unten im Dashboard an, wie sich deine Entscheidungen langfristig ausgewirkt haben.")
     else:
-        st.success("🎉 Glückwunsch! Du hast alle Szenarien durchgespielt!")
+        st.subheader(f"Jahr {st.session_state.jahr}")
+        if len(st.session_state.aktuelle_szenarien) > 0:
+            alle_fertig = all(st.session_state.entscheidungen_getroffen)
+
+            if not alle_fertig:
+                st.markdown("Treffe eine Entscheidung für anstehende Ereignisse. **Sie verschwinden nach dem Klick!**")
+                for i, sz in enumerate(st.session_state.aktuelle_szenarien):
+                    if not st.session_state.entscheidungen_getroffen[i]:
+                        st.markdown(f"### ⚡ {sz['titel']}")
+                        st.write(sz["text"])
+
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            if st.button(sz["option_a"]["text"], key=f"a_{st.session_state.jahr}_{sz['id']}",
+                                         use_container_width=True):
+                                anwenden(sz["option_a"], sz["titel"], i)
+                                st.rerun()
+                        with c2:
+                            if st.button(sz["option_b"]["text"], key=f"b_{st.session_state.jahr}_{sz['id']}",
+                                         use_container_width=True):
+                                anwenden(sz["option_b"], sz["titel"], i)
+                                st.rerun()
+                        st.divider()
+            else:
+                st.success("✅ Du hast alle Entscheidungen für dieses Jahr getroffen.")
+
+                # Check ob es das letzte Jahr ist, um den Button-Text anzupassen
+                if st.session_state.jahr < st.session_state.ziel_jahre:
+                    if st.button("➡️ Jahr abschließen & Nächstes Jahr starten", type="primary"):
+                        naechstes_jahr()
+                else:
+                    if st.button("🏁 Simulation beenden & Auswertung ansehen", type="primary"):
+                        naechstes_jahr()
+        else:
+            st.warning("Es gibt keine weiteren Ereignisse mehr in der Datenbank! Die Simulation wird beendet.")
 
     st.markdown("---")
 
