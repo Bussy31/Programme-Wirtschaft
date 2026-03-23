@@ -291,10 +291,10 @@ html_code = f"""
     .e_sh {{ animation: m_sh {dauer}s linear infinite; }}
     .e_us {{ animation: m_us {dauer}s linear infinite; }}
     .e_su {{ animation: m_su {dauer}s linear infinite; }}
-    .e_sb {{ animation: m_sb {dauer}s linear infinite; }}
-    .e_bs {{ animation: m_bs {dauer}s linear infinite; }}
-    .e_hb {{ animation: m_hb {dauer}s linear infinite; }}
-    .e_bu {{ animation: m_bu {dauer}s linear infinite; }}
+    .e_sb {{ animation: m_sb {dauer_sparen}s linear infinite; }}
+    .e_bs {{ animation: m_bs {dauer_kredit}s linear infinite; }}
+    .e_hb {{ animation: m_hb {dauer_sparen}s linear infinite; }}
+    .e_bu {{ animation: m_bu {dauer_kredit}s linear infinite; }}
     .e_ha {{ animation: m_ha {dauer}s linear infinite; }}
     .e_ah {{ animation: m_ah {dauer}s linear infinite; }}
     .e_ua {{ animation: m_ua {dauer}s linear infinite; }}
@@ -369,13 +369,13 @@ html_code = f"""
         
         <div class="emoji e_su" title="Konsum" style="animation-delay: {verzogerung}s;">💶</div>
 
-        <div class="emoji e_sb" title="Ersparnisse" style="animation-delay: {verzogerung}s;">🐖</div>
+        <div class="emoji e_sb" title="Ersparnisse" style="animation-delay: {verzogerung_sparen}s;">🐖</div>
         
-        <div class="emoji e_bs" title="Schulden" style="animation-delay: {verzogerung}s;">🏦</div>
+        <div class="emoji e_bs" title="Schulden" style="animation-delay: {verzogerung_kredit}s;">🏦</div>
         
-        <div class="emoji e_hb" title="Spareinlagen" style="animation-delay: {verzogerung}s;">🐖</div>
+        <div class="emoji e_hb" title="Spareinlagen" style="animation-delay: {verzogerung_sparen}s;">🐖</div>
         
-        <div class="emoji e_bu" title="Investitionen" style="animation-delay: {verzogerung}s;">🏗️</div>
+        <div class="emoji e_bu" title="Investitionen" style="animation-delay: {verzogerung_kredit}s;">🏗️</div>
 
         <div class="emoji e_ha" title="Transfer ins Ausland" style="animation-delay: {verzogerung}s;">💸</div>
         
