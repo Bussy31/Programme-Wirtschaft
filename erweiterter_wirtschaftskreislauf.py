@@ -186,20 +186,25 @@ with col_regler2:
 dauer = 8.0 - (konjunktur * 0.6)
 verzogerung = dauer / 2  # Standard-Verzögerung für alle normalen Güter/Geldströme
 
-# --- Mathe für die EZB-Zinsen (Entkopplung der Bank-Ströme) ---
-# Normalzins ist 2.0%. Wir berechnen die Abweichung davon.
-zins_abweichung = zins - 2.0
+# --- Extreme Mathe für spürbares Tempo bei der EZB ---
+if zins == 2.0:
+    # Normalzins: Alles fließt im normalen Takt der Konjunktur
+    dauer_sparen = dauer
+    dauer_kredit = dauer
+elif zins > 2.0:
+    # Hoher Zins (bis 5.0) -> Sparen rast, Kredite schleichen!
+    intensitaet = (zins - 2.0) / 3.0  # Faktor von 0 bis 1
+    dauer_sparen = dauer * (1.0 - (intensitaet * 0.8))  # Bis zu 80% schneller!
+    dauer_kredit = dauer * (1.0 + (intensitaet * 3.0))  # Bis zu 300% langsamer!
+else:
+    # Niedriger Zins (bis 0.0) -> Kredite rasen, Sparen schleicht!
+    intensitaet = (2.0 - zins) / 2.0  # Faktor von 0 bis 1
+    dauer_kredit = dauer * (1.0 - (intensitaet * 0.8))  # Bis zu 80% schneller!
+    dauer_sparen = dauer * (1.0 + (intensitaet * 3.0))  # Bis zu 300% langsamer!
 
-# Multiplikatoren für die Animationsdauer:
-# Bei 5% Zins: Sparen geht deutlich schneller (Faktor < 1), Kredite dauern länger (Faktor > 1).
-# Bei 0% Zins: Sparen dauert länger (Faktor > 1), Kredite gehen schneller (Faktor < 1).
-# Wir nutzen max(0.3, ...), damit die Dauer nie auf 0 oder in den Minusbereich fällt.
-faktor_sparen = max(0.3, 1.0 - (zins_abweichung * 0.15))
-faktor_kredit = max(0.3, 1.0 + (zins_abweichung * 0.25))
-
-# Dauer mit dem Faktor multiplizieren
-dauer_sparen = dauer * faktor_sparen
-dauer_kredit = dauer * faktor_kredit
+# Limits setzen, damit die Animation nicht crasht (nicht unter 0.5 Sekunden)
+dauer_sparen = max(0.5, dauer_sparen)
+dauer_kredit = max(0.5, dauer_kredit)
 
 # Exakt die halbe Zeit für den perfekten Doppel-Emoji-Fluss
 verzogerung_sparen = dauer_sparen / 2
