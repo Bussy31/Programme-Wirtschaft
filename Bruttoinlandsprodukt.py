@@ -345,7 +345,6 @@ if st.session_state.setup:
 
     # Prüfen, ob das Spiel beendet wurde
     if st.session_state.get("spiel_ende", False):
-        st.balloons()
         st.success(
             f"🏁 **Simulation beendet!** Du hast dein Land erfolgreich {st.session_state.ziel_jahre} Jahre lang regiert.")
         st.markdown("Schau dir unten im Dashboard an, wie sich deine Entscheidungen langfristig ausgewirkt haben.")
