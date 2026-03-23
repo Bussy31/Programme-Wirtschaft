@@ -155,27 +155,47 @@ if alles_richtig:
     )
     st.divider()
 
+# --- Wirtschaftspolitik-Regler (Konjunktur & EZB) ---
+st.subheader("📈 Steuere die Wirtschaftspolitik!")
 
-# --- NEU: Konjunktur-Regler ---
-st.subheader("📈 Steuere die Konjunktur!")
-st.markdown("Was passiert in einer Wirtschaftskrise? Und was in einem Boom?")
+col_regler1, col_regler2 = st.columns(2)
 
-# Der Slider geht von 1 (Krise) bis 10 (Boom)
-konjunktur = st.slider("Wirtschaftslage (1 = Schwere Rezession, 10 = Starker Boom)", min_value=1, max_value=10,
-                       value=5)
+with col_regler1:
+    st.markdown("**Konjunktur (Fiskalpolitik)**")
+    konjunktur = st.slider("Wirtschaftslage (1 = Krise, 10 = Boom)", min_value=1, max_value=10, value=5)
 
-# Dynamische Anzeige der aktuellen Phase
-if konjunktur <= 3:
-    st.error("📉 **Rezession:** Die Wirtschaft lahmt. Die Arbeitslosigkeit steigt, es fließt weniger Geld.")
-elif konjunktur >= 8:
-    st.success("🚀 **Hochkonjunktur (Boom):** Die Wirtschaft brummt! Vollbeschäftigung und hoher Konsum.")
-else:
-    st.info("⚖️ **Normalphase:** Die Wirtschaft wächst in einem normalen, gesunden Tempo.")
+    if konjunktur <= 3:
+        st.error("📉 **Rezession:** Die Wirtschaft lahmt.")
+    elif konjunktur >= 8:
+        st.success("🚀 **Boom:** Die Wirtschaft brummt!")
+    else:
+        st.info("⚖️ **Normalphase:** Gesundes Wachstum.")
 
-# --- Mathe-Magie für die Animationsgeschwindigkeit ---
-# Bei Regler=1: 6 Sekunden (langsam) | Bei Regler=5: 4 Sekunden (normal) | Bei Regler=10: 1.5 Sekunden (schnell)
-dauer = 8.0 - (konjunktur * 0.6)  # Das hast du schon
-verzogerung = dauer / 2  # HIER: Genau die Hälfte der Zeit als Verzögerung
+with col_regler2:
+    st.markdown("**Leitzins (Geldpolitik der EZB)**")
+    zins = st.slider("EZB-Leitzins (in %)", min_value=0.0, max_value=5.0, value=2.0, step=0.5)
+
+    if zins >= 4.0:
+        st.warning("🏦 **Hohe Zinsen:** Sparen ist attraktiv, Kredite sind teuer!")
+    elif zins <= 1.0:
+        st.success("💸 **Niedrige Zinsen:** Sparen lohnt kaum, Kredite sind billig!")
+    else:
+        st.info("💶 **Normalzins:** Ausgewogenes Bankgeschäft.")
+
+# --- Mathe für die Basis-Animation ---
+dauer = 8.0 - (konjunktur * 0.6)
+verzogerung = dauer / 2  # Standard-Verzögerung für alle normalen Güter/Geldströme
+
+# --- Mathe für die EZB-Zinsen (Entkopplung der Bank-Ströme) ---
+# zins_effekt verändert die Geschwindigkeit basierend auf dem 2.0% Normalwert
+zins_effekt = (zins - 2.0) * 1.5
+
+# Wenn Zins hoch -> dauer_sparen wird kleiner (schneller), dauer_kredit wird größer (langsamer)
+dauer_sparen = max(1.0, dauer - zins_effekt)
+dauer_kredit = max(1.0, dauer + zins_effekt)
+
+verzogerung_sparen = dauer_sparen / 2
+verzogerung_kredit = dauer_kredit / 2
 
 # --- HTML & CSS für das neue, verbesserte Design & Animation ---
 html_code = f"""
