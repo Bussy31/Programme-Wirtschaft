@@ -126,4 +126,52 @@ if lohn_richtig and arbeit_richtig:
         }
 
         .geld { top: 110px; animation: moveRight 3s linear infinite; }
-        .gueter {
+        .gueter { top: 160px; animation: moveLeft 3s linear infinite; }
+
+        /* Die Animations-Routen (angepasst an die Schienen) */
+        @keyframes moveRight {
+            0% { left: 160px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 500px; opacity: 0; }
+        }
+
+        @keyframes moveLeft {
+            0% { left: 500px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 160px; opacity: 0; }
+        }
+
+        /* Beschriftung der Linien */
+        .label { position: absolute; width: 100%; text-align: center; font-size: 14px; font-weight: bold;}
+        .label-top { top: 100px; color: #2ca02c;}
+        .label-bottom { top: 195px; color: #1f77b4;}
+    </style>
+    </head>
+    <body>
+        <div class="kreislauf-box">
+
+            <div class="akteur unternehmen">Unternehmen</div>
+            <div class="akteur haushalte">Haushalte</div>
+
+            <div class="label label-top">Löhne & Gehälter</div>
+            <div class="track track-top"></div>
+            <div class="objekt geld">💶</div>
+            <div class="objekt geld" style="animation-delay: 1.5s;">💶</div>
+
+            <div class="track track-bottom"></div>
+            <div class="objekt gueter">👷</div>
+            <div class="objekt gueter" style="animation-delay: 1.5s;">👷</div>
+            <div class="label label-bottom">Arbeitskraft</div>
+
+        </div>
+    </body>
+    </html>
+    """
+
+    components.html(html_animation, height=350)
+
+elif lohn_von != "Bitte wählen" or arbeit_von != "Bitte wählen":
+    st.info(
+        "💡 Fast! Denk daran: Wer gibt seine Arbeitskraft her, und wer bezahlt am Ende den Lohn dafür? Verbinde alle vier Felder richtig.")
