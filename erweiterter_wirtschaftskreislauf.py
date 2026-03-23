@@ -273,7 +273,7 @@ html_code = f"""
 
     @keyframes m_ua {{ 0%{{left:880px; top:470px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:550px; top:650px; opacity:0;}} }}
     @keyframes m_au {{ 0%{{left:510px; top:650px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:840px; top:470px; opacity:0;}} }}
-    @keyframes l_ua_gueter {{ 0%{{left: 690px; top: 730px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 1020px; top: 470px; opacity: 0;}} }}
+    @keyframes l_ua_gueter {{ 0%{{left:550px; top:650px; opacity:0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left:880px; top:470px; opacity:0;}} }}
     @keyframes l_au_gueter {{ 0%{{left: 1050px; top: 470px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 690px; top: 750px; opacity: 0;}} }}
 
     @keyframes m_sb {{ 0%{{left:480px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:480px; top:220px; opacity:0;}} }}
