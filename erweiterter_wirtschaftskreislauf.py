@@ -3,165 +3,186 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Wirtschaftskreislauf Pro", layout="wide")
 
-st.title("🌐 Der offene Wirtschaftskreislauf")
-st.markdown("Setze die fehlenden Begriffe in die richtigen Felder ein, um den Kreislauf zu starten!")
+st.title("🔄 Der komplette, offene Wirtschaftskreislauf")
+st.markdown(
+    "Ordne **alle 16** Geld- und Güterströme aus dem erweiterten Modell richtig zu. Wenn alles stimmt, erwacht der Kreislauf zum Leben!")
 st.divider()
 
-# --- Die Auswahlmöglichkeiten ---
-optionen_staat = ["Bitte wählen...", "staatliche Ersparnisse", "staatliche Kreditaufnahme"]
-optionen_stroeme = [
-    "Bitte wählen...", "Steuern, Sozialabgaben", "Transferleistungen",
+# --- Alle Antwortmöglichkeiten aus deinem Bild ---
+optionen = [
+    "Bitte wählen...",
+    "Steuern, Sozialabgaben", "Transferleistungen",
+    "staatliche Ersparnisse", "staatliche Kreditaufnahme",
     "staatlicher Konsum", "Steuern abzüglich Subventionen",
     "Spareinlagen", "Investitionen",
-    "Einkommen", "Konsumausgaben",
-    "Zahlungen für Exporte", "Zahlungen für Importe",
-    "Transfer der Haushalte", "Transfer des Auslands"
+    "Konsumausgaben", "Konsumgüter",
+    "Einkommen", "Arbeitskraft, Boden, Kapital",
+    "Transfer der Haushalte", "Transfer des Auslands",
+    "Zahlungen für Exporte", "Zahlungen für Importe"
 ]
 
-# --- Phase 1: Die roten Boxen beim Staat ---
-st.subheader("1. Die Lage des Staates")
-c1, c2, c3 = st.columns([1, 2, 1])
-with c2:
-    st.info("🏛️ **Staat**")
-    box_links = st.selectbox("Rotes Feld links (Wenn der Staat Geld übrig hat):", optionen_staat, key="b_l")
-    box_rechts = st.selectbox("Rotes Feld rechts (Wenn der Staat Schulden macht):", optionen_staat, key="b_r")
-
-st.divider()
-
-# --- Phase 2: Die Geldströme (Pfeile) ---
-st.subheader("2. Die Geldströme verbinden")
+# --- Eingabefelder im Grid-Layout ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown("**Haushalte ↔ Staat**")
-    h_zu_s = st.selectbox("Fließt von Haushalten an Staat:", optionen_stroeme, key="hs")
-    s_zu_h = st.selectbox("Fließt von Staat an Haushalte:", optionen_stroeme, key="sh")
-
-    st.markdown("**Haushalte ↔ Ausland**")
-    h_zu_a = st.selectbox("Fließt von Haushalten ans Ausland:", optionen_stroeme, key="ha")
-    a_zu_h = st.selectbox("Fließt vom Ausland an Haushalte:", optionen_stroeme, key="ah")
+    st.subheader("1. Haushalte & Staat/Ausland")
+    st.markdown("**Mit dem Staat**")
+    h_s = st.selectbox("Haushalte ➔ Staat:", optionen, key="hs")
+    s_h = st.selectbox("Staat ➔ Haushalte:", optionen, key="sh")
+    st.markdown("**Mit dem Ausland**")
+    h_a = st.selectbox("Haushalte ➔ Ausland:", optionen, key="ha")
+    a_h = st.selectbox("Ausland ➔ Haushalte:", optionen, key="ah")
 
 with col2:
-    st.markdown("**Der Kernkreislauf**")
-    u_zu_h = st.selectbox("Fließt von Unternehmen an Haushalte (für Arbeit):", optionen_stroeme, key="uh")
-    h_zu_u = st.selectbox("Fließt von Haushalten an Unternehmen (für Güter):", optionen_stroeme, key="hu")
+    st.subheader("2. Der Kern (Güter & Banken)")
+    st.markdown("**Haushalte ↔ Unternehmen (Direkt)**")
+    h_u_geld = st.selectbox("Haushalte ➔ Unternehmen (Geld für Güter):", optionen, key="hug")
+    u_h_gut = st.selectbox("Unternehmen ➔ Haushalte (Waren):", optionen, key="uhg")
+    u_h_geld = st.selectbox("Unternehmen ➔ Haushalte (Lohn):", optionen, key="uhl")
+    h_u_gut = st.selectbox("Haushalte ➔ Unternehmen (Arbeit/Kapital):", optionen, key="hua")
 
     st.markdown("**Über die Banken**")
-    h_zu_b = st.selectbox("Fließt von Haushalten an Banken:", optionen_stroeme, key="hb")
-    b_zu_u = st.selectbox("Fließt von Banken an Unternehmen:", optionen_stroeme, key="bu")
+    h_b = st.selectbox("Haushalte ➔ Banken:", optionen, key="hb")
+    b_u = st.selectbox("Banken ➔ Unternehmen:", optionen, key="bu")
+    s_b = st.selectbox("Staat ➔ Banken (Rotes Feld links):", optionen, key="sb")
+    b_s = st.selectbox("Banken ➔ Staat (Rotes Feld rechts):", optionen, key="bs")
 
 with col3:
-    st.markdown("**Unternehmen ↔ Staat**")
-    u_zu_s = st.selectbox("Fließt von Unternehmen an Staat:", optionen_stroeme, key="us")
-    s_zu_u = st.selectbox("Fließt von Staat an Unternehmen:", optionen_stroeme, key="su")
+    st.subheader("3. Unternehmen & Staat/Ausland")
+    st.markdown("**Mit dem Staat**")
+    u_s = st.selectbox("Unternehmen ➔ Staat:", optionen, key="us")
+    s_u = st.selectbox("Staat ➔ Unternehmen:", optionen, key="su")
+    st.markdown("**Mit dem Ausland**")
+    u_a = st.selectbox("Unternehmen ➔ Ausland:", optionen, key="ua")
+    a_u = st.selectbox("Ausland ➔ Unternehmen:", optionen, key="au")
 
-    st.markdown("**Unternehmen ↔ Ausland**")
-    a_zu_u = st.selectbox("Fließt vom Ausland an Unternehmen:", optionen_stroeme, key="au")
-    u_zu_a = st.selectbox("Fließt von Unternehmen ans Ausland:", optionen_stroeme, key="ua")
-
-# --- Logik-Check: Stimmt alles mit deinem Bild überein? ---
+# --- Logik-Check (Exakt nach deinem Bild) ---
 alles_richtig = (
-        box_links == "staatliche Ersparnisse" and
-        box_rechts == "staatliche Kreditaufnahme" and
-        h_zu_s == "Steuern, Sozialabgaben" and
-        s_zu_h == "Transferleistungen" and
-        u_zu_h == "Einkommen" and
-        h_zu_u == "Konsumausgaben" and
-        h_zu_b == "Spareinlagen" and
-        b_zu_u == "Investitionen" and
-        u_zu_s == "Steuern abzüglich Subventionen" and
-        s_zu_u == "staatlicher Konsum" and
-        a_zu_u == "Zahlungen für Exporte" and
-        u_zu_a == "Zahlungen für Importe" and
-        h_zu_a == "Transfer der Haushalte" and
-        a_zu_h == "Transfer des Auslands"
+        h_s == "Steuern, Sozialabgaben" and
+        s_h == "Transferleistungen" and
+        s_u == "staatlicher Konsum" and
+        u_s == "Steuern abzüglich Subventionen" and
+        s_b == "staatliche Ersparnisse" and
+        b_s == "staatliche Kreditaufnahme" and
+        h_b == "Spareinlagen" and
+        b_u == "Investitionen" and
+        h_u_geld == "Konsumausgaben" and
+        u_h_gut == "Konsumgüter" and
+        u_h_geld == "Einkommen" and
+        h_u_gut == "Arbeitskraft, Boden, Kapital" and
+        h_a == "Transfer der Haushalte" and
+        a_h == "Transfer des Auslands" and
+        a_u == "Zahlungen für Exporte" and
+        u_a == "Zahlungen für Importe"
 )
 
 st.divider()
 
 if alles_richtig:
-    st.success("🎉 Perfekt! Das Diagramm ist vollständig. Die Simulation startet...")
+    st.success("🎉 Meisterhaft! Du hast das komplette 5-Sektoren-Modell gelöst. Die Wirtschaft läuft!")
 
     konjunktur = st.slider("Wirtschaftslage (Geschwindigkeit)", 1, 10, 5)
     dauer = 8.0 - (konjunktur * 0.6)
 
-    # --- Das komplette HTML/CSS für die Animation ---
+    # --- HTML & CSS für das Linien-Design und die Animation ---
     html_code = f"""
     <!DOCTYPE html>
     <html>
     <head>
     <style>
         .canvas {{
-            position: relative; width: 100%; max-width: 800px; height: 500px;
-            background-color: #e3f2fd; border-radius: 10px; margin: 0 auto;
-            border: 2px solid #90caf9; overflow: hidden; font-family: sans-serif;
+            position: relative; width: 100%; max-width: 900px; height: 600px;
+            background-color: #f8f9fa; border-radius: 10px; margin: 0 auto;
+            border: 2px solid #ced4da; overflow: hidden; font-family: sans-serif;
         }}
 
         .akteur {{
-            position: absolute; background: #1565c0; color: white; border-radius: 8px;
+            position: absolute; background: white; color: #333; border-radius: 8px;
             text-align: center; font-weight: bold; z-index: 10; display: flex;
-            align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            align-items: center; justify-content: center; 
+            border: 3px solid #333; font-size: 16px;
         }}
 
-        /* Positionierung wie in deinem Bild */
-        .staat {{ width: 140px; height: 50px; left: 330px; top: 30px; background: #0d47a1; }}
-        .haushalte {{ width: 140px; height: 80px; left: 40px; top: 210px; background: #64b5f6; color: black; }}
-        .banken {{ width: 140px; height: 80px; left: 330px; top: 210px; background: #90caf9; color: black; }}
-        .unternehmen {{ width: 140px; height: 80px; left: 620px; top: 210px; background: #90caf9; color: black; }}
-        .ausland {{ width: 140px; height: 50px; left: 330px; top: 420px; background: #0d47a1; }}
+        /* Das Kreuz-Layout */
+        .staat {{ width: 140px; height: 60px; left: 380px; top: 30px; border-color: #d62728; }}
+        .haushalte {{ width: 140px; height: 60px; left: 40px; top: 270px; border-color: #1f77b4; }}
+        .banken {{ width: 140px; height: 60px; left: 380px; top: 270px; border-color: #ff7f0e; }}
+        .unternehmen {{ width: 140px; height: 60px; left: 720px; top: 270px; border-color: #2ca02c; }}
+        .ausland {{ width: 140px; height: 60px; left: 380px; top: 510px; border-color: #9467bd; }}
 
-        .rote-box {{
-            position: absolute; background: #c62828; color: white; padding: 5px;
-            border-radius: 5px; font-size: 11px; z-index: 10;
-        }}
-        .rb-links {{ left: 160px; top: 100px; }}
-        .rb-rechts {{ left: 490px; top: 100px; }}
+        /* Fliegende Emojis (Güter & Geld) */
+        .emoji {{ position: absolute; font-size: 22px; z-index: 20; background: #f8f9fa; border-radius: 50%; }}
 
-        /* Die fliegenden Emojis (Geldströme) */
-        .emoji {{ position: absolute; font-size: 20px; z-index: 20; background: rgba(255,255,255,0.7); border-radius: 50%; padding: 2px; }}
+        /* --- Die 16 Animations-Routen (Keyframes) --- */
+        @keyframes m_hs {{ 0%{{left:120px; top:270px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:380px; top:80px; opacity:0;}} }}
+        @keyframes m_sh {{ 0%{{left:380px; top:50px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:100px; top:250px; opacity:0;}} }}
 
-        @keyframes move_h_s {{ 0%{{left:110px; top:210px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:330px; top:55px; opacity:0;}} }}
-        @keyframes move_s_h {{ 0%{{left:330px; top:45px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:110px; top:200px; opacity:0;}} }}
+        @keyframes m_us {{ 0%{{left:760px; top:270px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:520px; top:80px; opacity:0;}} }}
+        @keyframes m_su {{ 0%{{left:520px; top:50px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:780px; top:250px; opacity:0;}} }}
 
-        @keyframes move_u_s {{ 0%{{left:690px; top:210px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:470px; top:55px; opacity:0;}} }}
-        @keyframes move_s_u {{ 0%{{left:470px; top:45px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:690px; top:200px; opacity:0;}} }}
+        @keyframes m_sb {{ 0%{{left:430px; top:90px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:430px; top:270px; opacity:0;}} }}
+        @keyframes m_bs {{ 0%{{left:470px; top:270px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:470px; top:90px; opacity:0;}} }}
 
-        @keyframes move_h_b {{ 0%{{left:180px; top:240px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:330px; top:240px; opacity:0;}} }}
-        @keyframes move_b_u {{ 0%{{left:470px; top:240px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:620px; top:240px; opacity:0;}} }}
+        @keyframes m_hb {{ 0%{{left:180px; top:290px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:380px; top:290px; opacity:0;}} }}
+        @keyframes m_bu {{ 0%{{left:520px; top:290px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:720px; top:290px; opacity:0;}} }}
 
-        @keyframes move_u_h {{ 0%{{left:620px; top:270px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:180px; top:270px; opacity:0;}} }}
-        @keyframes move_h_u {{ 0%{{left:180px; top:210px; opacity:0;}} 20%{{top: 150px; opacity:1;}} 80%{{top: 150px; opacity:1;}} 100%{{left:620px; top:210px; opacity:0;}} }} /* Bogen obenrum */
+        @keyframes m_ha {{ 0%{{left:120px; top:330px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:380px; top:520px; opacity:0;}} }}
+        @keyframes m_ah {{ 0%{{left:380px; top:550px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:100px; top:350px; opacity:0;}} }}
 
-        @keyframes move_a_u {{ 0%{{left:470px; top:430px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:660px; top:290px; opacity:0;}} }}
-        @keyframes move_u_a {{ 0%{{left:680px; top:290px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:470px; top:450px; opacity:0;}} }}
+        @keyframes m_ua {{ 0%{{left:760px; top:330px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:520px; top:520px; opacity:0;}} }}
+        @keyframes m_au {{ 0%{{left:520px; top:550px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:780px; top:350px; opacity:0;}} }}
 
-        @keyframes move_a_h {{ 0%{{left:330px; top:430px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:140px; top:290px; opacity:0;}} }}
-        @keyframes move_h_a {{ 0%{{left:120px; top:290px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:330px; top:450px; opacity:0;}} }}
+        /* Die großen Bögen zwischen H und U */
+        @keyframes m_hu_geld {{ 0%{{left:110px; top:270px; opacity:0;}} 20%{{top:140px; opacity:1;}} 80%{{top:140px; opacity:1;}} 100%{{left:790px; top:270px; opacity:0;}} }}
+        @keyframes m_uh_gut {{ 0%{{left:790px; top:270px; opacity:0;}} 20%{{top:170px; opacity:1;}} 80%{{top:170px; opacity:1;}} 100%{{left:110px; top:270px; opacity:0;}} }}
+        @keyframes m_uh_geld {{ 0%{{left:790px; top:330px; opacity:0;}} 20%{{top:430px; opacity:1;}} 80%{{top:430px; opacity:1;}} 100%{{left:110px; top:330px; opacity:0;}} }}
+        @keyframes m_hu_gut {{ 0%{{left:110px; top:330px; opacity:0;}} 20%{{top:460px; opacity:1;}} 80%{{top:460px; opacity:1;}} 100%{{left:790px; top:330px; opacity:0;}} }}
 
-        .e_hs {{ animation: move_h_s {dauer}s linear infinite; }}
-        .e_sh {{ animation: move_s_h {dauer}s linear infinite; }}
-        .e_us {{ animation: move_u_s {dauer}s linear infinite; }}
-        .e_su {{ animation: move_s_u {dauer}s linear infinite; }}
-        .e_hb {{ animation: move_h_b {dauer}s linear infinite; }}
-        .e_bu {{ animation: move_b_u {dauer}s linear infinite; }}
-        .e_uh {{ animation: move_u_h {dauer}s linear infinite; }}
-        .e_hu {{ animation: move_h_u {dauer}s linear infinite; }}
-        .e_au {{ animation: move_a_u {dauer}s linear infinite; }}
-        .e_ua {{ animation: move_u_a {dauer}s linear infinite; }}
-        .e_ah {{ animation: move_a_h {dauer}s linear infinite; }}
-        .e_ha {{ animation: move_h_a {dauer}s linear infinite; }}
+        /* CSS-Klassen Zuweisung */
+        .e_hs {{ animation: m_hs {dauer}s linear infinite; }}
+        .e_sh {{ animation: m_sh {dauer}s linear infinite; }}
+        .e_us {{ animation: m_us {dauer}s linear infinite; }}
+        .e_su {{ animation: m_su {dauer}s linear infinite; }}
+        .e_sb {{ animation: m_sb {dauer}s linear infinite; }}
+        .e_bs {{ animation: m_bs {dauer}s linear infinite; }}
+        .e_hb {{ animation: m_hb {dauer}s linear infinite; }}
+        .e_bu {{ animation: m_bu {dauer}s linear infinite; }}
+        .e_ha {{ animation: m_ha {dauer}s linear infinite; }}
+        .e_ah {{ animation: m_ah {dauer}s linear infinite; }}
+        .e_ua {{ animation: m_ua {dauer}s linear infinite; }}
+        .e_au {{ animation: m_au {dauer}s linear infinite; }}
+        .e_hu_geld {{ animation: m_hu_geld {dauer}s linear infinite; }}
+        .e_uh_gut {{ animation: m_uh_gut {dauer}s linear infinite; }}
+        .e_uh_geld {{ animation: m_uh_geld {dauer}s linear infinite; }}
+        .e_hu_gut {{ animation: m_hu_gut {dauer}s linear infinite; }}
 
     </style>
     </head>
     <body>
         <div class="canvas">
+
             <svg width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:1;">
-                <line x1="110" y1="210" x2="330" y2="55" stroke="#1565c0" stroke-width="2"/>
-                <line x1="690" y1="210" x2="470" y2="55" stroke="#1565c0" stroke-width="2"/>
-                <line x1="180" y1="250" x2="620" y2="250" stroke="#000" stroke-width="4"/>
-                <path d="M 110 210 Q 400 50 690 210" fill="transparent" stroke="#ffca28" stroke-width="20" opacity="0.6"/>
-                <line x1="470" y1="445" x2="670" y2="290" stroke="#1565c0" stroke-width="2"/>
-                <line x1="330" y1="445" x2="130" y2="290" stroke="#1565c0" stroke-width="2"/>
+                <line x1="130" y1="280" x2="390" y2="90" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+                <line x1="110" y1="260" x2="390" y2="60" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+                <line x1="770" y1="280" x2="530" y2="90" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+                <line x1="790" y1="260" x2="530" y2="60" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+                <line x1="440" y1="90" x2="440" y2="270" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+                <line x1="480" y1="90" x2="480" y2="270" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+                <line x1="180" y1="300" x2="380" y2="300" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+                <line x1="520" y1="300" x2="720" y2="300" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+                <line x1="130" y1="340" x2="390" y2="530" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+                <line x1="110" y1="360" x2="390" y2="560" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+                <line x1="770" y1="340" x2="530" y2="530" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+                <line x1="790" y1="360" x2="530" y2="560" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+                <path d="M 120 280 Q 450 120 780 280" fill="transparent" stroke="#ffca28" stroke-width="4" stroke-dasharray="5,5"/>
+                <path d="M 120 280 Q 450 160 780 280" fill="transparent" stroke="#ffca28" stroke-width="4" stroke-dasharray="5,5"/>
+
+                <path d="M 120 320 Q 450 440 780 320" fill="transparent" stroke="#64b5f6" stroke-width="4" stroke-dasharray="5,5"/>
+                <path d="M 120 320 Q 450 480 780 320" fill="transparent" stroke="#64b5f6" stroke-width="4" stroke-dasharray="5,5"/>
             </svg>
 
             <div class="akteur staat">Staat</div>
@@ -170,27 +191,34 @@ if alles_richtig:
             <div class="akteur unternehmen">Unternehmen</div>
             <div class="akteur ausland">Ausland</div>
 
-            <div class="rote-box rb-links">staatliche Ersparnisse</div>
-            <div class="rote-box rb-rechts">staatliche Kreditaufnahme</div>
+            <div class="emoji e_hs" title="Steuern">🪙</div>
+            <div class="emoji e_sh" title="Transfers">💶</div>
+            <div class="emoji e_us" title="Steuern">🪙</div>
+            <div class="emoji e_su" title="Subventionen">💶</div>
 
-            <div class="emoji e_hs">🪙</div>
-            <div class="emoji e_sh">💶</div>
-            <div class="emoji e_us">🪙</div>
-            <div class="emoji e_su">💶</div>
-            <div class="emoji e_hb">🐖</div>
-            <div class="emoji e_bu">🏗️</div>
-            <div class="emoji e_uh">💶</div>
-            <div class="emoji e_hu">🛍️</div>
-            <div class="emoji e_au">💶</div>
-            <div class="emoji e_ua">💸</div>
-            <div class="emoji e_ah">💶</div>
-            <div class="emoji e_ha">💸</div>
+            <div class="emoji e_sb" title="Ersparnisse">🐖</div>
+            <div class="emoji e_bs" title="Kreditaufnahme">🏦</div>
+
+            <div class="emoji e_hb" title="Spareinlagen">🐖</div>
+            <div class="emoji e_bu" title="Investitionen">🏗️</div>
+
+            <div class="emoji e_ha" title="Transfer ins Ausland">💸</div>
+            <div class="emoji e_ah" title="Transfer aus Ausland">💶</div>
+            <div class="emoji e_ua" title="Zahlung für Importe">💸</div>
+            <div class="emoji e_au" title="Zahlung für Exporte">💶</div>
+
+            <div class="emoji e_hu_geld" title="Konsumausgaben">💶</div>
+            <div class="emoji e_uh_gut" title="Konsumgüter">🛍️</div>
+            <div class="emoji e_uh_geld" title="Einkommen">💶</div>
+            <div class="emoji e_hu_gut" title="Arbeit/Boden/Kapital">🧑‍🔧</div>
+
         </div>
     </body>
     </html>
     """
 
-    components.html(html_code, height=550)
+    components.html(html_code, height=650)
 
 else:
-    st.info("💡 Wähle alle Begriffe korrekt aus. Sobald alles stimmt, startet die Simulation automatisch!")
+    st.info(
+        "💡 Fülle alle 16 Felder korrekt aus. Orientier dich an den Begriffen aus deinem Diagramm. Wenn alles stimmt, startet das System automatisch!")
