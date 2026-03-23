@@ -130,6 +130,7 @@ html_template = """
         <div class="akteur haushalte">Haushalte</div>
 
         <div class="label label-top">Löhne & Gehälter</div>
+        <div class="track track-top"></div>
         <div class="objekt geld">💶</div>
         <div class="objekt geld" style="animation-delay: ANIM_DELAYs;">💶</div>
 
