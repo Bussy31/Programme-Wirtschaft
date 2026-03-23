@@ -319,8 +319,8 @@ html_code = f"""
 
         <div class="label lbl-hs">Steuern ↗</div>
         <div class="label lbl-sh">↙ Transfers</div>
-        <div class="label lbl-us">↖ Steuern-Sub.</div>
-        <div class="label lbl-su">Konsum ↘</div>
+        <div class="label lbl-us">↖ Steuern</div>
+        <div class="label lbl-su">Subventionen ↘</div>
 
         <div class="label lbl-sb">Sparen ↓</div>
         <div class="label lbl-bs">Kredite ↑</div>
