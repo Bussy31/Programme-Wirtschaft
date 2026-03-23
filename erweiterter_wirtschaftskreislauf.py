@@ -298,6 +298,7 @@ html_code = f"""
     .e_ha {{ animation: m_ha {dauer}s linear infinite; }}
     .e_ah {{ animation: m_ah {dauer}s linear infinite; }}
     .e_ua {{ animation: m_ua {dauer}s linear infinite; }}
+    .e_ua2 {{ animation: m_au {dauer}s linear infinite; }}
     .e_au {{ animation: m_au {dauer}s linear infinite; }}
     .e_hu_geld {{ animation: m_hu_geld {dauer}s linear infinite; }}
     .e_uh_gut {{ animation: m_uh_gut {dauer}s linear infinite; }}
@@ -382,7 +383,7 @@ html_code = f"""
         <div class="emoji e_ah" title="Transfer aus Ausland" style="animation-delay: {verzogerung}s;">💶</div>
         
         <div class="emoji e_ua" title="Zahlung für Importe" style="animation-delay: {verzogerung}s;">💸</div>
-        <div class="emoji e_au" title="Zahlung für Importe" style="animation-delay: {verzogerung}s;">💸</div>
+        <div class="emoji e_ua2" title="Zahlung für Importe" style="animation-delay: {verzogerung}s;">💸</div>
 
         <div class="emoji e_au" title="Zahlung für Exporte" style="animation-delay: {verzogerung}s;">💶</div>
 
