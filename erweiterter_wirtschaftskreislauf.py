@@ -100,7 +100,6 @@ else:
 # --- NEU: PDF Export der Lösungen ---
 from fpdf import FPDF
 
-
 def generiere_loesungs_pdf():
     pdf = FPDF()
     pdf.add_page()
@@ -146,14 +145,15 @@ def generiere_loesungs_pdf():
 
 
 # Button zum Download anzeigen
-st.write("Brauchst du die Lösungen auf Papier?")
-st.download_button(
-    label="📄 Lösungen als PDF herunterladen",
-    data=generiere_loesungs_pdf(),
-    file_name="Loesungen_Wirtschaftskreislauf.pdf",
-    mime="application/pdf"
-)
-st.divider()
+if alles_richtig:
+    st.write("Brauchst du die Lösungen auf Papier?")
+    st.download_button(
+        label="📄 Lösungen als PDF herunterladen",
+        data=generiere_loesungs_pdf(),
+        file_name="Loesungen_Wirtschaftskreislauf.pdf",
+        mime="application/pdf"
+    )
+    st.divider()
 
 
 # --- NEU: Konjunktur-Regler ---
