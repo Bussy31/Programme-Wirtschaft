@@ -300,6 +300,5 @@ html_code = f"""
 </body>
 </html>
 """
-html_animation = html_code.replace("ANIM_DURATION", str(dauer)).replace("ANIM_DELAY", str(verzogerung))
 
 components.html(html_code, height=750)
