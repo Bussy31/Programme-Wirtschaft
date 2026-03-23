@@ -104,7 +104,6 @@ konjunktur = st.slider("Weltwirtschaftslage (1 = Krise, 10 = BOOM)", min_value=1
 dauer = 8.0 - (konjunktur * 0.6)  # Dynamische Geschwindigkeit
 
 # --- HTML & CSS für das neue, verbesserte Design & Animation ---
-
 html_code = f"""
 <!DOCTYPE html>
 <html>
@@ -124,67 +123,73 @@ html_code = f"""
         border: 4px solid #333; font-size: 18px;
     }}
 
-    /* Vergrößertes Sektoren-Layout (Kreuz) - Haushalte & Unternehmen höher gemacht (140px) und nach oben versetzt (330px) */
+    /* Layout */
     .staat {{ width: 180px; height: 80px; left: 410px; top: 20px; border-color: #d62728; }}
     .ausland {{ width: 180px; height: 80px; left: 410px; top: 650px; border-color: #9467bd; }}
-    .banken {{ width: 180px; height: 100px; left: 410px; top: 150px; border-color: #ff7f0e; }}
-    .haushalte {{ width: 180px; height: 140px; left: 30px; top: 330px; border-color: #1f77b4; }}
+    .banken {{ width: 180px; height: 100px; left: 410px; top: 220px; border-color: #ff7f0e; }} /* Banken nach unten korrigiert! */
+    .haushalte {{ width: 180px; height: 140px; left: 30px; top: 330px; border-color: #1f77b4; }} /* Große Boxen bleiben */
     .unternehmen {{ width: 180px; height: 140px; left: 790px; top: 330px; border-color: #2ca02c; }}
 
     /* Fliegende Emojis (Güter & Geld) */
-    .emoji {{ position: absolute; font-size: 24px; z-index: 20; background: #f8f9fa; border-radius: 50%; padding: 2px;}}
+    .emoji {{ position: absolute; font-size: 24px; z-index: 20; background: #f8f9fa; border-radius: 50%; padding: 2px; transform: translate(-50%, -50%);}}
 
-    /* --- Labels & Pfeile (CSS Overlay) --- */
+    /* --- Labels & Pfeile --- */
     .label {{
         position: absolute; font-size: 12px; font-weight: bold; color: #666; 
         z-index: 15; background: rgba(248, 249, 250, 0.9); padding: 2px 5px; border-radius: 4px;
         text-align: center; display: flex; align-items: center; justify-content: center;
     }}
-    /* Positionierung aller 16 Labels */
-    .lbl-hs {{ left: 310px; top: 225px; transform: translate(-50%, -50%); color: #d62728;}}
-    .lbl-sh {{ left: 310px; top: 225px; transform: translate(-50%, -50%); color: #d62728;}}
-    .lbl-us {{ left: 690px; top: 225px; transform: translate(-50%, -50%); color: #d62728;}}
-    .lbl-su {{ left: 690px; top: 225px; transform: translate(-50%, -50%); color: #d62728;}}
-    .lbl-sb {{ left: 500px; top: 125px; transform: translate(-50%, -50%); color: #ff7f0e;}}
-    .lbl-bs {{ left: 500px; top: 125px; transform: translate(-50%, -50%); color: #ff7f0e;}}
-    .lbl-hb {{ left: 310px; top: 300px; transform: translate(-50%, -50%); color: #ff7f0e;}}
-    .lbl-bu {{ left: 690px; top: 300px; transform: translate(-50%, -50%); color: #ff7f0e;}}
-    .lbl-ha {{ left: 310px; top: 550px; transform: translate(-50%, -50%); color: #9467bd;}}
-    .lbl-ah {{ left: 310px; top: 550px; transform: translate(-50%, -50%); color: #9467bd;}}
-    .lbl-ua {{ left: 690px; top: 550px; transform: translate(-50%, -50%); color: #9467bd;}}
-    .lbl-au {{ left: 690px; top: 550px; transform: translate(-50%, -50%); color: #9467bd;}}
-    /* Labels Kern H<->U (alle zentral) */
+
+    /* Positionierung aller 16 Labels passend zu den parallelen Linien */
+    .lbl-hs {{ left: 260px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+    .lbl-sh {{ left: 350px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+    .lbl-us {{ left: 740px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+    .lbl-su {{ left: 650px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+
+    .lbl-sb {{ left: 400px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
+    .lbl-bs {{ left: 600px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
+
+    .lbl-hb {{ left: 310px; top: 320px; transform: translate(-50%, -50%); color: #ff7f0e;}}
+    .lbl-bu {{ left: 690px; top: 320px; transform: translate(-50%, -50%); color: #ff7f0e;}}
+
+    .lbl-ha {{ left: 260px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+    .lbl-ah {{ left: 350px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+    .lbl-ua {{ left: 740px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+    .lbl-au {{ left: 650px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+
+    /* Labels Kern H<->U */
     .label-hu {{ left: 500px; transform: translate(-50%, -50%); }}
     .lbl-hu-g {{ top: 370px; color: #1f77b4; }}
     .lbl-uh-w {{ top: 390px; color: #2ca02c; }}
     .lbl-uh-e {{ top: 410px; color: #2ca02c; }}
     .lbl-hu-a {{ top: 430px; color: #1f77b4; }}
 
+    /* --- Animations-Routen (Jetzt wieder mit parallelen, separaten Pfaden!) --- */
+    @keyframes m_hs {{ 0%{{left:120px; top:330px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:450px; top:100px; opacity:0;}} }}
+    @keyframes m_sh {{ 0%{{left:490px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:160px; top:330px; opacity:0;}} }}
 
-    /* --- Animations-Routen (Alles auf geraden Schienen) --- */
-    /* Basis-Kreuz H/U <-> Staat/Ausland */
-    @keyframes m_hs {{ 0%{{left:120px; top:350px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:500px; top:100px; opacity:0;}} }}
-    @keyframes m_sh {{ 0%{{left:500px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:120px; top:350px; opacity:0;}} }}
-    @keyframes m_us {{ 0%{{left:880px; top:350px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:500px; top:100px; opacity:0;}} }}
-    @keyframes m_su {{ 0%{{left:500px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:880px; top:350px; opacity:0;}} }}
-    @keyframes m_ha {{ 0%{{left:120px; top:450px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:500px; top:650px; opacity:0;}} }}
-    @keyframes m_ah {{ 0%{{left:500px; top:650px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:120px; top:450px; opacity:0;}} }}
-    @keyframes m_ua {{ 0%{{left:880px; top:450px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:500px; top:650px; opacity:0;}} }}
-    @keyframes m_au {{ 0%{{left:500px; top:650px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:880px; top:450px; opacity:0;}} }}
-    /* Vertikal Staat <-> Bank */
-    @keyframes m_sb {{ 0%{{left:500px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:500px; top:150px; opacity:0;}} }}
-    @keyframes m_bs {{ 0%{{left:500px; top:150px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:500px; top:100px; opacity:0;}} }}
-    /* Diagonal über Bank */
-    @keyframes m_hb {{ 0%{{left:120px; top:350px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:500px; top:250px; opacity:0;}} }}
-    @keyframes m_bu {{ 0%{{left:500px; top:250px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:880px; top:350px; opacity:0;}} }}
+    @keyframes m_us {{ 0%{{left:880px; top:330px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:550px; top:100px; opacity:0;}} }}
+    @keyframes m_su {{ 0%{{left:510px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:840px; top:330px; opacity:0;}} }}
 
-    /* Kern H <-> U (4 Parallel und Gerade) */
-    @keyframes m_hu_geld {{ 0%{{left:210px; top:370px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:770px; top:370px; opacity:0;}} }}
-    @keyframes m_uh_gut {{ 0%{{left:770px; top:390px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:210px; top:390px; opacity:0;}} }}
-    @keyframes m_uh_geld {{ 0%{{left:770px; top:410px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:210px; top:410px; opacity:0;}} }}
-    @keyframes m_hu_gut {{ 0%{{left:210px; top:430px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:770px; top:430px; opacity:0;}} }}
+    @keyframes m_ha {{ 0%{{left:120px; top:470px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:450px; top:650px; opacity:0;}} }}
+    @keyframes m_ah {{ 0%{{left:490px; top:650px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:160px; top:470px; opacity:0;}} }}
 
-    /* CSS-Klassen Zuweisung */
+    @keyframes m_ua {{ 0%{{left:880px; top:470px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:550px; top:650px; opacity:0;}} }}
+    @keyframes m_au {{ 0%{{left:510px; top:650px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:840px; top:470px; opacity:0;}} }}
+
+    @keyframes m_sb {{ 0%{{left:480px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:480px; top:220px; opacity:0;}} }}
+    @keyframes m_bs {{ 0%{{left:520px; top:220px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:520px; top:100px; opacity:0;}} }}
+
+    @keyframes m_hb {{ 0%{{left:210px; top:340px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:410px; top:280px; opacity:0;}} }}
+    @keyframes m_bu {{ 0%{{left:590px; top:280px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:790px; top:340px; opacity:0;}} }}
+
+    /* Kern H <-> U (4 Parallel) */
+    @keyframes m_hu_geld {{ 0%{{left:210px; top:370px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:790px; top:370px; opacity:0;}} }}
+    @keyframes m_uh_gut {{ 0%{{left:790px; top:390px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:210px; top:390px; opacity:0;}} }}
+    @keyframes m_uh_geld {{ 0%{{left:790px; top:410px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:210px; top:410px; opacity:0;}} }}
+    @keyframes m_hu_gut {{ 0%{{left:210px; top:430px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:790px; top:430px; opacity:0;}} }}
+
+    /* Zuweisung */
     .e_hs {{ animation: m_hs {dauer}s linear infinite; }}
     .e_sh {{ animation: m_sh {dauer}s linear infinite; }}
     .e_us {{ animation: m_us {dauer}s linear infinite; }}
@@ -208,14 +213,23 @@ html_code = f"""
     <div class="canvas">
 
         <svg width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:1;">
-            <line x1="120" y1="350" x2="500" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-            <line x1="880" y1="350" x2="500" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-            <line x1="500" y1="100" x2="500" y2="150" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-            <line x1="500" y1="150" x2="500" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-            <line x1="120" y1="350" x2="500" y2="250" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-            <line x1="500" y1="250" x2="880" y2="350" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-            <line x1="120" y1="450" x2="500" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-            <line x1="880" y1="450" x2="500" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="120" y1="330" x2="450" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="160" y1="330" x2="490" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+            <line x1="880" y1="330" x2="550" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="840" y1="330" x2="510" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+            <line x1="480" y1="100" x2="480" y2="220" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="520" y1="100" x2="520" y2="220" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+            <line x1="210" y1="340" x2="410" y2="280" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="590" y1="280" x2="790" y2="340" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+            <line x1="120" y1="470" x2="450" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="160" y1="470" x2="490" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+            <line x1="880" y1="470" x2="550" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="840" y1="470" x2="510" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
 
             <line x1="210" y1="370" x2="790" y2="370" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
             <line x1="790" y1="390" x2="210" y2="390" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
@@ -229,27 +243,31 @@ html_code = f"""
         <div class="akteur unternehmen">Unternehmen</div>
         <div class="akteur ausland">Ausland</div>
 
-        <div class="label lbl-hs">Steuern, Sozialabgaben →</div>
-        <div class="label lbl-sh">Transferleistungen ←</div>
-        <div class="label lbl-us">Steuern abzüglich Subventionen →</div>
-        <div class="label lbl-su">staatlicher Konsum ←</div>
-        <div class="label lbl-sb">staatliche Ersparnisse ↓</div>
-        <div class="label lbl-bs">staatliche Kreditaufnahme ↑</div>
-        <div class="label lbl-hb">Spareinlagen →</div>
-        <div class="label lbl-bu">Investitionen →</div>
-        <div class="label lbl-ha">Transfer der Haushalte ↓</div>
-        <div class="label lbl-ah">Transfer des Auslands ↑</div>
-        <div class="label lbl-ua">Zahlungen für Importe ↓</div>
-        <div class="label lbl-au">Zahlungen für Exporte ↑</div>
+        <div class="label lbl-hs">Steuern →</div>
+        <div class="label lbl-sh">← Transfers</div>
+        <div class="label lbl-us">← Steuern-Sub.</div>
+        <div class="label lbl-su">Konsum →</div>
+
+        <div class="label lbl-sb">Sparen ↓</div>
+        <div class="label lbl-bs">Kredite ↑</div>
+
+        <div class="label lbl-hb">Sparen ↘</div>
+        <div class="label lbl-bu">Investitionen ↗</div>
+
+        <div class="label lbl-ha">Transfers ↘</div>
+        <div class="label lbl-ah">↖ Transfers</div>
+        <div class="label lbl-ua">↙ Importe</div>
+        <div class="label lbl-au">Exporte ↗</div>
+
         <div class="label label-hu lbl-hu-g">Konsumausgaben →</div>
         <div class="label label-hu lbl-uh-w">Konsumgüter ←</div>
         <div class="label label-hu lbl-uh-e">Einkommen ←</div>
-        <div class="label label-hu lbl-hu-a">Arbeitskraft, Boden, Kapital →</div>
+        <div class="label label-hu lbl-hu-a">Arbeitskraft etc. →</div>
 
         <div class="emoji e_hs" title="Steuern">🪙</div>
         <div class="emoji e_sh" title="Transfers">💶</div>
         <div class="emoji e_us" title="Steuern">🪙</div>
-        <div class="emoji e_su" title="Subventionen">💶</div>
+        <div class="emoji e_su" title="Konsum">💶</div>
         <div class="emoji e_sb" title="Ersparnisse">🐖</div>
         <div class="emoji e_bs" title="Schulden">🏦</div>
         <div class="emoji e_hb" title="Spareinlagen">🐖</div>
@@ -268,5 +286,4 @@ html_code = f"""
 </html>
 """
 
-# Die Animation wird immer gerendert (height angepasst)
 components.html(html_code, height=750)
