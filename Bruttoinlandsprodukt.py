@@ -382,8 +382,9 @@ if st.session_state.setup:
                         naechstes_jahr()
                 else:
                     if st.button("🏁 Simulation beenden & Auswertung ansehen", type="primary"):
-                        naechstes_jahr()
                         st.session_state.jahr -= 1
+                        naechstes_jahr()
+
         else:
             st.warning("Es gibt keine weiteren Ereignisse mehr in der Datenbank! Die Simulation wird beendet.")
 
