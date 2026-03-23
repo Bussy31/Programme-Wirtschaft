@@ -95,7 +95,7 @@ if alles_richtig:
     st.success("🎉 Meisterhaft! Du hast das komplette offene Wirtschaftssystem korrekt verstanden und zugeordnet.")
 else:
     st.info(
-        "💡 Das System läuft! Aber einige Beschriftungen in den Feldern oben fehlen noch oder sind nicht korrekt. Orientier dich am Diagramm.")
+        "Einige Beschriftungen in den Feldern oben fehlen noch oder sind nicht korrekt. Orientier dich am Wirtschaftskreislauf.")
 
 # --- NEU: Konjunktur-Regler ---
     st.subheader("📈 Steuere die Konjunktur!")
