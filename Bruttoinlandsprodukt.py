@@ -313,6 +313,8 @@ if st.session_state.setup:
 
 
     def zeige_logs(kategorie, sektor_key):
+        if st.session_state.spiel_ende:
+            return
         for log in st.session_state.ereignis_logbuch:
             if sektor_key in log[kategorie]:
                 wert = log[kategorie][sektor_key]
