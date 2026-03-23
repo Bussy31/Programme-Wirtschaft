@@ -202,9 +202,9 @@ with st.sidebar:
 
         st.write("---")
         st.write("**Arbeitskräfte verteilen:**")
-        anteil_agrar = st.slider("Landwirtschaft (%)", 0, 100, 15)
-        anteil_industrie = st.slider("Industrie (%)", 0, 100, 45)
-        anteil_dienst = st.slider("Dienstleistung (%)", 0, 100, 40)
+        anteil_agrar = st.slider("Landwirtschaft (%)", 0, 100, 10)
+        anteil_industrie = st.slider("Industrie (%)", 0, 100, 40)
+        anteil_dienst = st.slider("Dienstleistung (%)", 0, 100, 50)
 
         summe = anteil_agrar + anteil_industrie + anteil_dienst
 
@@ -309,7 +309,7 @@ if st.session_state.setup:
         with tab_diagramm:
             # Für das Diagramm nutzen wir das Jahr als Index
             df_chart = df.set_index("Jahr")
-            st.line_chart(df_chart, y="BIP", height=200)
+            st.line_chart(df_chart, y="BIP", height=300)
 
 
     def zeige_logs(kategorie, sektor_key):
