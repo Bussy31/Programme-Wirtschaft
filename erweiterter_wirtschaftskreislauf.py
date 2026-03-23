@@ -177,6 +177,23 @@ else:
 dauer = 8.0 - (konjunktur * 0.6)  # Das hast du schon
 verzogerung = dauer / 2  # HIER: Genau die Hälfte der Zeit als Verzögerung
 
+st.subheader("🌍 Globale Handelspolitik")
+grenzen_dicht = st.checkbox("Grenzen schließen (Handelskrieg / Autarkie simulieren)")
+
+# CSS-Trick: Wenn das Häkchen gesetzt ist, blenden wir alles aus, was mit dem Ausland zu tun hat
+ausland_css = ""
+if grenzen_dicht:
+    ausland_css = """
+    /* Versteckt den Kasten, die Texte und die Emojis */
+    .ausland, .lbl-ha, .lbl-ah, .lbl-ua, .lbl-au, .e_ha, .e_ah, .e_ua, .e_au { 
+        display: none !important; 
+    }
+    /* Versteckt die 4 gestrichelten Linien zum Ausland (SVG) */
+    .svg-ausland {
+        display: none !important;
+    }
+    """
+
 # --- HTML & CSS für das neue, verbesserte Design & Animation ---
 html_code = f"""
 <!DOCTYPE html>
