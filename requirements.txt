@@ -2,3 +2,5 @@ streamlit
 fpdf
 pandas
 plotly
+streamlit-lottie
+requests
