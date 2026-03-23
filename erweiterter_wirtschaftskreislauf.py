@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# --- Seiten-Setup ---
+# --- Seiten-Setup ---.
 st.set_page_config(page_title="Eco-Sim: Globale Offene Volkswirtschaft", layout="wide")
 
 st.title("🌍 Eco-Sim: Das offene 5-Sektoren-Modell (Pro)")
