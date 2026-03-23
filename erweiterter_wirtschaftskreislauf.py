@@ -273,6 +273,8 @@ html_code = f"""
 
     @keyframes m_ua {{ 0%{{left:880px; top:470px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:550px; top:650px; opacity:0;}} }}
     @keyframes m_au {{ 0%{{left:510px; top:650px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:840px; top:470px; opacity:0;}} }}
+    @keyframes l_ua_gueter {{ 0%{{left: 690px; top: 730px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 1020px; top: 470px; opacity: 0;}} }}
+    @keyframes l_au_gueter {{ 0%{{left: 1050px; top: 470px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 690px; top: 750px; opacity: 0;}} }}
 
     @keyframes m_sb {{ 0%{{left:480px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:480px; top:220px; opacity:0;}} }}
     @keyframes m_bs {{ 0%{{left:520px; top:220px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:520px; top:100px; opacity:0;}} }}
@@ -299,6 +301,8 @@ html_code = f"""
     .e_ah {{ animation: m_ah {dauer}s linear infinite; }}
     .e_ua {{ animation: m_ua {dauer}s linear infinite; }}
     .e_au {{ animation: m_au {dauer}s linear infinite; }}
+    .e_ua_g {{ animation: l_ua_gueter {dauer}s linear infinite; }}
+    .e_au_g {{ animation: l_au_gueter {dauer}s linear infinite; }}
     .e_hu_geld {{ animation: m_hu_geld {dauer}s linear infinite; }}
     .e_uh_gut {{ animation: m_uh_gut {dauer}s linear infinite; }}
     .e_uh_geld {{ animation: m_uh_geld {dauer}s linear infinite; }}
@@ -384,6 +388,10 @@ html_code = f"""
         <div class="emoji e_ua" title="Zahlung für Importe" style="animation-delay: {verzogerung}s;">💸</div>
 
         <div class="emoji e_au" title="Zahlung für Exporte" style="animation-delay: {verzogerung}s;">💶</div>
+        
+        <div class="emoji e_ua_g" title="Güter für Importe" style="animation-delay: {verzogerung}s;">📦</div>
+
+        <div class="emoji e_au_g" title="Güter für Exporte" style="animation-delay: {verzogerung}s;">📦</div>
 
         <div class="emoji e_hu_geld" title="Konsumausgaben" style="animation-delay: {verzogerung}s;">💶</div>
         
