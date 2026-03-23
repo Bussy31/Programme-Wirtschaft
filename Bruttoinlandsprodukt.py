@@ -343,8 +343,8 @@ with st.sidebar:
 if st.session_state.setup:
     st.title(f"🌍 {st.session_state.land_name}")
 
-    # Prüfen, ob wir das Limit der Jahre überschritten haben (Spielende)
-    if st.session_state.jahr > st.session_state.ziel_jahre:
+    # Prüfen, ob das Spiel beendet wurde
+    if st.session_state.get("spiel_ende", False):
         st.balloons()
         st.success(
             f"🏁 **Simulation beendet!** Du hast dein Land erfolgreich {st.session_state.ziel_jahre} Jahre lang regiert.")
@@ -382,7 +382,8 @@ if st.session_state.setup:
                         naechstes_jahr()
                 else:
                     if st.button("🏁 Simulation beenden & Auswertung ansehen", type="primary"):
-                        naechstes_jahr()
+                        st.session_state.spiel_ende = True
+                        st.rerun()
         else:
             st.warning("Es gibt keine weiteren Ereignisse mehr in der Datenbank! Die Simulation wird beendet.")
 
