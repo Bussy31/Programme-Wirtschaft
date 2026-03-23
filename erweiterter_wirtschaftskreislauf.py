@@ -42,11 +42,11 @@ with col1:
 
 with col2:
     st.subheader("2. Kernkreislauf (H & U)")
-    h_u_geld = st.selectbox("Haushalte ➔ Unternehmen (Geldstrom für Käufe):", optionen, key="hug")
+    h_u_geld = st.selectbox("Haushalte ➔ Unternehmen (Geldstrom):", optionen, key="hug")
     u_h_gut = st.selectbox("Unternehmen ➔ Haushalte (Güterstrom):", optionen, key="uhg")
 
-    u_h_geld = st.selectbox("Unternehmen ➔ Haushalte (Geldstrom für Arbeit):", optionen, key="uhl")
-    h_u_gut = st.selectbox("Haushalte ➔ Unternehmen (Faktoren: Arbeit):", optionen, key="hua")
+    u_h_geld = st.selectbox("Unternehmen ➔ Haushalte (Geldstrom):", optionen, key="uhl")
+    h_u_gut = st.selectbox("Haushalte ➔ Unternehmen (Faktoren):", optionen, key="hua")
 
     kern_correct = (
             h_u_geld == "Konsumausgaben" and u_h_gut == "Konsumgüter" and
@@ -75,8 +75,8 @@ with col4:
     st.subheader("4. Ausland")
     h_a = st.selectbox("Haushalte ➔ Ausland (Geldstrom):", optionen, key="ha")
     a_h = st.selectbox("Ausland ➔ Haushalte (Geldstrom):", optionen, key="ah")
-    a_u = st.selectbox("Ausland ➔ Unternehmen (Geldstrom für Exporte):", optionen, key="au")
-    u_a = st.selectbox("Unternehmen ➔ Ausland (Geldstrom für Importe):", optionen, key="ua")
+    a_u = st.selectbox("Ausland ➔ Unternehmen (Geldstrom):", optionen, key="au")
+    u_a = st.selectbox("Unternehmen ➔ Ausland (Geldstrom):", optionen, key="ua")
 
     ausland_correct = (
             a_u == "Zahlungen für Exporte" and u_a == "Zahlungen für Importe" and
