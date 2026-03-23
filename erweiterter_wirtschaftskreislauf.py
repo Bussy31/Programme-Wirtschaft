@@ -97,11 +97,26 @@ else:
     st.info(
         "💡 Das System läuft! Aber einige Beschriftungen in den Feldern oben fehlen noch oder sind nicht korrekt. Orientier dich am Diagramm.")
 
-# --- Konjunktur-Regler ---
-st.subheader("📈 Steuere die globale Konjunktur!")
-st.markdown("Was passiert in einer Wirtschaftskrise? Und was in einem Boom?")
-konjunktur = st.slider("Weltwirtschaftslage (1 = Krise, 10 = BOOM)", min_value=1, max_value=10, value=5)
-dauer = 8.0 - (konjunktur * 0.6)  # Dynamische Geschwindigkeit
+# --- NEU: Konjunktur-Regler ---
+    st.subheader("📈 Steuere die Konjunktur!")
+    st.markdown("Was passiert in einer Wirtschaftskrise? Und was in einem Boom?")
+
+    # Der Slider geht von 1 (Krise) bis 10 (Boom)
+    konjunktur = st.slider("Wirtschaftslage (1 = Schwere Rezession, 10 = Starker Boom)", min_value=1, max_value=10,
+                           value=5)
+
+    # Dynamische Anzeige der aktuellen Phase
+    if konjunktur <= 3:
+        st.error("📉 **Rezession:** Die Wirtschaft lahmt. Die Arbeitslosigkeit steigt, es fließt weniger Geld.")
+    elif konjunktur >= 8:
+        st.success("🚀 **Hochkonjunktur (Boom):** Die Wirtschaft brummt! Vollbeschäftigung und hoher Konsum.")
+    else:
+        st.info("⚖️ **Normalphase:** Die Wirtschaft wächst in einem normalen, gesunden Tempo.")
+
+    # --- Mathe-Magie für die Animationsgeschwindigkeit ---
+    # Bei Regler=1: 6 Sekunden (langsam) | Bei Regler=5: 4 Sekunden (normal) | Bei Regler=10: 1.5 Sekunden (schnell)
+    dauer = 6.5 - (konjunktur * 0.5)
+    verzogerung = dauer / 2  # Damit das zweite Emoji immer genau auf halber Strecke startet
 
 # --- HTML & CSS für das neue, verbesserte Design & Animation ---
 html_code = f"""
