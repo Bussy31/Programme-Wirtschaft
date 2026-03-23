@@ -2,11 +2,11 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # --- Seiten-Setup ---
-st.set_page_config(page_title="Die Offene Volkswirtschaft", layout="wide")
+st.set_page_config(page_title="Eco-Sim: Globale Offene Volkswirtschaft", layout="wide")
 
-st.title("🌍 Die Offene Volkswirtschaft (Profi-Level)")
+st.title("🌍 Eco-Sim: Das offene 5-Sektoren-Modell (Pro)")
 st.markdown(
-    "Das absolute Meisterstück! Das Design nutzt die volle Breite, alle 16 Linien sind integriert und die Emojis fließen als echter Doppel-Strom. Löse alle 16 Kacheln, um die Kontrolle über die Weltkonjunktur zu erhalten.")
+    "Das absolute Meisterstück für den Unterricht! Das Design nutzt die volle Breite, alle 16 Linien sind integriert und die Emojis fließen als echter Doppel-Strom. Löse alle 16 Kacheln, um die Kontrolle über die Weltkonjunktur zu erhalten.")
 st.divider()
 
 # --- Alle Antwortmöglichkeiten aus dem Diagramm ---
@@ -32,12 +32,31 @@ with col1:
     u_s = st.selectbox("Unternehmen ➔ Staat:", optionen, key="us")
     s_u = st.selectbox("Staat ➔ Unternehmen:", optionen, key="su")
 
+    # Logik-Check für die Kategorie
+    correct_s_l = ["staatliche Ersparnisse"]
+    correct_s_r = ["staatliche Kreditaufnahme"]
+    staat_correct = (
+            h_s == "Steuern, Sozialabgaben" and s_h == "Transferleistungen" and
+            u_s == "Steuern abzüglich Subventionen" and s_u == "staatlicher Konsum"
+    )
+
+    if staat_correct:
+        st.success("🎉 Kategorie 'Mit dem Staat' korrekt gelöst!")
+
 with col2:
     st.subheader("🛍️ Der Kern (H & U)")
     h_u_geld = st.selectbox("Haushalte ➔ Unternehmen (Geld):", optionen, key="hug")
     u_h_gut = st.selectbox("Unternehmen ➔ Haushalte (Güter):", optionen, key="uhg")
     u_h_geld = st.selectbox("Unternehmen ➔ Haushalte (Lohn):", optionen, key="uhl")
     h_u_gut = st.selectbox("Haushalte ➔ Unternehmen (Arbeit):", optionen, key="hua")
+
+    kern_correct = (
+            h_u_geld == "Konsumausgaben" and u_h_gut == "Konsumgüter" and
+            u_h_geld == "Einkommen" and h_u_gut == "Arbeitskraft, Boden, Kapital"
+    )
+
+    if kern_correct:
+        st.success("🎉 Kategorie 'Kern (H & U)' korrekt gelöst!")
 
 with col3:
     st.subheader("🏦 Über die Banken")
@@ -46,6 +65,14 @@ with col3:
     s_b = st.selectbox("Staat ➔ Banken:", optionen, key="sb")
     b_s = st.selectbox("Banken ➔ Staat:", optionen, key="bs")
 
+    banken_correct = (
+            h_b == "Spareinlagen" and b_u == "Investitionen" and
+            s_b == "staatliche Ersparnisse" and b_s == "staatliche Kreditaufnahme"
+    )
+
+    if banken_correct:
+        st.success("🎉 Kategorie 'Über die Banken' korrekt gelöst!")
+
 with col4:
     st.subheader("🌍 Mit dem Ausland")
     a_u = st.selectbox("Ausland ➔ Unternehmen (Exportgeld):", optionen, key="au")
@@ -53,17 +80,16 @@ with col4:
     h_a = st.selectbox("Haushalte ➔ Ausland:", optionen, key="ha")
     a_h = st.selectbox("Ausland ➔ Haushalte:", optionen, key="ah")
 
-# --- Logik-Prüfung für die 16 Felder ---
-alles_richtig = (
-        h_s == "Steuern, Sozialabgaben" and s_h == "Transferleistungen" and
-        u_s == "Steuern abzüglich Subventionen" and s_u == "staatlicher Konsum" and
-        h_u_geld == "Konsumausgaben" and u_h_gut == "Konsumgüter" and
-        u_h_geld == "Einkommen" and h_u_gut == "Arbeitskraft, Boden, Kapital" and
-        h_b == "Spareinlagen" and b_u == "Investitionen" and
-        s_b == "staatliche Ersparnisse" and b_s == "staatliche Kreditaufnahme" and
-        a_u == "Zahlungen für Exporte" and u_a == "Zahlungen für Importe" and
-        h_a == "Transfer der Haushalte" and a_h == "Transfer des Auslands"
-)
+    ausland_correct = (
+            a_u == "Zahlungen für Exporte" and u_a == "Zahlungen für Importe" and
+            h_a == "Transfer der Haushalte" and a_h == "Transfer des Auslands"
+    )
+
+    if ausland_correct:
+        st.success("🎉 Kategorie 'Mit dem Ausland' korrekt gelöst!")
+
+# --- Logik-Check für die 16 Felder ---
+alles_richtig = staat_correct and kern_correct and banken_correct and ausland_correct
 
 st.divider()
 
@@ -72,15 +98,15 @@ dauer = 6.0
 konjunktur = 5
 
 if alles_richtig:
-    st.success("🎉 Weltklasse! Du hast das komplette 5-Sektoren-Modell gelöst. Du kontrollierst nun die Wirtschaft!")
+    st.success("🎉 Weltklasse! Du hast alle 16 Kacheln korrekt gelöst. Die Wirtschaft läuft!")
 
     st.subheader("📈 Steuere die globale Konjunktur!")
-    konjunktur = st.slider("Weltwirtschaftslage (1 = Krise, 10 = Boom)", min_value=1, max_value=10, value=5)
+    konjunktur = st.slider("Wirtschaftslage (1 = Krise, 10 = BOOM)", min_value=1, max_value=10, value=5)
 
     if konjunktur <= 3:
         st.error("📉 **Krise:** Geldströme stocken, die Wirtschaft kühlt massiv ab.")
     elif konjunktur >= 8:
-        st.success("🚀 **Boom:** Rekord-Umsätze! Alles fließt in rasantem Tempo.")
+        st.success("🚀 **BOOM:** Rekord-Umsätze! Alles fließt in rasantem Tempo.")
     else:
         st.info("⚖️ **Normalphase:** Stabiler, ausbalancierter Kreislauf.")
 
@@ -95,7 +121,7 @@ html_code = f"""
 <head>
 <style>
     .kreislauf-box {{
-        position: relative; width: 100%; max-width: 1200px; height: 850px;
+        position: relative; width: 100%; max-width: 1200px; height: 880px;
         background-color: #f8f9fa; border-radius: 15px; margin: 0 auto;
         border: 2px solid #e9ecef; font-family: sans-serif; overflow: hidden;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -140,38 +166,41 @@ html_code = f"""
     .e_hua {{ animation: l_hua {dauer}s linear infinite; }}
 
     /* --- Die Keyframes (16 Perfekte Routen) --- */
-    @keyframes l_hs {{ 0%{{left:180px; top:350px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:510px; top:120px; opacity:0;}} }}
-    @keyframes l_sh {{ 0%{{left:510px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:150px; top:350px; opacity:0;}} }}
-    @keyframes l_us {{ 0%{{left:1020px; top:350px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:690px; top:120px; opacity:0;}} }}
-    @keyframes l_su {{ 0%{{left:690px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:1050px; top:350px; opacity:0;}} }}
+    @keyframes l_hs {{ 0%{{left: 180px; top: 350px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 510px; top: 120px; opacity: 0;}} }}
+    @keyframes l_sh {{ 0%{{left: 510px; top: 100px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 150px; top: 350px; opacity: 0;}} }}
+    @keyframes l_us {{ 0%{{left: 1020px; top: 350px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 690px; top: 120px; opacity: 0;}} }}
+    @keyframes l_su {{ 0%{{left: 690px; top: 100px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 1050px; top: 350px; opacity: 0;}} }}
 
-    @keyframes l_sb {{ 0%{{left:580px; top:120px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:580px; top:360px; opacity:0;}} }}
-    @keyframes l_bs {{ 0%{{left:620px; top:360px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:620px; top:120px; opacity:0;}} }}
+    /* Vertikal: Staat <-> Banken (Offset) */
+    @keyframes l_sb {{ 0%{{left: 580px; top: 120px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 580px; top: 360px; opacity: 0;}} }}
+    @keyframes l_bs {{ 0%{{left: 620px; top: 360px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 620px; top: 120px; opacity: 0;}} }}
 
-    @keyframes l_hb {{ 0%{{left:220px; top:410px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:510px; top:410px; opacity:0;}} }}
-    @keyframes l_bu {{ 0%{{left:690px; top:410px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:980px; top:410px; opacity:0;}} }}
+    @keyframes l_hb {{ 0%{{left: 220px; top: 410px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 510px; top: 410px; opacity: 0;}} }}
+    @keyframes l_bu {{ 0%{{left: 690px; top: 410px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 980px; top: 410px; opacity: 0;}} }}
 
-    @keyframes l_ha {{ 0%{{left:180px; top:470px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:510px; top:730px; opacity:0;}} }}
-    @keyframes l_ah {{ 0%{{left:510px; top:750px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:150px; top:470px; opacity:0;}} }}
-    @keyframes l_ua {{ 0%{{left:1020px; top:470px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:690px; top:730px; opacity:0;}} }}
-    @keyframes l_au {{ 0%{{left:690px; top:750px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:1050px; top:470px; opacity:0;}} }}
+    @keyframes l_ha {{ 0%{{left: 180px; top: 470px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 510px; top: 730px; opacity: 0;}} }}
+    @keyframes l_ah {{ 0%{{left: 510px; top: 750px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 150px; top: 470px; opacity: 0;}} }}
+    @keyframes l_ua {{ 0%{{left: 1020px; top: 470px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 690px; top: 730px; opacity: 0;}} }}
+    @keyframes l_au {{ 0%{{left: 690px; top: 750px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 1050px; top: 470px; opacity: 0;}} }}
 
-    /* H <-> U Direkt (Fahren über und unter der Bank vorbei) */
-    @keyframes l_hug {{ 0%{{left:220px; top:320px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:980px; top:320px; opacity:0;}} }}
-    @keyframes l_uhw {{ 0%{{left:980px; top:340px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:220px; top:340px; opacity:0;}} }}
-    @keyframes l_uhe {{ 0%{{left:980px; top:480px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:220px; top:480px; opacity:0;}} }}
-    @keyframes l_hua {{ 0%{{left:220px; top:500px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:980px; top:500px; opacity:0;}} }}
+    /* H <-> U Direkt (Fahren über und unter der Banken-Box vorbei) */
+    @keyframes l_hug {{ 0%{{left: 220px; top: 320px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 980px; top: 320px; opacity: 0;}} }}
+    @keyframes l_uhw {{ 0%{{left: 980px; top: 340px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 220px; top: 340px; opacity: 0;}} }}
+    @keyframes l_uhe {{ 0%{{left: 980px; top: 480px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 220px; top: 480px; opacity: 0;}} }}
+    @keyframes l_hua {{ 0%{{left: 220px; top: 500px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 980px; top: 500px; opacity: 0;}} }}
 
     /* Kleine Text-Labels für die Ströme */
-    .label {{ position: absolute; font-size: 13px; font-weight: bold; z-index: 1; transform: translate(-50%, -50%); padding: 2px 5px; background: rgba(248, 249, 250, 0.9); border-radius: 4px;}}
+    .label {{ position: absolute; font-size: 13px; font-weight: bold; z-index: 1; transform: translate(-50%, -50%); padding: 2px 5px; background: rgba(248, 249, 250, 0.9); border-radius: 4px; }}
 
     .lbl-hs {{ left: 345px; top: 235px; color: #d62728; }}
     .lbl-sh {{ left: 290px; top: 200px; color: #d62728; }}
     .lbl-us {{ left: 855px; top: 235px; color: #d62728; }}
     .lbl-su {{ left: 910px; top: 200px; color: #d62728; }}
 
+    /* Vertikal: Staat <-> Banken (Spezifischer Offset) */
     .lbl-sb {{ left: 580px; top: 240px; color: #ff7f0e; }}
     .lbl-bs {{ left: 620px; top: 240px; color: #ff7f0e; }}
+
     .lbl-hb {{ left: 365px; top: 410px; color: #ff7f0e; }}
     .lbl-bu {{ left: 835px; top: 410px; color: #ff7f0e; }}
 
@@ -190,7 +219,7 @@ html_code = f"""
 <body>
     <div class="kreislauf-box">
 
-        <svg style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0;">
+        <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
             <line x1="180" y1="350" x2="510" y2="120" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
             <line x1="150" y1="350" x2="510" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
             <line x1="1020" y1="350" x2="690" y2="120" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
