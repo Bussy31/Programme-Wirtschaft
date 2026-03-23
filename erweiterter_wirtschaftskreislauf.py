@@ -258,8 +258,8 @@ html_code = f"""
         <div class="akteur unternehmen">Unternehmen</div>
         <div class="akteur ausland">Ausland</div>
 
-        <div class="label lbl-hs">Steuern →</div>
-        <div class="label lbl-sh">← Transfers</div>
+        <div class="label lbl-hs">Steuern ↗</div>
+        <div class="label lbl-sh">↙ Transfers</div>
         <div class="label lbl-us">← Steuern-Sub.</div>
         <div class="label lbl-su">Konsum →</div>
 
