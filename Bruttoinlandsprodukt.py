@@ -169,13 +169,13 @@ def erstelle_pdf():
     bip = berechne_bip()
     pdf.cell(0, 8, f"BIP Gesamt: {bip} {waehrung}", ln=True)
     pdf.cell(0, 8,
-             f"Entstehung: Agrar ({st.session_state.ent['landwirtschaft']}), Industrie ({st.session_state.ent['industrie']}), Dienstleistung ({st.session_state.ent['dienstleistung']})",
+             f"Entstehungsrechnung: Agrar ({st.session_state.ent['landwirtschaft']}), Industrie ({st.session_state.ent['industrie']}), Dienstleistung ({st.session_state.ent['dienstleistung']})",
              ln=True)
     pdf.cell(0, 8,
-             f"Verwendung: Konsum ({st.session_state.ver['konsum']}), Invest ({st.session_state.ver['investitionen']}), Staat ({st.session_state.ver['staat']}), Export ({st.session_state.ver['export']})",
+             f"Verwendungsrechnung: Konsum ({st.session_state.ver['konsum']}), Invest ({st.session_state.ver['investitionen']}), Staat ({st.session_state.ver['staat']}), Export ({st.session_state.ver['export']})",
              ln=True)
     pdf.cell(0, 8,
-             f"Verteilung: Loehne ({st.session_state.vert['loehne']}), Gewinne ({st.session_state.vert['gewinne']})",
+             f"Verteilungsrechnung: Loehne ({st.session_state.vert['loehne']}), Gewinne ({st.session_state.vert['gewinne']})",
              ln=True)
     pdf.ln(5)
 
@@ -216,11 +216,11 @@ def erstelle_pdf():
 
         # Eingerückt in das PDF schreiben
         pdf.set_x(20)
-        pdf.cell(0, 5, f"Entstehung: {ent_str}", ln=True)
+        pdf.cell(0, 5, f"Entstehungsrechnung: {ent_str}", ln=True)
         pdf.set_x(20)
-        pdf.cell(0, 5, f"Verwendung: {ver_str}", ln=True)
+        pdf.cell(0, 5, f"Verwendungsrechnung: {ver_str}", ln=True)
         pdf.set_x(20)
-        pdf.cell(0, 5, f"Verteilung: {vert_str}", ln=True)
+        pdf.cell(0, 5, f"Verteilungsrechnung: {vert_str}", ln=True)
         pdf.ln(2)  # Kleine Lücke zwischen den Ereignissen
 
     return bytes(pdf.output(dest='S'), encoding='latin1')
@@ -419,7 +419,7 @@ if st.session_state.setup:
                     st.caption(f"_{log['titel']}_: :{farbe}[**{vorzeichen}{wert}**]")
 
 
-    t1, t2, t3 = st.tabs(["🏭 Entstehung", "🛒 Verwendung", "💰 Verteilung"])
+    t1, t2, t3 = st.tabs(["🏭 Entstehungsrechnung", "🛒 Verwendungsrechnung", "💰 Verteilungsrechnung"])
 
     with t1:
         c1, c2, c3 = st.columns(3)
