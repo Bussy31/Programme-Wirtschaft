@@ -4,110 +4,13 @@ import pandas as pd
 import io
 import matplotlib.pyplot as plt
 from fpdf import FPDF
+import json
 
 st.set_page_config(page_title="Musterland Simulation", layout="wide", initial_sidebar_state="expanded")
 
-# --- 1. DATENBANK DER SZENARIEN (Prozentuale Logik) ----
-alle_szenarien = [
-    {
-        "id": "1", "titel": "🚨 Globale Rezession",
-        "text": "Die Weltwirtschaft schwächelt. Die Leute kaufen weniger ein.",
-        "option_a": {"text": "Staatliche Bauprojekte starten", "effekte": [
-            {"typ": "wachstum", "basis": "industrie", "prozent": 0.15, "ver": {"staat": 1.0},
-             "vert": {"loehne": 0.8, "gewinne": 0.2}}]},
-        "option_b": {"text": "Steuern für Unternehmen senken", "effekte": [
-            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"investitionen": 1.0},
-             "vert": {"loehne": 0.2, "gewinne": 0.8}}]}
-    },
-    {
-        "id": "2", "titel": "🔬 KI-Durchbruch", "text": "Eine neue Software beschleunigt Büroarbeiten enorm.",
-        "option_a": {"text": "Technologie ins Ausland verkaufen", "effekte": [
-            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.20, "ver": {"export": 1.0},
-             "vert": {"loehne": 0.3, "gewinne": 0.7}}]},
-        "option_b": {"text": "Im Inland nutzen & Preise senken", "effekte": [
-            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.15, "ver": {"konsum": 1.0},
-             "vert": {"loehne": 0.6, "gewinne": 0.4}}]}
-    },
-    {
-        "id": "3", "titel": "🌪️ Jahrhundert-Dürre", "text": "Es regnet wochenlang nicht. Die Ernten vertrocknen.",
-        "option_a": {"text": "Bauern mit Steuergeldern retten", "effekte": [
-            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": -0.30, "ver": {"konsum": 0.5, "staat": 0.5},
-             "vert": {"loehne": 0.4, "gewinne": 0.6}}]},
-        "option_b": {"text": "Freier Markt (Keine Hilfe)", "effekte": [
-            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": -0.40, "ver": {"konsum": 1.0},
-             "vert": {"loehne": 0.5, "gewinne": 0.5}}]}
-    },
-    {
-        "id": "4", "titel": "🪧 Generalstreik",
-        "text": "Die Industriearbeiter legen die Fabriken lahm und fordern mehr Geld.",
-        "option_a": {"text": "Lohnerhöhungen erzwingen", "effekte": [
-            {"typ": "verteilung_shift", "basis": "loehne", "prozent": 0.15}]},
-        "option_b": {"text": "Streik polizeilich auflösen", "effekte": [
-            {"typ": "wachstum", "basis": "industrie", "prozent": -0.10, "ver": {"export": 1.0},
-             "vert": {"loehne": 0.5, "gewinne": 0.5}}]}
-    },
-    {
-        "id": "5", "titel": "🏖️ Tourismus-Boom", "text": "Ein Hollywood-Film wurde in deinem Land gedreht!",
-        "option_a": {"text": "Luxus-Resorts bauen (Fokus Ausland)", "effekte": [
-            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.25, "ver": {"export": 1.0},
-             "vert": {"loehne": 0.4, "gewinne": 0.6}}]},
-        "option_b": {"text": "Naturparks fördern (Fokus Inland)", "effekte": [
-            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.15, "ver": {"konsum": 1.0},
-             "vert": {"loehne": 0.7, "gewinne": 0.3}}]}
-    },
-    {
-        "id": "6", "titel": "🚜 Traktoren-Mangel", "text": "Die Landwirtschaft ist veraltet und unproduktiv.",
-        "option_a": {"text": "Staat kauft moderne Maschinen", "effekte": [
-            {"typ": "wachstum", "basis": "industrie", "prozent": 0.10, "ver": {"staat": 1.0},
-             "vert": {"loehne": 0.5, "gewinne": 0.5}},
-            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.15, "ver": {"konsum": 1.0},
-             "vert": {"loehne": 0.2, "gewinne": 0.8}}]},
-        "option_b": {"text": "Kredite für Bauern erleichtern", "effekte": [
-            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.10, "ver": {"investitionen": 1.0},
-             "vert": {"loehne": 0.5, "gewinne": 0.5}}]}
-    },
-    {
-        "id": "7", "titel": "🚀 Start-Up Welle", "text": "Viele junge Menschen gründen eigene IT-Firmen.",
-        "option_a": {"text": "Gründer finanziell fördern", "effekte": [
-            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.20, "ver": {"staat": 0.5, "investitionen": 0.5},
-             "vert": {"loehne": 0.8, "gewinne": 0.2}}]},
-        "option_b": {"text": "Aufkäufe durch Großkonzerne zulassen", "effekte": [
-            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.30, "ver": {"export": 1.0},
-             "vert": {"loehne": 0.1, "gewinne": 0.9}}]}
-    },
-    {
-        "id": "8", "titel": "🛳️ Häfen verstopft", "text": "Globale Lieferketten sind gerissen, Exporte stauen sich.",
-        "option_a": {"text": "Inlandskonsum anregen", "effekte": [
-            {"typ": "wachstum", "basis": "industrie", "prozent": -0.15, "ver": {"export": 1.0},
-             "vert": {"loehne": 0.2, "gewinne": 0.8}},
-            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"konsum": 1.0},
-             "vert": {"loehne": 0.6, "gewinne": 0.4}}]},
-        "option_b": {"text": "Warten und hoffen", "effekte": [
-            {"typ": "wachstum", "basis": "industrie", "prozent": -0.20, "ver": {"export": 1.0},
-             "vert": {"loehne": 0.5, "gewinne": 0.5}}]}
-    },
-    {
-        "id": "9", "titel": "🍎 Bio-Trend",
-        "text": "Die Menschen wollen gesünder essen und zahlen mehr für gute Lebensmittel.",
-        "option_a": {"text": "Bio-Siegel staatlich pushen", "effekte": [
-            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.25, "ver": {"konsum": 1.0},
-             "vert": {"loehne": 0.4, "gewinne": 0.6}}]},
-        "option_b": {"text": "Massenproduktion für Export beibehalten", "effekte": [
-            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.10, "ver": {"export": 1.0},
-             "vert": {"loehne": 0.1, "gewinne": 0.9}}]}
-    },
-    {
-        "id": "10", "titel": "🎓 Bildungsoffensive",
-        "text": "Die Regierung überlegt, massiv in Schulen und Unis zu investieren.",
-        "option_a": {"text": "Kostenlose Unis für alle", "effekte": [
-            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.15, "ver": {"staat": 1.0},
-             "vert": {"loehne": 0.9, "gewinne": 0.1}}]},
-        "option_b": {"text": "Forschungsgelder für Industrie", "effekte": [
-            {"typ": "wachstum", "basis": "industrie", "prozent": 0.15, "ver": {"investitionen": 1.0},
-             "vert": {"loehne": 0.3, "gewinne": 0.7}}]}
-    }
-]
-
+# --- 1. DATENBANK DER SZENARIEN LADEN ---
+with open("Bruttoinlandsprodukt_szenarien.json", "r", encoding="utf-8") as file:
+    alle_szenarien = json.load(file)
 
 # --- 2. HILFSFUNKTIONEN FÜR LOGIK UND MATHEMATIK ---
 def ziehe_3_szenarien():
