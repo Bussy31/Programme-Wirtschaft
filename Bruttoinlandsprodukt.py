@@ -376,7 +376,7 @@ if st.session_state.setup:
             else:
                 st.success("✅ Du hast alle Entscheidungen für dieses Jahr getroffen.")
 
-                # Check ob es das letzte Jahr ist, um den Button-Text anzupassen
+                # Check ob es das letzte Jahr ist, um den Button-Text anzupassen -
                 if st.session_state.jahr < st.session_state.ziel_jahre:
                     if st.button("➡️ Jahr abschließen & Nächstes Jahr starten", type="primary"):
                         naechstes_jahr()
