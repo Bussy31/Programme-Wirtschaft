@@ -371,16 +371,16 @@ html_code = f"""
         <div class="emoji e_su" title="Konsum" style="animation-delay: {verzogerung}s;">💶</div>
 
         <div class="emoji e_sb" title="Ersparnisse">🐖</div>
-        <div class="emoji e_sb" title="Ersparnisse" style="animation-delay: {verzogerung}s;">🐖</div>
+        <div class="emoji e_sb" title="Ersparnisse" style="animation-delay: {verzogerung_sparen}s;">🐖</div>
         
         <div class="emoji e_bs" title="Schulden">🏦</div>
-        <div class="emoji e_bs" title="Schulden" style="animation-delay: {verzogerung}s;">🏦</div>
+        <div class="emoji e_bs" title="Schulden" style="animation-delay: {verzogerung_kredit}s;">🏦</div>
         
         <div class="emoji e_hb" title="Spareinlagen">🐖</div>
-        <div class="emoji e_hb" title="Spareinlagen" style="animation-delay: {verzogerung}s;">🐖</div>
+        <div class="emoji e_hb" title="Spareinlagen" style="animation-delay: {verzogerung_sparen}s;">🐖</div>
         
         <div class="emoji e_bu" title="Investitionen">🏗️</div>
-        <div class="emoji e_bu" title="Investitionen" style="animation-delay: {verzogerung}s;">🏗️</div>
+        <div class="emoji e_bu" title="Investitionen" style="animation-delay: {verzogerung_kredit}s;">🏗️</div>
 
         <div class="emoji e_ha" title="Transfer ins Ausland">💸</div>
         <div class="emoji e_ha" title="Transfer ins Ausland" style="animation-delay: {verzogerung}s;">💸</div>
