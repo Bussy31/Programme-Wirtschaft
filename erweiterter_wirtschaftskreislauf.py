@@ -1,186 +1,196 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# --- Seiten-Setup ---
-st.set_page_config(page_title="Die Offene Volkswirtschaft", layout="wide")
+st.set_page_config(page_title="Wirtschaftskreislauf Pro", layout="wide")
 
-st.title("🌍 Die Offene Volkswirtschaft!")
-st.markdown(
-    "Das absolute Profi-Level: Jetzt ist unsere Wirtschaft globalisiert. Wir handeln mit dem **Ausland**. Löse das finale Rätsel, um den globalen Geldkreislauf zu starten!")
+st.title("🌐 Der offene Wirtschaftskreislauf")
+st.markdown("Setze die fehlenden Begriffe in die richtigen Felder ein, um den Kreislauf zu starten!")
 st.divider()
 
-# --- Phase 1: Das Finale Puzzle ---
-st.subheader("Level 3: Die globalen Ströme")
+# --- Die Auswahlmöglichkeiten ---
+optionen_staat = ["Bitte wählen...", "staatliche Ersparnisse", "staatliche Kreditaufnahme"]
+optionen_stroeme = [
+    "Bitte wählen...", "Steuern, Sozialabgaben", "Transferleistungen",
+    "staatlicher Konsum", "Steuern abzüglich Subventionen",
+    "Spareinlagen", "Investitionen",
+    "Einkommen", "Konsumausgaben",
+    "Zahlungen für Exporte", "Zahlungen für Importe",
+    "Transfer der Haushalte", "Transfer des Auslands"
+]
 
-col1, col2, col3, col4 = st.columns(4)
+# --- Phase 1: Die roten Boxen beim Staat ---
+st.subheader("1. Die Lage des Staates")
+c1, c2, c3 = st.columns([1, 2, 1])
+with c2:
+    st.info("🏛️ **Staat**")
+    box_links = st.selectbox("Rotes Feld links (Wenn der Staat Geld übrig hat):", optionen_staat, key="b_l")
+    box_rechts = st.selectbox("Rotes Feld rechts (Wenn der Staat Schulden macht):", optionen_staat, key="b_r")
+
+st.divider()
+
+# --- Phase 2: Die Geldströme (Pfeile) ---
+st.subheader("2. Die Geldströme verbinden")
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown("🚢 **Export-Erlöse (Geld)**")
-    export_von = st.selectbox("Geld für unsere Exporte fließt vom Ausland an...",
-                              ["Bitte wählen", "Unternehmen", "Haushalte", "Staat"], key="ex")
+    st.markdown("**Haushalte ↔ Staat**")
+    h_zu_s = st.selectbox("Fließt von Haushalten an Staat:", optionen_stroeme, key="hs")
+    s_zu_h = st.selectbox("Fließt von Staat an Haushalte:", optionen_stroeme, key="sh")
+
+    st.markdown("**Haushalte ↔ Ausland**")
+    h_zu_a = st.selectbox("Fließt von Haushalten ans Ausland:", optionen_stroeme, key="ha")
+    a_zu_h = st.selectbox("Fließt vom Ausland an Haushalte:", optionen_stroeme, key="ah")
 
 with col2:
-    st.markdown("🌍 **Import-Ausgaben (Geld)**")
-    import_von = st.selectbox("Geld für Importwaren fließt ans Ausland von...",
-                              ["Bitte wählen", "Unternehmen", "Haushalte", "Banken"], key="im")
+    st.markdown("**Der Kernkreislauf**")
+    u_zu_h = st.selectbox("Fließt von Unternehmen an Haushalte (für Arbeit):", optionen_stroeme, key="uh")
+    h_zu_u = st.selectbox("Fließt von Haushalten an Unternehmen (für Güter):", optionen_stroeme, key="hu")
+
+    st.markdown("**Über die Banken**")
+    h_zu_b = st.selectbox("Fließt von Haushalten an Banken:", optionen_stroeme, key="hb")
+    b_zu_u = st.selectbox("Fließt von Banken an Unternehmen:", optionen_stroeme, key="bu")
 
 with col3:
-    st.markdown("🪙 **Steuern**")
-    steuer_zu = st.selectbox("Steuern von Haushalten & Unternehmen fließen an...",
-                             ["Bitte wählen", "Staat", "Banken", "Ausland"], key="st")
+    st.markdown("**Unternehmen ↔ Staat**")
+    u_zu_s = st.selectbox("Fließt von Unternehmen an Staat:", optionen_stroeme, key="us")
+    s_zu_u = st.selectbox("Fließt von Staat an Unternehmen:", optionen_stroeme, key="su")
 
-with col4:
-    st.markdown("🐖 **Ersparnisse**")
-    sparen_zu = st.selectbox("Ersparnisse der Haushalte fließen an...", ["Bitte wählen", "Staat", "Banken", "Ausland"],
-                             key="sp")
+    st.markdown("**Unternehmen ↔ Ausland**")
+    a_zu_u = st.selectbox("Fließt vom Ausland an Unternehmen:", optionen_stroeme, key="au")
+    u_zu_a = st.selectbox("Fließt von Unternehmen ans Ausland:", optionen_stroeme, key="ua")
 
-# Logik-Prüfung für die finale Stufe
-alle_richtig = (
-        export_von == "Unternehmen" and
-        import_von == "Unternehmen" and
-        steuer_zu == "Staat" and
-        sparen_zu == "Banken"
+# --- Logik-Check: Stimmt alles mit deinem Bild überein? ---
+alles_richtig = (
+        box_links == "staatliche Ersparnisse" and
+        box_rechts == "staatliche Kreditaufnahme" and
+        h_zu_s == "Steuern, Sozialabgaben" and
+        s_zu_h == "Transferleistungen" and
+        u_zu_h == "Einkommen" and
+        h_zu_u == "Konsumausgaben" and
+        h_zu_b == "Spareinlagen" and
+        b_zu_u == "Investitionen" and
+        u_zu_s == "Steuern abzüglich Subventionen" and
+        s_zu_u == "staatlicher Konsum" and
+        a_zu_u == "Zahlungen für Exporte" and
+        u_zu_a == "Zahlungen für Importe" and
+        h_zu_a == "Transfer der Haushalte" and
+        a_zu_h == "Transfer des Auslands"
 )
 
 st.divider()
 
-if alle_richtig:
-    st.success("🎉 Weltklasse! Du hast das komplette 5-Sektoren-Modell gelöst. Die Weltwirtschaft läuft!")
+if alles_richtig:
+    st.success("🎉 Perfekt! Das Diagramm ist vollständig. Die Simulation startet...")
 
-    # --- Konjunktur-Regler ---
-    st.subheader("📈 Steuere die globale Konjunktur!")
+    konjunktur = st.slider("Wirtschaftslage (Geschwindigkeit)", 1, 10, 5)
+    dauer = 8.0 - (konjunktur * 0.6)
 
-    konjunktur = st.slider("Weltwirtschaftslage (1 = Globale Krise, 10 = Weltweiter Boom)", min_value=1, max_value=10,
-                           value=5)
-
-    if konjunktur <= 3:
-        st.error("📉 **Weltwirtschaftskrise:** Der Welthandel bricht ein, Exporte und Importe stocken.")
-    elif konjunktur >= 8:
-        st.success("🚀 **Globaler Boom:** Die Häfen sind voll, der internationale Handel floriert!")
-    else:
-        st.info("⚖️ **Normalphase:** Stabiler internationaler Handel.")
-
-    # Mathematik für die Geschwindigkeit
-    dauer = 7.0 - (konjunktur * 0.5)
-    verzogerung = dauer / 2
-
-    # --- Phase 3: Die gigantische 5-Akteur-Animation ---
-    html_template = """
+    # --- Das komplette HTML/CSS für die Animation ---
+    html_code = f"""
     <!DOCTYPE html>
     <html>
     <head>
     <style>
-        .kreislauf-box {
-            position: relative; width: 100%; max-width: 850px; height: 450px;
-            background-color: #f8f9fa; border-radius: 15px; margin: 0 auto;
-            border: 2px solid #e9ecef; font-family: sans-serif; overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        .canvas {{
+            position: relative; width: 100%; max-width: 800px; height: 500px;
+            background-color: #e3f2fd; border-radius: 10px; margin: 0 auto;
+            border: 2px solid #90caf9; overflow: hidden; font-family: sans-serif;
+        }}
 
-        .akteur {
-            position: absolute; width: 130px; height: 90px; background: white;
-            border: 3px solid #333; border-radius: 10px; text-align: center;
-            line-height: 90px; font-weight: bold; font-size: 16px; z-index: 10;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
+        .akteur {{
+            position: absolute; background: #1565c0; color: white; border-radius: 8px;
+            text-align: center; font-weight: bold; z-index: 10; display: flex;
+            align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }}
 
-        /* Layout: Ausland links, Unternehmen mittig-links, Haushalte rechts, Staat oben, Banken unten */
-        .ausland { left: 20px; top: 180px; border-color: #9467bd; color: #9467bd; }
-        .unternehmen { left: 280px; top: 180px; border-color: #2ca02c; color: #2ca02c; }
-        .haushalte { left: 640px; top: 180px; border-color: #1f77b4; color: #1f77b4; }
-        .staat { left: 460px; top: 20px; border-color: #d62728; color: #d62728; }
-        .banken { left: 460px; top: 340px; border-color: #ff7f0e; color: #ff7f0e; }
+        /* Positionierung wie in deinem Bild */
+        .staat {{ width: 140px; height: 50px; left: 330px; top: 30px; background: #0d47a1; }}
+        .haushalte {{ width: 140px; height: 80px; left: 40px; top: 210px; background: #64b5f6; color: black; }}
+        .banken {{ width: 140px; height: 80px; left: 330px; top: 210px; background: #90caf9; color: black; }}
+        .unternehmen {{ width: 140px; height: 80px; left: 620px; top: 210px; background: #90caf9; color: black; }}
+        .ausland {{ width: 140px; height: 50px; left: 330px; top: 420px; background: #0d47a1; }}
 
-        .objekt {
-            position: absolute; font-size: 24px; z-index: 5; background: #f8f9fa; border-radius: 50%;
-        }
+        .rote-box {{
+            position: absolute; background: #c62828; color: white; padding: 5px;
+            border-radius: 5px; font-size: 11px; z-index: 10;
+        }}
+        .rb-links {{ left: 160px; top: 100px; }}
+        .rb-rechts {{ left: 490px; top: 100px; }}
 
-        /* --- Animations-Zuordnungen --- */
-        .export_geld { animation: l_au ANIM_DURATIONs linear infinite; }
-        .import_geld { animation: l_ua ANIM_DURATIONs linear infinite; }
-        .lohn { animation: l_uh ANIM_DURATIONs linear infinite; }
-        .konsum { animation: l_hu ANIM_DURATIONs linear infinite; }
-        .steuer_h { animation: l_hs ANIM_DURATIONs linear infinite; }
-        .steuer_u { animation: l_us ANIM_DURATIONs linear infinite; }
-        .sparen { animation: l_hb ANIM_DURATIONs linear infinite; }
-        .investition { animation: l_bu ANIM_DURATIONs linear infinite; }
+        /* Die fliegenden Emojis (Geldströme) */
+        .emoji {{ position: absolute; font-size: 20px; z-index: 20; background: rgba(255,255,255,0.7); border-radius: 50%; padding: 2px; }}
 
-        /* --- Die Keyframes (Routen der Emojis) --- */
-        /* Ausland <-> Unternehmen */
-        @keyframes l_au { 0%{left: 160px; top: 195px; opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{left: 250px; top: 195px; opacity:0;} }
-        @keyframes l_ua { 0%{left: 250px; top: 225px; opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{left: 160px; top: 225px; opacity:0;} }
+        @keyframes move_h_s {{ 0%{{left:110px; top:210px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:330px; top:55px; opacity:0;}} }}
+        @keyframes move_s_h {{ 0%{{left:330px; top:45px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:110px; top:200px; opacity:0;}} }}
 
-        /* Unternehmen <-> Haushalte */
-        @keyframes l_uh { 0%{left: 420px; top: 195px; opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{left: 610px; top: 195px; opacity:0;} }
-        @keyframes l_hu { 0%{left: 610px; top: 225px; opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{left: 420px; top: 225px; opacity:0;} }
+        @keyframes move_u_s {{ 0%{{left:690px; top:210px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:470px; top:55px; opacity:0;}} }}
+        @keyframes move_s_u {{ 0%{{left:470px; top:45px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:690px; top:200px; opacity:0;}} }}
 
-        /* Staat & Banken */
-        @keyframes l_us { 0%{left: 345px; top: 165px; opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{left: 450px; top: 95px; opacity:0;} }
-        @keyframes l_hs { 0%{left: 685px; top: 165px; opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{left: 570px; top: 95px; opacity:0;} }
-        @keyframes l_hb { 0%{left: 685px; top: 255px; opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{left: 570px; top: 325px; opacity:0;} }
-        @keyframes l_bu { 0%{left: 450px; top: 325px; opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{left: 345px; top: 255px; opacity:0;} }
+        @keyframes move_h_b {{ 0%{{left:180px; top:240px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:330px; top:240px; opacity:0;}} }}
+        @keyframes move_b_u {{ 0%{{left:470px; top:240px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:620px; top:240px; opacity:0;}} }}
 
-        /* Kleine Text-Labels für die Ströme */
-        .label { position: absolute; font-size: 12px; font-weight: bold; color: #666; z-index: 1;}
-        .lbl-exp { left: 175px; top: 180px; color: #9467bd;}
-        .lbl-imp { left: 175px; top: 245px; color: #9467bd;}
-        .lbl-lohn { left: 490px; top: 180px; }
-        .lbl-konsum { left: 490px; top: 245px; }
-        .lbl-st-h { left: 630px; top: 110px; color: #d62728; }
-        .lbl-st-u { left: 380px; top: 110px; color: #d62728; }
-        .lbl-spar { left: 630px; top: 310px; color: #ff7f0e; }
-        .lbl-inv { left: 380px; top: 310px; color: #ff7f0e; }
+        @keyframes move_u_h {{ 0%{{left:620px; top:270px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:180px; top:270px; opacity:0;}} }}
+        @keyframes move_h_u {{ 0%{{left:180px; top:210px; opacity:0;}} 20%{{top: 150px; opacity:1;}} 80%{{top: 150px; opacity:1;}} 100%{{left:620px; top:210px; opacity:0;}} }} /* Bogen obenrum */
+
+        @keyframes move_a_u {{ 0%{{left:470px; top:430px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:660px; top:290px; opacity:0;}} }}
+        @keyframes move_u_a {{ 0%{{left:680px; top:290px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:470px; top:450px; opacity:0;}} }}
+
+        @keyframes move_a_h {{ 0%{{left:330px; top:430px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:140px; top:290px; opacity:0;}} }}
+        @keyframes move_h_a {{ 0%{{left:120px; top:290px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:330px; top:450px; opacity:0;}} }}
+
+        .e_hs {{ animation: move_h_s {dauer}s linear infinite; }}
+        .e_sh {{ animation: move_s_h {dauer}s linear infinite; }}
+        .e_us {{ animation: move_u_s {dauer}s linear infinite; }}
+        .e_su {{ animation: move_s_u {dauer}s linear infinite; }}
+        .e_hb {{ animation: move_h_b {dauer}s linear infinite; }}
+        .e_bu {{ animation: move_b_u {dauer}s linear infinite; }}
+        .e_uh {{ animation: move_u_h {dauer}s linear infinite; }}
+        .e_hu {{ animation: move_h_u {dauer}s linear infinite; }}
+        .e_au {{ animation: move_a_u {dauer}s linear infinite; }}
+        .e_ua {{ animation: move_u_a {dauer}s linear infinite; }}
+        .e_ah {{ animation: move_a_h {dauer}s linear infinite; }}
+        .e_ha {{ animation: move_h_a {dauer}s linear infinite; }}
+
     </style>
     </head>
     <body>
-        <div class="kreislauf-box">
-
-            <svg style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0;">
-                <line x1="160" y1="210" x2="270" y2="210" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-                <line x1="160" y1="240" x2="270" y2="240" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-                <line x1="420" y1="210" x2="630" y2="210" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-                <line x1="420" y1="240" x2="630" y2="240" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-                <line x1="705" y1="180" x2="550" y2="110" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-                <line x1="345" y1="180" x2="500" y2="110" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-                <line x1="705" y1="270" x2="550" y2="340" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-                <line x1="500" y1="340" x2="345" y2="270" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+        <div class="canvas">
+            <svg width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:1;">
+                <line x1="110" y1="210" x2="330" y2="55" stroke="#1565c0" stroke-width="2"/>
+                <line x1="690" y1="210" x2="470" y2="55" stroke="#1565c0" stroke-width="2"/>
+                <line x1="180" y1="250" x2="620" y2="250" stroke="#000" stroke-width="4"/>
+                <path d="M 110 210 Q 400 50 690 210" fill="transparent" stroke="#ffca28" stroke-width="20" opacity="0.6"/>
+                <line x1="470" y1="445" x2="670" y2="290" stroke="#1565c0" stroke-width="2"/>
+                <line x1="330" y1="445" x2="130" y2="290" stroke="#1565c0" stroke-width="2"/>
             </svg>
 
-            <div class="akteur ausland">Ausland</div>
-            <div class="akteur unternehmen">Unternehmen</div>
-            <div class="akteur haushalte">Haushalte</div>
             <div class="akteur staat">Staat</div>
+            <div class="akteur haushalte">Haushalte</div>
             <div class="akteur banken">Banken</div>
+            <div class="akteur unternehmen">Unternehmen</div>
+            <div class="akteur ausland">Ausland</div>
 
-            <div class="label lbl-exp">Exporte ➔</div>
-            <div class="label lbl-imp">⬅ Importe</div>
-            <div class="label lbl-lohn">Löhne ➔</div>
-            <div class="label lbl-konsum">⬅ Konsum</div>
-            <div class="label lbl-st-h">↖ Steuern</div>
-            <div class="label lbl-st-u">Steuern ↗</div>
-            <div class="label lbl-spar">↙ Sparen</div>
-            <div class="label lbl-inv">Kredite ↖</div>
+            <div class="rote-box rb-links">staatliche Ersparnisse</div>
+            <div class="rote-box rb-rechts">staatliche Kreditaufnahme</div>
 
-            <div class="objekt export_geld">💶</div> <div class="objekt export_geld" style="animation-delay: ANIM_DELAYs;">💶</div>
-            <div class="objekt import_geld">💸</div> <div class="objekt import_geld" style="animation-delay: ANIM_DELAYs;">💸</div>
-
-            <div class="objekt lohn">💶</div> <div class="objekt lohn" style="animation-delay: ANIM_DELAYs;">💶</div>
-            <div class="objekt konsum">🛍️</div> <div class="objekt konsum" style="animation-delay: ANIM_DELAYs;">🛍️</div>
-
-            <div class="objekt steuer_h">🪙</div> <div class="objekt steuer_h" style="animation-delay: ANIM_DELAYs;">🪙</div>
-            <div class="objekt steuer_u">🪙</div> <div class="objekt steuer_u" style="animation-delay: ANIM_DELAYs;">🪙</div>
-
-            <div class="objekt sparen">🐖</div> <div class="objekt sparen" style="animation-delay: ANIM_DELAYs;">🐖</div>
-            <div class="objekt investition">🏗️</div> <div class="objekt investition" style="animation-delay: ANIM_DELAYs;">🏗️</div>
-
+            <div class="emoji e_hs">🪙</div>
+            <div class="emoji e_sh">💶</div>
+            <div class="emoji e_us">🪙</div>
+            <div class="emoji e_su">💶</div>
+            <div class="emoji e_hb">🐖</div>
+            <div class="emoji e_bu">🏗️</div>
+            <div class="emoji e_uh">💶</div>
+            <div class="emoji e_hu">🛍️</div>
+            <div class="emoji e_au">💶</div>
+            <div class="emoji e_ua">💸</div>
+            <div class="emoji e_ah">💶</div>
+            <div class="emoji e_ha">💸</div>
         </div>
     </body>
     </html>
     """
 
-    html_animation = html_template.replace("ANIM_DURATION", str(dauer)).replace("ANIM_DELAY", str(verzogerung))
+    components.html(html_code, height=550)
 
-    components.html(html_animation, height=500)
-
-elif export_von != "Bitte wählen" or import_von != "Bitte wählen":
-    st.info("💡 Fast! Denk daran: Wer in unserem Land produziert die Güter, die ans Ausland verkauft werden (Export)?")
+else:
+    st.info("💡 Wähle alle Begriffe korrekt aus. Sobald alles stimmt, startet die Simulation automatisch!")
