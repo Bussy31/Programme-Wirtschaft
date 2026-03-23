@@ -297,6 +297,8 @@ html_code = f"""
     .e_uh_gut {{ animation: m_uh_gut {dauer}s linear infinite; }}
     .e_uh_geld {{ animation: m_uh_geld {dauer}s linear infinite; }}
     .e_hu_gut {{ animation: m_hu_gut {dauer}s linear infinite; }}
+    
+    {ausland_css}
 
 </style>
 </head>
@@ -304,11 +306,11 @@ html_code = f"""
     <div class="canvas">
 
         <svg width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:1;">
-            <line x1="120" y1="330" x2="450" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-            <line x1="160" y1="330" x2="490" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line class="svg-ausland" x1="120" y1="470" x2="450" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line class="svg-ausland" x1="160" y1="470" x2="490" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
 
-            <line x1="880" y1="330" x2="550" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
-            <line x1="840" y1="330" x2="510" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line class="svg-ausland" x1="880" y1="470" x2="550" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line class="svg-ausland" x1="840" y1="470" x2="510" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
 
             <line x1="480" y1="100" x2="480" y2="220" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
             <line x1="520" y1="100" x2="520" y2="220" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
