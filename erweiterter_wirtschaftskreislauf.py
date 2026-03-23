@@ -57,7 +57,7 @@ with col2:
         st.success("🎉 Kategorie 'Kern (H & U)' korrekt gelöst!")
 
 with col3:
-    st.subheader("3. Banken & Investitionen")
+    st.subheader("3. Banken")
     h_b = st.selectbox("Haushalte ➔ Banken (Geldstrom):", optionen, key="hb")
     b_u = st.selectbox("Banken ➔ Unternehmen (Geldstrom):", optionen, key="bu")
     s_b = st.selectbox("Staat ➔ Banken (Geldstrom):", optionen, key="sb")
@@ -72,7 +72,7 @@ with col3:
         st.success("🎉 Kategorie 'Über die Banken' korrekt gelöst!")
 
 with col4:
-    st.subheader("4. Das Ausland")
+    st.subheader("4. Ausland")
     h_a = st.selectbox("Haushalte ➔ Ausland (Geldstrom):", optionen, key="ha")
     a_h = st.selectbox("Ausland ➔ Haushalte (Geldstrom):", optionen, key="ah")
     a_u = st.selectbox("Ausland ➔ Unternehmen (Geldstrom für Exporte):", optionen, key="au")
