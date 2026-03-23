@@ -266,8 +266,8 @@ html_code = f"""
         <div class="label lbl-sb">Sparen ↓</div>
         <div class="label lbl-bs">Kredite ↑</div>
 
-        <div class="label lbl-hb">Sparen ↘</div>
-        <div class="label lbl-bu">Investitionen ↗</div>
+        <div class="label lbl-hb">Sparen ↗</div>
+        <div class="label lbl-bu">Investitionen ↘</div>
 
         <div class="label lbl-ha">Transfers ↘</div>
         <div class="label lbl-ah">↖ Transfers</div>
