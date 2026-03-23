@@ -95,7 +95,65 @@ if alles_richtig:
     st.success("🎉 Meisterhaft! Du hast das komplette offene Wirtschaftssystem korrekt verstanden und zugeordnet.")
 else:
     st.info(
-        "Einige Beschriftungen in den Feldern oben fehlen noch oder sind nicht korrekt. Orientier dich am Wirtschaftskreislauf.")
+        "❕ Einige Beschriftungen in den Feldern oben fehlen noch oder sind nicht korrekt. Orientier dich am Wirtschaftskreislauf.")
+
+    # --- NEU: PDF Export der Lösungen ---
+    from fpdf import FPDF
+
+
+def generiere_loesungs_pdf():
+    pdf = FPDF()
+    pdf.add_page()
+
+    # Titel
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, txt="Lösungen: Offenes Wirtschaftssystem", ln=True, align="C")
+    pdf.ln(5)
+
+    # Inhalt (Umlaute als ae, oe, ue geschrieben, da Standard-Arial im PDF sonst zicken kann)
+    pdf.set_font("Arial", size=12)
+    loesungen = [
+        "1. Haushalte & Staat",
+        "   - Haushalte -> Staat: Steuern, Sozialabgaben",
+        "   - Staat -> Haushalte: Transferleistungen",
+        "   - Unternehmen -> Staat: Steuern abzueglich Subventionen",
+        "   - Staat -> Unternehmen: staatlicher Konsum",
+        "",
+        "2. Kernkreislauf (H & U)",
+        "   - Haushalte -> Unternehmen: Konsumausgaben",
+        "   - Unternehmen -> Haushalte: Konsumgueter",
+        "   - Unternehmen -> Haushalte: Einkommen",
+        "   - Haushalte -> Unternehmen: Arbeitskraft, Boden, Kapital",
+        "",
+        "3. Banken & Investitionen",
+        "   - Haushalte -> Banken: Spareinlagen",
+        "   - Banken -> Unternehmen: Investitionen",
+        "   - Staat -> Banken: staatliche Ersparnisse",
+        "   - Banken -> Staat: staatliche Kreditaufnahme",
+        "",
+        "4. Das Ausland",
+        "   - Haushalte -> Ausland: Transfer der Haushalte",
+        "   - Ausland -> Haushalte: Transfer des Auslands",
+        "   - Ausland -> Unternehmen: Zahlungen fuer Exporte",
+        "   - Unternehmen -> Ausland: Zahlungen fuer Importe"
+    ]
+
+    for zeile in loesungen:
+        pdf.cell(0, 7, txt=zeile, ln=True)
+
+    # PDF als Bytes zurückgeben (latin-1 Encoding ist wichtig für fpdf)
+    return bytes(pdf.output(dest="S").encode("latin-1"))
+
+
+# Button zum Download anzeigen
+st.write("Brauchst du die Lösungen auf Papier?")
+st.download_button(
+    label="📄 Lösungen als PDF herunterladen",
+    data=generiere_loesungs_pdf(),
+    file_name="Loesungen_Wirtschaftskreislauf.pdf",
+    mime="application/pdf"
+)
+st.divider()
 
 # --- NEU: Konjunktur-Regler ---
     st.subheader("📈 Steuere die Konjunktur!")
