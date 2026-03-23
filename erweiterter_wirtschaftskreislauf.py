@@ -155,173 +155,160 @@ if alles_richtig:
     )
     st.divider()
 
-# --- Wirtschaftspolitik-Regler (Konjunktur & EZB) ---
-st.subheader("📈 Steuere die Wirtschaftspolitik!")
 
-col_regler1, col_regler2 = st.columns(2)
+# --- NEU: Konjunktur-Regler ---
+st.subheader("📈 Steuere die Konjunktur!")
+st.markdown("Was passiert in einer Wirtschaftskrise? Und was in einem Boom?")
 
-with col_regler1:
-    st.markdown("**Konjunktur (Fiskalpolitik)**")
-    konjunktur = st.slider("Wirtschaftslage (1 = Krise, 10 = Boom)", min_value=1, max_value=10, value=5)
+# Der Slider geht von 1 (Krise) bis 10 (Boom)
+konjunktur = st.slider("Wirtschaftslage (1 = Schwere Rezession, 10 = Starker Boom)", min_value=1, max_value=10,
+                       value=5)
 
-    if konjunktur <= 3:
-        st.error("📉 **Rezession:** Die Wirtschaft lahmt.")
-    elif konjunktur >= 8:
-        st.success("🚀 **Boom:** Die Wirtschaft brummt!")
-    else:
-        st.info("⚖️ **Normalphase:** Gesundes Wachstum.")
+# Dynamische Anzeige der aktuellen Phase
+if konjunktur <= 3:
+    st.error("📉 **Rezession:** Die Wirtschaft lahmt. Die Arbeitslosigkeit steigt, es fließt weniger Geld.")
+elif konjunktur >= 8:
+    st.success("🚀 **Hochkonjunktur (Boom):** Die Wirtschaft brummt! Vollbeschäftigung und hoher Konsum.")
+else:
+    st.info("⚖️ **Normalphase:** Die Wirtschaft wächst in einem normalen, gesunden Tempo.")
 
-with col_regler2:
-    st.markdown("**Leitzins (Geldpolitik der EZB)**")
-    zins = st.slider("EZB-Leitzins (in %)", min_value=0.0, max_value=5.0, value=2.0, step=0.5)
+# --- Mathe-Magie für die Animationsgeschwindigkeit ---
+# Bei Regler=1: 6 Sekunden (langsam) | Bei Regler=5: 4 Sekunden (normal) | Bei Regler=10: 1.5 Sekunden (schnell)
+dauer = 8.0 - (konjunktur * 0.6)  # Das hast du schon
+verzogerung = dauer / 2  # HIER: Genau die Hälfte der Zeit als Verzögerung
 
-    if zins >= 4.0:
-        st.warning("🏦 **Hohe Zinsen:** Sparen ist attraktiv, Kredite sind teuer!")
-    elif zins <= 1.0:
-        st.success("💸 **Niedrige Zinsen:** Sparen lohnt kaum, Kredite sind billig!")
-    else:
-        st.info("💶 **Normalzins:** Ausgewogenes Bankgeschäft.")
-
-# --- Mathe für die Basis-Animation ---
-dauer = 8.0 - (konjunktur * 0.6)
-verzogerung = dauer / 2  # Standard-Verzögerung für alle normalen Güter/Geldströme
-
-# --- Mathe für die EZB-Zinsen (Entkopplung der Bank-Ströme) ---
-# zins_effekt verändert die Geschwindigkeit basierend auf dem 2.0% Normalwert
-zins_effekt = (zins - 2.0) * 1.5
-
-# Wenn Zins hoch -> dauer_sparen wird kleiner (schneller), dauer_kredit wird größer (langsamer)
-dauer_sparen = max(1.0, dauer - zins_effekt)
-dauer_kredit = max(1.0, dauer + zins_effekt)
-
-verzogerung_sparen = dauer_sparen / 2
-verzogerung_kredit = dauer_kredit / 2
-
-# --- HTML & CSS für das geniale, breite Design ---
+# --- HTML & CSS für das neue, verbesserte Design & Animation ---
 html_code = f"""
 <!DOCTYPE html>
 <html>
 <head>
 <style>
-    .kreislauf-box {{
-        position: relative; width: 100%; max-width: 1200px; height: 880px;
-        background-color: #f8f9fa; border-radius: 15px; margin: 0 auto;
-        border: 2px solid #e9ecef; font-family: sans-serif; overflow: hidden;
+    .canvas {{
+        position: relative; width: 100%; max-width: 1000px; height: 750px;
+        background-color: #f8f9fa; border-radius: 10px; margin: 0 auto;
+        border: 2px solid #ced4da; overflow: hidden; font-family: sans-serif;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }}
 
     .akteur {{
-        position: absolute; background: white; color: #333; border-radius: 12px;
+        position: absolute; background: white; color: #333; border-radius: 10px;
+        text-align: center; font-weight: bold; z-index: 10; display: flex;
+        align-items: center; justify-content: center; 
+        border: 4px solid #333; font-size: 18px;
+    }}
+
+    /* Layout */
+    .staat {{ width: 180px; height: 80px; left: 410px; top: 20px; border-color: #d62728; }}
+    .ausland {{ width: 180px; height: 80px; left: 410px; top: 650px; border-color: #9467bd; }}
+    .banken {{ width: 180px; height: 100px; left: 410px; top: 220px; border-color: #ff7f0e; }} /* Banken nach unten korrigiert! */
+    .haushalte {{ width: 180px; height: 140px; left: 30px; top: 330px; border-color: #1f77b4; }} /* Große Boxen bleiben */
+    .unternehmen {{ width: 180px; height: 140px; left: 790px; top: 330px; border-color: #2ca02c; }}
+
+    /* Fliegende Emojis (Güter & Geld) */
+    .emoji {{ position: absolute; font-size: 24px; z-index: 20; background: #f8f9fa; border-radius: 50%; padding: 2px; transform: translate(-50%, -50%);}}
+
+    /* --- Labels & Pfeile --- */
+    .label {{
+        position: absolute; font-size: 12px; font-weight: bold; color: #666; 
+        z-index: 15; background: rgba(248, 249, 250, 0.9); padding: 2px 5px; border-radius: 4px;
         text-align: center; display: flex; align-items: center; justify-content: center;
-        font-weight: bold; font-size: 20px; z-index: 10;
-        border: 4px solid #333; box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }}
 
-    /* Perfektes Kreuz-Layout - Boxen H&U sind höher! */
-    .staat {{ left: 510px; top: 40px; border-color: #d62728; color: #d62728; width: 180px; height: 80px; }}
-    .haushalte {{ left: 40px; top: 340px; border-color: #1f77b4; color: #1f77b4; width: 180px; height: 140px; }}
-    .banken {{ left: 510px; top: 360px; border-color: #ff7f0e; color: #ff7f0e; width: 180px; height: 100px; }}
-    .unternehmen {{ left: 980px; top: 340px; border-color: #2ca02c; color: #2ca02c; width: 180px; height: 140px; }}
-    .ausland {{ left: 510px; top: 730px; border-color: #9467bd; color: #9467bd; width: 180px; height: 80px; }}
+    /* Positionierung aller 16 Labels passend zu den parallelen Linien */
+    .lbl-hs {{ left: 260px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+    .lbl-sh {{ left: 350px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+    .lbl-us {{ left: 740px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+    .lbl-su {{ left: 650px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
 
-    .objekt {{
-        position: absolute; font-size: 26px; z-index: 5; background: #f8f9fa; 
-        border-radius: 50%; padding: 2px; transform: translate(-50%, -50%);
-    }}
+    .lbl-sb {{ left: 450px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
+    .lbl-bs {{ left: 550px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
 
-    /* --- Animations-Zuordnungen --- */
-    /* Normale Konjunktur-Geschwindigkeit */
-    .e_hs {{ animation: l_hs {dauer}s linear infinite; }}
-    .e_sh {{ animation: l_sh {dauer}s linear infinite; }}
-    .e_us {{ animation: l_us {dauer}s linear infinite; }}
-    .e_su {{ animation: l_su {dauer}s linear infinite; }}
-    .e_ha {{ animation: l_ha {dauer}s linear infinite; }}
-    .e_ah {{ animation: l_ah {dauer}s linear infinite; }}
-    .e_ua {{ animation: l_ua {dauer}s linear infinite; }}
-    .e_au {{ animation: l_au {dauer}s linear infinite; }}
-    .e_hug {{ animation: l_hug {dauer}s linear infinite; }}
-    .e_uhw {{ animation: l_uhw {dauer}s linear infinite; }}
-    .e_uhe {{ animation: l_uhe {dauer}s linear infinite; }}
-    .e_hua {{ animation: l_hua {dauer}s linear infinite; }}
+    .lbl-hb {{ left: 310px; top: 320px; transform: translate(-50%, -50%); color: #ff7f0e;}}
+    .lbl-bu {{ left: 690px; top: 320px; transform: translate(-50%, -50%); color: #ff7f0e;}}
 
-    /* EZB-Spezialgeschwindigkeit für Bank-Ströme! */
-    .e_sb {{ animation: l_sb {dauer_sparen}s linear infinite; }}
-    .e_hb {{ animation: l_hb {dauer_sparen}s linear infinite; }}
-    .e_bs {{ animation: l_bs {dauer_kredit}s linear infinite; }}
-    .e_bu {{ animation: l_bu {dauer_kredit}s linear infinite; }}
+    .lbl-ha {{ left: 260px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+    .lbl-ah {{ left: 350px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+    .lbl-ua {{ left: 740px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+    .lbl-au {{ left: 650px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
 
-    /* --- Die Keyframes (16 Perfekte Routen) --- */
-    @keyframes l_hs {{ 0%{{left: 180px; top: 350px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 510px; top: 120px; opacity: 0;}} }}
-    @keyframes l_sh {{ 0%{{left: 510px; top: 100px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 150px; top: 350px; opacity: 0;}} }}
-    @keyframes l_us {{ 0%{{left: 1020px; top: 350px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 690px; top: 120px; opacity: 0;}} }}
-    @keyframes l_su {{ 0%{{left: 690px; top: 100px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 1050px; top: 350px; opacity: 0;}} }}
+    /* Labels Kern H<->U */
+    .label-hu {{ left: 500px; transform: translate(-50%, -50%); }}
+    .lbl-hu-g {{ top: 370px; color: #1f77b4; }}
+    .lbl-uh-w {{ top: 390px; color: #2ca02c; }}
+    .lbl-uh-e {{ top: 410px; color: #2ca02c; }}
+    .lbl-hu-a {{ top: 430px; color: #1f77b4; }}
 
-    @keyframes l_sb {{ 0%{{left: 580px; top: 120px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 580px; top: 360px; opacity: 0;}} }}
-    @keyframes l_bs {{ 0%{{left: 620px; top: 360px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 620px; top: 120px; opacity: 0;}} }}
+    /* --- Animations-Routen (Jetzt wieder mit parallelen, separaten Pfaden!) --- */
+    @keyframes m_hs {{ 0%{{left:120px; top:330px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:450px; top:100px; opacity:0;}} }}
+    @keyframes m_sh {{ 0%{{left:490px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:160px; top:330px; opacity:0;}} }}
 
-    @keyframes l_hb {{ 0%{{left: 220px; top: 410px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 510px; top: 410px; opacity: 0;}} }}
-    @keyframes l_bu {{ 0%{{left: 690px; top: 410px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 980px; top: 410px; opacity: 0;}} }}
+    @keyframes m_us {{ 0%{{left:880px; top:330px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:550px; top:100px; opacity:0;}} }}
+    @keyframes m_su {{ 0%{{left:510px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:840px; top:330px; opacity:0;}} }}
 
-    @keyframes l_ha {{ 0%{{left: 180px; top: 470px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 510px; top: 730px; opacity: 0;}} }}
-    @keyframes l_ah {{ 0%{{left: 510px; top: 750px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 150px; top: 470px; opacity: 0;}} }}
-    @keyframes l_ua {{ 0%{{left: 1020px; top: 470px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 690px; top: 730px; opacity: 0;}} }}
-    @keyframes l_au {{ 0%{{left: 690px; top: 750px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 1050px; top: 470px; opacity: 0;}} }}
+    @keyframes m_ha {{ 0%{{left:120px; top:470px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:450px; top:650px; opacity:0;}} }}
+    @keyframes m_ah {{ 0%{{left:490px; top:650px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:160px; top:470px; opacity:0;}} }}
 
-    @keyframes l_hug {{ 0%{{left: 220px; top: 320px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 980px; top: 320px; opacity: 0;}} }}
-    @keyframes l_uhw {{ 0%{{left: 980px; top: 340px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 220px; top: 340px; opacity: 0;}} }}
-    @keyframes l_uhe {{ 0%{{left: 980px; top: 480px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 220px; top: 480px; opacity: 0;}} }}
-    @keyframes l_hua {{ 0%{{left: 220px; top: 500px; opacity: 0;}} 10%{{opacity: 1;}} 90%{{opacity: 1;}} 100%{{left: 980px; top: 500px; opacity: 0;}} }}
+    @keyframes m_ua {{ 0%{{left:880px; top:470px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:550px; top:650px; opacity:0;}} }}
+    @keyframes m_au {{ 0%{{left:510px; top:650px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:840px; top:470px; opacity:0;}} }}
 
-    /* Kleine Text-Labels für die Ströme */
-    .label {{ position: absolute; font-size: 13px; font-weight: bold; z-index: 1; transform: translate(-50%, -50%); padding: 2px 5px; background: rgba(248, 249, 250, 0.9); border-radius: 4px; }}
+    @keyframes m_sb {{ 0%{{left:480px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:480px; top:220px; opacity:0;}} }}
+    @keyframes m_bs {{ 0%{{left:520px; top:220px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:520px; top:100px; opacity:0;}} }}
 
-    .lbl-hs {{ left: 345px; top: 235px; color: #d62728; }}
-    .lbl-sh {{ left: 290px; top: 200px; color: #d62728; }}
-    .lbl-us {{ left: 855px; top: 235px; color: #d62728; }}
-    .lbl-su {{ left: 910px; top: 200px; color: #d62728; }}
+    @keyframes m_hb {{ 0%{{left:210px; top:340px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:410px; top:280px; opacity:0;}} }}
+    @keyframes m_bu {{ 0%{{left:590px; top:280px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:790px; top:340px; opacity:0;}} }}
 
-    .lbl-sb {{ left: 580px; top: 210px; color: #ff7f0e; }} 
-    .lbl-bs {{ left: 620px; top: 270px; color: #ff7f0e; }}
+    /* Kern H <-> U (4 Parallel) */
+    @keyframes m_hu_geld {{ 0%{{left:210px; top:370px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:790px; top:370px; opacity:0;}} }}
+    @keyframes m_uh_gut {{ 0%{{left:790px; top:390px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:210px; top:390px; opacity:0;}} }}
+    @keyframes m_uh_geld {{ 0%{{left:790px; top:410px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:210px; top:410px; opacity:0;}} }}
+    @keyframes m_hu_gut {{ 0%{{left:210px; top:430px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:790px; top:430px; opacity:0;}} }}
 
-    .lbl-hb {{ left: 365px; top: 410px; color: #ff7f0e; }}
-    .lbl-bu {{ left: 835px; top: 410px; color: #ff7f0e; }}
-
-    .lbl-ha {{ left: 345px; top: 600px; color: #9467bd; }}
-    .lbl-ah {{ left: 290px; top: 630px; color: #9467bd; }}
-    .lbl-ua {{ left: 855px; top: 600px; color: #9467bd; }}
-    .lbl-au {{ left: 910px; top: 630px; color: #9467bd; }}
-
-    .lbl-hug {{ left: 600px; top: 320px; color: #1f77b4; }}
-    .lbl-uhw {{ left: 600px; top: 340px; color: #2ca02c; }}
-    .lbl-uhe {{ left: 600px; top: 480px; color: #2ca02c; }}
-    .lbl-hua {{ left: 600px; top: 500px; color: #1f77b4; }}
+    /* Zuweisung */
+    .e_hs {{ animation: m_hs {dauer}s linear infinite; }}
+    .e_sh {{ animation: m_sh {dauer}s linear infinite; }}
+    .e_us {{ animation: m_us {dauer}s linear infinite; }}
+    .e_su {{ animation: m_su {dauer}s linear infinite; }}
+    .e_sb {{ animation: m_sb {dauer}s linear infinite; }}
+    .e_bs {{ animation: m_bs {dauer}s linear infinite; }}
+    .e_hb {{ animation: m_hb {dauer}s linear infinite; }}
+    .e_bu {{ animation: m_bu {dauer}s linear infinite; }}
+    .e_ha {{ animation: m_ha {dauer}s linear infinite; }}
+    .e_ah {{ animation: m_ah {dauer}s linear infinite; }}
+    .e_ua {{ animation: m_ua {dauer}s linear infinite; }}
+    .e_au {{ animation: m_au {dauer}s linear infinite; }}
+    .e_hu_geld {{ animation: m_hu_geld {dauer}s linear infinite; }}
+    .e_uh_gut {{ animation: m_uh_gut {dauer}s linear infinite; }}
+    .e_uh_geld {{ animation: m_uh_geld {dauer}s linear infinite; }}
+    .e_hu_gut {{ animation: m_hu_gut {dauer}s linear infinite; }}
 
 </style>
 </head>
 <body>
-    <div class="kreislauf-box">
+    <div class="canvas">
 
-        <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
-            <line x1="180" y1="350" x2="510" y2="120" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="150" y1="350" x2="510" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="1020" y1="350" x2="690" y2="120" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="1050" y1="350" x2="690" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
+        <svg width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:1;">
+            <line x1="120" y1="330" x2="450" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="160" y1="330" x2="490" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
 
-            <line x1="580" y1="120" x2="580" y2="360" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="620" y1="120" x2="620" y2="360" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
+            <line x1="880" y1="330" x2="550" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="840" y1="330" x2="510" y2="100" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
 
-            <line x1="220" y1="410" x2="510" y2="410" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="690" y1="410" x2="980" y2="410" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
+            <line x1="480" y1="100" x2="480" y2="220" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="520" y1="100" x2="520" y2="220" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
 
-            <line x1="180" y1="470" x2="510" y2="730" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="150" y1="470" x2="510" y2="750" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="1020" y1="470" x2="690" y2="730" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="1050" y1="470" x2="690" y2="750" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
+            <line x1="210" y1="340" x2="410" y2="280" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="590" y1="280" x2="790" y2="340" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
 
-            <line x1="220" y1="320" x2="980" y2="320" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="220" y1="340" x2="980" y2="340" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="220" y1="480" x2="980" y2="480" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
-            <line x1="220" y1="500" x2="980" y2="500" stroke="#ced4da" stroke-width="3" stroke-dasharray="6,6"/>
+            <line x1="120" y1="470" x2="450" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="160" y1="470" x2="490" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+            <line x1="880" y1="470" x2="550" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="840" y1="470" x2="510" y2="650" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+
+            <line x1="210" y1="370" x2="790" y2="370" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="790" y1="390" x2="210" y2="390" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="790" y1="410" x2="210" y2="410" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
+            <line x1="210" y1="430" x2="790" y2="430" stroke="#ced4da" stroke-width="3" stroke-dasharray="5,5"/>
         </svg>
 
         <div class="akteur staat">Staat</div>
@@ -330,39 +317,79 @@ html_code = f"""
         <div class="akteur unternehmen">Unternehmen</div>
         <div class="akteur ausland">Ausland</div>
 
-        <div class="label lbl-hs">Steuern ↗</div> <div class="label lbl-sh">↙ Transfers</div>
-        <div class="label lbl-us">↖ Steuern</div> <div class="label lbl-su">Konsum ↘</div>
-        <div class="label lbl-sb">Sparen ↓</div> <div class="label lbl-bs">↑ Kredite</div>
-        <div class="label lbl-hb">Sparen →</div> <div class="label lbl-bu">Investitionen →</div>
-        <div class="label lbl-ha">Transfers ↘</div> <div class="label lbl-ah">↖ Transfers</div>
-        <div class="label lbl-ua">Importe ↙</div> <div class="label lbl-au">↗ Exporte</div>
-        <div class="label lbl-hug">Konsumausgaben →</div> <div class="label lbl-uhw">← Konsumgüter</div>
-        <div class="label lbl-uhe">← Einkommen</div> <div class="label lbl-hua">Arbeitskraft →</div>
+        <div class="label lbl-hs">Steuern ↗</div>
+        <div class="label lbl-sh">↙ Transfers</div>
+        <div class="label lbl-us">↖ Steuern</div>
+        <div class="label lbl-su">Subventionen ↘</div>
 
-        <div class="objekt e_hs">🪙</div> <div class="objekt e_hs" style="animation-delay: {verzogerung}s;">🪙</div>
-        <div class="objekt e_sh">💶</div> <div class="objekt e_sh" style="animation-delay: {verzogerung}s;">💶</div>
-        <div class="objekt e_us">🪙</div> <div class="objekt e_us" style="animation-delay: {verzogerung}s;">🪙</div>
-        <div class="objekt e_su">💶</div> <div class="objekt e_su" style="animation-delay: {verzogerung}s;">💶</div>
+        <div class="label lbl-sb">Sparen ↓</div>
+        <div class="label lbl-bs">Kredite ↑</div>
 
-        <div class="objekt e_sb">🐖</div> <div class="objekt e_sb" style="animation-delay: {verzogerung_sparen}s;">🐖</div>
-        <div class="objekt e_bs">🏦</div> <div class="objekt e_bs" style="animation-delay: {verzogerung_kredit}s;">🏦</div>
-        <div class="objekt e_hb">🐖</div> <div class="objekt e_hb" style="animation-delay: {verzogerung_sparen}s;">🐖</div>
-        <div class="objekt e_bu">🏗️</div> <div class="objekt e_bu" style="animation-delay: {verzogerung_kredit}s;">🏗️</div>
+        <div class="label lbl-hb">Sparen ↗</div>
+        <div class="label lbl-bu">Investitionen ↘</div>
 
-        <div class="objekt e_ha">💸</div> <div class="objekt e_ha" style="animation-delay: {verzogerung}s;">💸</div>
-        <div class="objekt e_ah">💶</div> <div class="objekt e_ah" style="animation-delay: {verzogerung}s;">💶</div>
-        <div class="objekt e_ua">💸</div> <div class="objekt e_ua" style="animation-delay: {verzogerung}s;">💸</div>
-        <div class="objekt e_au">💶</div> <div class="objekt e_au" style="animation-delay: {verzogerung}s;">💶</div>
+        <div class="label lbl-ha">Transfers ↘</div>
+        <div class="label lbl-ah">↖ Transfers</div>
+        <div class="label lbl-ua">↙ Importe</div>
+        <div class="label lbl-au">Exporte ↗</div>
 
-        <div class="objekt e_hug">💶</div> <div class="objekt e_hug" style="animation-delay: {verzogerung}s;">💶</div>
-        <div class="objekt e_uhw">🛍️</div> <div class="objekt e_uhw" style="animation-delay: {verzogerung}s;">🛍️</div>
-        <div class="objekt e_uhe">💶</div> <div class="objekt e_uhe" style="animation-delay: {verzogerung}s;">💶</div>
-        <div class="objekt e_hua">🧑‍🔧</div> <div class="objekt e_hua" style="animation-delay: {verzogerung}s;">🧑‍🔧</div>
+        <div class="label label-hu lbl-hu-g">Konsumausgaben →</div>
+        <div class="label label-hu lbl-uh-w">Konsumgüter ←</div>
+        <div class="label label-hu lbl-uh-e">Einkommen ←</div>
+        <div class="label label-hu lbl-hu-a">Arbeitskraft →</div>
+
+        <div class="emoji e_hs" title="Steuern">🪙</div>
+        <div class="emoji e_hs" title="Steuern" style="animation-delay: {verzogerung}s;">🪙</div>
+        
+        <div class="emoji e_sh" title="Transfers">💶</div>
+        <div class="emoji e_sh" title="Transfers" style="animation-delay: {verzogerung}s;">💶</div>
+        
+        <div class="emoji e_us" title="Steuern">🪙</div>
+        <div class="emoji e_us" title="Steuern" style="animation-delay: {verzogerung}s;">🪙</div>
+        
+        <div class="emoji e_su" title="Konsum">💶</div>
+        <div class="emoji e_su" title="Konsum" style="animation-delay: {verzogerung}s;">💶</div>
+
+        <div class="emoji e_sb" title="Ersparnisse">🐖</div>
+        <div class="emoji e_sb" title="Ersparnisse" style="animation-delay: {verzogerung}s;">🐖</div>
+        
+        <div class="emoji e_bs" title="Schulden">🏦</div>
+        <div class="emoji e_bs" title="Schulden" style="animation-delay: {verzogerung}s;">🏦</div>
+        
+        <div class="emoji e_hb" title="Spareinlagen">🐖</div>
+        <div class="emoji e_hb" title="Spareinlagen" style="animation-delay: {verzogerung}s;">🐖</div>
+        
+        <div class="emoji e_bu" title="Investitionen">🏗️</div>
+        <div class="emoji e_bu" title="Investitionen" style="animation-delay: {verzogerung}s;">🏗️</div>
+
+        <div class="emoji e_ha" title="Transfer ins Ausland">💸</div>
+        <div class="emoji e_ha" title="Transfer ins Ausland" style="animation-delay: {verzogerung}s;">💸</div>
+        
+        <div class="emoji e_ah" title="Transfer aus Ausland">💶</div>
+        <div class="emoji e_ah" title="Transfer aus Ausland" style="animation-delay: {verzogerung}s;">💶</div>
+        
+        <div class="emoji e_ua" title="Zahlung für Importe">💸</div>
+        <div class="emoji e_ua" title="Zahlung für Importe" style="animation-delay: {verzogerung}s;">💸</div>
+        
+        <div class="emoji e_au" title="Zahlung für Exporte">💶</div>
+        <div class="emoji e_au" title="Zahlung für Exporte" style="animation-delay: {verzogerung}s;">💶</div>
+
+        <div class="emoji e_hu_geld" title="Konsumausgaben">💶</div>
+        <div class="emoji e_hu_geld" title="Konsumausgaben" style="animation-delay: {verzogerung}s;">💶</div>
+        
+        <div class="emoji e_uh_gut" title="Konsumgüter">🛍️</div>
+        <div class="emoji e_uh_gut" title="Konsumgüter" style="animation-delay: {verzogerung}s;">🛍️</div>
+        
+        <div class="emoji e_uh_geld" title="Einkommen">💶</div>
+        <div class="emoji e_uh_geld" title="Einkommen" style="animation-delay: {verzogerung}s;">💶</div>
+        
+        <div class="emoji e_hu_gut" title="Arbeit/Faktoren">🧑‍🔧</div>
+        <div class="emoji e_hu_gut" title="Arbeit/Faktoren" style="animation-delay: {verzogerung}s;">🧑‍🔧</div>
 
     </div>
 </body>
 </html>
 """
+html_animation = html_code.replace("ANIM_DURATION", str(dauer)).replace("ANIM_DELAY", str(verzogerung))
 
-# HTML Rendern
-components.html(html_code, height=880)
+components.html(html_code, height=750)
