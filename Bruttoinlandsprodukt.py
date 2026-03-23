@@ -260,7 +260,7 @@ if st.session_state.setup:
                 st.markdown("Treffe eine Entscheidung für anstehende Ereignisse. **Sie verschwinden nach dem Klick!**")
                 for i, sz in enumerate(st.session_state.aktuelle_szenarien):
                     if not st.session_state.entscheidungen_getroffen[i]:
-                        st.markdown(f"### ⚡ {sz['titel']}")
+                        st.markdown(f"### {sz['titel']}")
                         st.write(sz["text"])
 
                         c1, c2 = st.columns(2)
