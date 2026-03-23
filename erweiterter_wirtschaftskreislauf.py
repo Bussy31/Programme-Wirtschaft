@@ -115,8 +115,8 @@ else:
 
     # --- Mathe-Magie für die Animationsgeschwindigkeit ---
     # Bei Regler=1: 6 Sekunden (langsam) | Bei Regler=5: 4 Sekunden (normal) | Bei Regler=10: 1.5 Sekunden (schnell)
-    dauer = 6.5 - (konjunktur * 0.5)
-    verzogerung = dauer / 2  # Damit das zweite Emoji immer genau auf halber Strecke startet
+    dauer = 8.0 - (konjunktur * 0.6)  # Das hast du schon
+    verzogerung = dauer / 2  # HIER: Genau die Hälfte der Zeit als Verzögerung
 
 # --- HTML & CSS für das neue, verbesserte Design & Animation ---
 html_code = f"""
@@ -280,21 +280,52 @@ html_code = f"""
         <div class="label label-hu lbl-hu-a">Arbeitskraft etc. →</div>
 
         <div class="emoji e_hs" title="Steuern">🪙</div>
+        <div class="emoji e_hs" title="Steuern" style="animation-delay: {verzogerung}s;">🪙</div>
+        
         <div class="emoji e_sh" title="Transfers">💶</div>
+        <div class="emoji e_sh" title="Transfers" style="animation-delay: {verzogerung}s;">💶</div>
+        
         <div class="emoji e_us" title="Steuern">🪙</div>
+        <div class="emoji e_us" title="Steuern" style="animation-delay: {verzogerung}s;">🪙</div>
+        
         <div class="emoji e_su" title="Konsum">💶</div>
+        <div class="emoji e_su" title="Konsum" style="animation-delay: {verzogerung}s;">💶</div>
+
         <div class="emoji e_sb" title="Ersparnisse">🐖</div>
+        <div class="emoji e_sb" title="Ersparnisse" style="animation-delay: {verzogerung}s;">🐖</div>
+        
         <div class="emoji e_bs" title="Schulden">🏦</div>
+        <div class="emoji e_bs" title="Schulden" style="animation-delay: {verzogerung}s;">🏦</div>
+        
         <div class="emoji e_hb" title="Spareinlagen">🐖</div>
+        <div class="emoji e_hb" title="Spareinlagen" style="animation-delay: {verzogerung}s;">🐖</div>
+        
         <div class="emoji e_bu" title="Investitionen">🏗️</div>
+        <div class="emoji e_bu" title="Investitionen" style="animation-delay: {verzogerung}s;">🏗️</div>
+
         <div class="emoji e_ha" title="Transfer ins Ausland">💸</div>
+        <div class="emoji e_ha" title="Transfer ins Ausland" style="animation-delay: {verzogerung}s;">💸</div>
+        
         <div class="emoji e_ah" title="Transfer aus Ausland">💶</div>
+        <div class="emoji e_ah" title="Transfer aus Ausland" style="animation-delay: {verzogerung}s;">💶</div>
+        
         <div class="emoji e_ua" title="Zahlung für Importe">💸</div>
+        <div class="emoji e_ua" title="Zahlung für Importe" style="animation-delay: {verzogerung}s;">💸</div>
+        
         <div class="emoji e_au" title="Zahlung für Exporte">💶</div>
+        <div class="emoji e_au" title="Zahlung für Exporte" style="animation-delay: {verzogerung}s;">💶</div>
+
         <div class="emoji e_hu_geld" title="Konsumausgaben">💶</div>
+        <div class="emoji e_hu_geld" title="Konsumausgaben" style="animation-delay: {verzogerung}s;">💶</div>
+        
         <div class="emoji e_uh_gut" title="Konsumgüter">🛍️</div>
+        <div class="emoji e_uh_gut" title="Konsumgüter" style="animation-delay: {verzogerung}s;">🛍️</div>
+        
         <div class="emoji e_uh_geld" title="Einkommen">💶</div>
+        <div class="emoji e_uh_geld" title="Einkommen" style="animation-delay: {verzogerung}s;">💶</div>
+        
         <div class="emoji e_hu_gut" title="Arbeit/Faktoren">🧑‍🔧</div>
+        <div class="emoji e_hu_gut" title="Arbeit/Faktoren" style="animation-delay: {verzogerung}s;">🧑‍🔧</div>
 
     </div>
 </body>
