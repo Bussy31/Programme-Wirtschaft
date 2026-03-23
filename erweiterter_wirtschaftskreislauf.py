@@ -115,26 +115,26 @@ def generiere_loesungs_pdf():
         "1. Haushalte & Staat",
         "   - Haushalte -> Staat: Steuern, Sozialabgaben",
         "   - Staat -> Haushalte: Transferleistungen",
-        "   - Unternehmen -> Staat: Steuern abzueglich Subventionen",
+        "   - Unternehmen -> Staat: Steuern abzüglich Subventionen",
         "   - Staat -> Unternehmen: staatlicher Konsum",
         "",
         "2. Kernkreislauf (H & U)",
         "   - Haushalte -> Unternehmen: Konsumausgaben",
-        "   - Unternehmen -> Haushalte: Konsumgueter",
+        "   - Unternehmen -> Haushalte: Konsumgüter",
         "   - Unternehmen -> Haushalte: Einkommen",
         "   - Haushalte -> Unternehmen: Arbeitskraft",
         "",
-        "3. Banken & Investitionen",
+        "3. Banken",
         "   - Haushalte -> Banken: Spareinlagen",
         "   - Banken -> Unternehmen: Investitionen",
         "   - Staat -> Banken: staatliche Ersparnisse",
         "   - Banken -> Staat: staatliche Kreditaufnahme",
         "",
-        "4. Das Ausland",
+        "4. Ausland",
         "   - Haushalte -> Ausland: Transfer der Haushalte",
         "   - Ausland -> Haushalte: Transfer des Auslands",
-        "   - Ausland -> Unternehmen: Zahlungen fuer Exporte",
-        "   - Unternehmen -> Ausland: Zahlungen fuer Importe"
+        "   - Ausland -> Unternehmen: Zahlungen für Exporte",
+        "   - Unternehmen -> Ausland: Zahlungen für Importe"
     ]
 
     for zeile in loesungen:
