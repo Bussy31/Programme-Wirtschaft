@@ -15,7 +15,7 @@ optionen = [
     "staatlicher Konsum", "Steuern abzüglich Subventionen",
     "Spareinlagen", "Investitionen",
     "Konsumausgaben", "Konsumgüter",
-    "Einkommen", "Arbeitskraft, Boden, Kapital",
+    "Einkommen", "Arbeitskraft",
     "Transfer der Haushalte", "Transfer des Auslands",
     "Zahlungen für Exporte", "Zahlungen für Importe",
     "staatliche Ersparnisse", "staatliche Kreditaufnahme"
@@ -50,7 +50,7 @@ with col2:
 
     kern_correct = (
             h_u_geld == "Konsumausgaben" and u_h_gut == "Konsumgüter" and
-            u_h_geld == "Einkommen" and h_u_gut == "Arbeitskraft, Boden, Kapital"
+            u_h_geld == "Einkommen" and h_u_gut == "Arbeitskraft"
     )
 
     if kern_correct:
@@ -122,7 +122,7 @@ def generiere_loesungs_pdf():
         "   - Haushalte -> Unternehmen: Konsumausgaben",
         "   - Unternehmen -> Haushalte: Konsumgueter",
         "   - Unternehmen -> Haushalte: Einkommen",
-        "   - Haushalte -> Unternehmen: Arbeitskraft, Boden, Kapital",
+        "   - Haushalte -> Unternehmen: Arbeitskraft",
         "",
         "3. Banken & Investitionen",
         "   - Haushalte -> Banken: Spareinlagen",
@@ -336,7 +336,7 @@ html_code = f"""
         <div class="label label-hu lbl-hu-g">Konsumausgaben →</div>
         <div class="label label-hu lbl-uh-w">Konsumgüter ←</div>
         <div class="label label-hu lbl-uh-e">Einkommen ←</div>
-        <div class="label label-hu lbl-hu-a">Arbeitskraft etc. →</div>
+        <div class="label label-hu lbl-hu-a">Arbeitskraft →</div>
 
         <div class="emoji e_hs" title="Steuern">🪙</div>
         <div class="emoji e_hs" title="Steuern" style="animation-delay: {verzogerung}s;">🪙</div>
