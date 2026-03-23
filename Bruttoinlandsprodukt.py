@@ -1,6 +1,9 @@
 import streamlit as st
 import random
 import pandas as pd
+import io
+import matplotlib.pyplot as plt
+from fpdf import FPDF
 
 st.set_page_config(page_title="Musterland Simulation", layout="wide", initial_sidebar_state="expanded")
 
@@ -134,6 +137,77 @@ def naechstes_jahr():
     st.rerun()
 
 
+def erstelle_pdf():
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 16)
+
+    def clean_text(text):
+        text = text.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
+        text = text.replace('Ä', 'Ae').replace('Ö', 'Oe').replace('Ü', 'Ue').replace('ß', 'ss')
+        return text.encode('ascii', 'ignore').decode('ascii')
+
+    land = clean_text(st.session_state.land_name)
+    waehrung = clean_text(st.session_state.waehrung)
+
+    pdf.cell(0, 10, f"Wirtschaftsbericht: {land}", ln=True, align='C')
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 10, f"Stand: Jahr {st.session_state.jahr}", ln=True, align='C')
+    pdf.ln(5)
+
+    # 1. Aktuelle Zahlen
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, "Aktuelle Wirtschaftslage:", ln=True)
+    pdf.set_font("Arial", '', 12)
+    bip = berechne_bip()
+    pdf.cell(0, 8, f"BIP Gesamt: {bip} {waehrung}", ln=True)
+    pdf.cell(0, 8,
+             f"Entstehung: Agrar ({st.session_state.ent['landwirtschaft']}), Industrie ({st.session_state.ent['industrie']}), Dienstleistung ({st.session_state.ent['dienstleistung']})",
+             ln=True)
+    pdf.cell(0, 8,
+             f"Verwendung: Konsum ({st.session_state.ver['konsum']}), Invest ({st.session_state.ver['investitionen']}), Staat ({st.session_state.ver['staat']}), Export ({st.session_state.ver['export']})",
+             ln=True)
+    pdf.cell(0, 8,
+             f"Verteilung: Loehne ({st.session_state.vert['loehne']}), Gewinne ({st.session_state.vert['gewinne']})",
+             ln=True)
+    pdf.ln(5)
+
+    # 2. Graph generieren
+    if len(st.session_state.bip_historie) > 0:
+        jahre = [d["Jahr"] for d in st.session_state.bip_historie] + [st.session_state.jahr]
+        bips = [d["BIP"] for d in st.session_state.bip_historie] + [bip]
+
+        fig, ax = plt.subplots(figsize=(6, 3))
+        ax.plot(jahre, bips, marker='o', color='b')
+        ax.set_title("BIP Entwicklung")
+        ax.grid(True)
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png", bbox_inches='tight')
+        plt.close(fig)
+        pdf.image(buf, x=10, w=150)
+        pdf.ln(5)
+
+    # 3. Historie der Entscheidungen
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, "Chronik der Ereignisse:", ln=True)
+    pdf.set_font("Arial", '', 11)
+
+    letztes_jahr = 0
+    for eintrag in st.session_state.alle_entscheidungen:
+        if eintrag['jahr'] != letztes_jahr:
+            pdf.ln(3)
+            pdf.set_font("Arial", 'B', 11)
+            pdf.cell(0, 8, f"--- Jahr {eintrag['jahr']} ---", ln=True)
+            pdf.set_font("Arial", '', 11)
+            letztes_jahr = eintrag['jahr']
+
+        titel_sauber = clean_text(eintrag['log']['titel'])
+        pdf.cell(0, 6, f"- {titel_sauber}", ln=True)
+
+    return bytes(pdf.output(dest='S'), encoding='latin1')
+
+
 def anwenden(option, titel, index):
     ereignis_log = {"titel": f"{titel} ({option['text']})", "ent": {}, "ver": {}, "vert": {}}
 
@@ -173,6 +247,7 @@ def anwenden(option, titel, index):
             ereignis_log["vert"][anderes_ziel] = ereignis_log["vert"].get(anderes_ziel, 0) - delta
 
     st.session_state.ereignis_logbuch.append(ereignis_log)
+    st.session_state.alle_entscheidungen.append({"jahr": st.session_state.jahr, "log": ereignis_log})
     st.session_state.entscheidungen_getroffen[index] = True
 
 
@@ -189,6 +264,7 @@ if "setup" not in st.session_state:
     st.session_state.aktuelle_szenarien = []
     st.session_state.entscheidungen_getroffen = []
     st.session_state.ereignis_logbuch = []
+    st.session_state.alle_entscheidungen = []
 
     st.session_state.ent = {"landwirtschaft": 0, "industrie": 0, "dienstleistung": 0}
     st.session_state.ver = {"konsum": 0, "investitionen": 0, "staat": 0, "export": 0}
@@ -234,6 +310,14 @@ with st.sidebar:
         if st.button("Neustart / Reset"):
             st.session_state.clear()
             st.rerun()
+        st.write("---")
+        pdf_daten = erstelle_pdf()
+        st.download_button(
+            label="📄 Verlauf als PDF exportieren",
+            data=pdf_daten,
+            file_name=f"Wirtschaftsbericht_{st.session_state.land_name}_Jahr_{st.session_state.jahr}.pdf",
+            mime="application/pdf"
+        )
 
 # --- 5. UI: HAUPTBEREICH (SIMULATION) ---
 if st.session_state.setup:
