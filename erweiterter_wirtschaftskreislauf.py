@@ -141,8 +141,8 @@ html_code = f"""
     /* Layout */
     .staat {{ width: 180px; height: 80px; left: 410px; top: 20px; border-color: #d62728; }}
     .ausland {{ width: 180px; height: 80px; left: 410px; top: 650px; border-color: #9467bd; }}
-    .banken {{ width: 180px; height: 100px; left: 410px; top: 220px; border-color: #ff7f0e; }}
-    .haushalte {{ width: 180px; height: 140px; left: 30px; top: 330px; border-color: #1f77b4; }}
+    .banken {{ width: 180px; height: 100px; left: 410px; top: 220px; border-color: #ff7f0e; }} /* Banken nach unten korrigiert! */
+    .haushalte {{ width: 180px; height: 140px; left: 30px; top: 330px; border-color: #1f77b4; }} /* Große Boxen bleiben */
     .unternehmen {{ width: 180px; height: 140px; left: 790px; top: 330px; border-color: #2ca02c; }}
 
     /* Fliegende Emojis (Güter & Geld) */
@@ -155,23 +155,22 @@ html_code = f"""
         text-align: center; display: flex; align-items: center; justify-content: center;
     }}
 
-    /* Exakt zentrierte Positionierung auf den Linien */
-    .lbl-hs {{ left: 285px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
-    .lbl-sh {{ left: 325px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
-    .lbl-su {{ left: 675px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
-    .lbl-us {{ left: 715px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+    /* Positionierung aller 16 Labels passend zu den parallelen Linien */
+    .lbl-hs {{ left: 260px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+    .lbl-sh {{ left: 350px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+    .lbl-us {{ left: 740px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
+    .lbl-su {{ left: 650px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
 
-    /* Banken <-> Staat Labels wieder exakt auf die vertikalen Linien gelegt */
-    .lbl-sb {{ left: 480px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
-    .lbl-bs {{ left: 520px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
+    .lbl-sb {{ left: 400px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
+    .lbl-bs {{ left: 600px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
 
     .lbl-hb {{ left: 310px; top: 320px; transform: translate(-50%, -50%); color: #ff7f0e;}}
     .lbl-bu {{ left: 690px; top: 320px; transform: translate(-50%, -50%); color: #ff7f0e;}}
 
-    .lbl-ha {{ left: 285px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
-    .lbl-ah {{ left: 325px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
-    .lbl-au {{ left: 675px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
-    .lbl-ua {{ left: 715px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+    .lbl-ha {{ left: 260px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+    .lbl-ah {{ left: 350px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+    .lbl-ua {{ left: 740px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
+    .lbl-au {{ left: 650px; top: 560px; transform: translate(-50%, -50%); color: #9467bd;}}
 
     /* Labels Kern H<->U */
     .label-hu {{ left: 500px; transform: translate(-50%, -50%); }}
@@ -180,7 +179,7 @@ html_code = f"""
     .lbl-uh-e {{ top: 410px; color: #2ca02c; }}
     .lbl-hu-a {{ top: 430px; color: #1f77b4; }}
 
-    /* --- Animations-Routen --- */
+    /* --- Animations-Routen (Jetzt wieder mit parallelen, separaten Pfaden!) --- */
     @keyframes m_hs {{ 0%{{left:120px; top:330px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:450px; top:100px; opacity:0;}} }}
     @keyframes m_sh {{ 0%{{left:490px; top:100px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:160px; top:330px; opacity:0;}} }}
 
@@ -199,7 +198,7 @@ html_code = f"""
     @keyframes m_hb {{ 0%{{left:210px; top:340px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:410px; top:280px; opacity:0;}} }}
     @keyframes m_bu {{ 0%{{left:590px; top:280px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:790px; top:340px; opacity:0;}} }}
 
-    /* Kern H <-> U */
+    /* Kern H <-> U (4 Parallel) */
     @keyframes m_hu_geld {{ 0%{{left:210px; top:370px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:790px; top:370px; opacity:0;}} }}
     @keyframes m_uh_gut {{ 0%{{left:790px; top:390px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:210px; top:390px; opacity:0;}} }}
     @keyframes m_uh_geld {{ 0%{{left:790px; top:410px; opacity:0;}} 10%{{opacity:1;}} 90%{{opacity:1;}} 100%{{left:210px; top:410px; opacity:0;}} }}
@@ -259,12 +258,12 @@ html_code = f"""
         <div class="akteur unternehmen">Unternehmen</div>
         <div class="akteur ausland">Ausland</div>
 
-        <div class="label lbl-hs">Steuern ↗</div>
-        <div class="label lbl-sh">↙ Transfers</div>
-        <div class="label lbl-us">↖ Steuern-Sub.</div>
-        <div class="label lbl-su">Konsum ↘</div>
+        <div class="label lbl-hs">Steuern →</div>
+        <div class="label lbl-sh">← Transfers</div>
+        <div class="label lbl-us">← Steuern-Sub.</div>
+        <div class="label lbl-su">Konsum →</div>
 
-        <div class="label lbl-sb">Ersparnisse ↓</div>
+        <div class="label lbl-sb">Sparen ↓</div>
         <div class="label lbl-bs">Kredite ↑</div>
 
         <div class="label lbl-hb">Sparen ↘</div>
