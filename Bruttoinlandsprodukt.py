@@ -380,7 +380,12 @@ if st.session_state.setup:
                 if st.session_state.jahr < st.session_state.ziel_jahre:
                     if st.button("➡️ Jahr abschließen & Nächstes Jahr starten", type="primary"):
                         naechstes_jahr()
-
+                else:
+                    if st.button("🏁 Simulation beenden & Auswertung ansehen", type="primary"):
+                        naechstes_jahr()
+                        st.session_state.jahr -= 1
+        else:
+            st.warning("Es gibt keine weiteren Ereignisse mehr in der Datenbank! Die Simulation wird beendet.")
 
     st.markdown("---")
 
