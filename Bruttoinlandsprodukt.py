@@ -4,7 +4,7 @@ import pandas as pd
 
 st.set_page_config(page_title="Musterland Simulation", layout="wide", initial_sidebar_state="expanded")
 
-# --- 1. DATENBANK DER SZENARIEN (Prozentuale Logik!)
+# --- 1. DATENBANK DER SZENARIEN (Prozentuale Logik) ---
 alle_szenarien = [
     {
         "id": "1", "titel": "🚨 Globale Rezession",
@@ -39,7 +39,6 @@ alle_szenarien = [
         "text": "Die Industriearbeiter legen die Fabriken lahm und fordern mehr Geld.",
         "option_a": {"text": "Lohnerhöhungen erzwingen", "effekte": [
             {"typ": "verteilung_shift", "basis": "loehne", "prozent": 0.15}]},
-        # Reiner Shift von Gewinn zu Lohn, BIP bleibt gleich!
         "option_b": {"text": "Streik polizeilich auflösen", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": -0.10, "ver": {"export": 1.0},
              "vert": {"loehne": 0.5, "gewinne": 0.5}}]}
@@ -103,8 +102,7 @@ alle_szenarien = [
         "option_b": {"text": "Forschungsgelder für Industrie", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.15, "ver": {"investitionen": 1.0},
              "vert": {"loehne": 0.3, "gewinne": 0.7}}]}
-    },
-    # Hier können beliebig viele weitere hinzugefügt werden!
+    }
 ]
 
 
@@ -132,7 +130,7 @@ def naechstes_jahr():
 
     st.session_state.aktuelle_szenarien = ziehe_3_szenarien()
     st.session_state.entscheidungen_getroffen = [False] * len(st.session_state.aktuelle_szenarien)
-    st.session_state.ereignis_logbuch = []  # Löscht die alten Ereignisse aus dem Dashboard
+    st.session_state.ereignis_logbuch = []
     st.rerun()
 
 
@@ -141,15 +139,12 @@ def anwenden(option, titel, index):
 
     for effekt in option["effekte"]:
         if effekt["typ"] == "wachstum":
-            # 1. Skalierung berechnen (Prozent vom aktuellen Sektorwert)
             basis_wert = st.session_state.ent[effekt["basis"]]
             delta = int(basis_wert * effekt["prozent"])
 
-            # 2. Entstehung aktualisieren
             st.session_state.ent[effekt["basis"]] += delta
             ereignis_log["ent"][effekt["basis"]] = ereignis_log["ent"].get(effekt["basis"], 0) + delta
 
-            # 3. Verwendung aktualisieren (mit Rest-Ausgleich für Rundungsfehler)
             verteilt_ver = 0
             items_ver = list(effekt["ver"].items())
             for i, (ziel, anteil) in enumerate(items_ver):
@@ -158,7 +153,6 @@ def anwenden(option, titel, index):
                 st.session_state.ver[ziel] += v_delta
                 ereignis_log["ver"][ziel] = ereignis_log["ver"].get(ziel, 0) + v_delta
 
-            # 4. Verteilung aktualisieren
             verteilt_vert = 0
             items_vert = list(effekt["vert"].items())
             for i, (ziel, anteil) in enumerate(items_vert):
@@ -168,7 +162,6 @@ def anwenden(option, titel, index):
                 ereignis_log["vert"][ziel] = ereignis_log["vert"].get(ziel, 0) + v_delta
 
         elif effekt["typ"] == "verteilung_shift":
-            # Lohn-Gewinn-Verschiebung ohne BIP-Wachstum (z.B. Streik)
             basis_wert = st.session_state.vert[effekt["basis"]]
             delta = int(basis_wert * effekt["prozent"])
             anderes_ziel = "gewinne" if effekt["basis"] == "loehne" else "loehne"
@@ -208,7 +201,7 @@ with st.sidebar:
         st.session_state.waehrung = st.text_input("Währung:", "Taler")
 
         st.write("---")
-        st.write("**Arbeitskräfte verteilen (Start-Wirtschaft):**")
+        st.write("**Arbeitskräfte verteilen:**")
         anteil_agrar = st.slider("Landwirtschaft (%)", 0, 100, 15)
         anteil_industrie = st.slider("Industrie (%)", 0, 100, 45)
         anteil_dienst = st.slider("Dienstleistung (%)", 0, 100, 40)
@@ -242,32 +235,33 @@ with st.sidebar:
 # --- 5. UI: HAUPTBEREICH (SIMULATION) ---
 if st.session_state.setup:
     st.title(f"🌍 {st.session_state.land_name} - Jahr {st.session_state.jahr}")
-    st.markdown(
-        "Treffe eine Entscheidung für alle anstehenden Ereignisse, um die Auswirkungen unten im Dashboard zu sehen.")
 
     if len(st.session_state.aktuelle_szenarien) > 0:
-        for i, sz in enumerate(st.session_state.aktuelle_szenarien):
-            st.markdown(f"### Ereignis {i + 1}: {sz['titel']}")
-            st.write(sz["text"])
+        alle_fertig = all(st.session_state.entscheidungen_getroffen)
 
-            if not st.session_state.entscheidungen_getroffen[i]:
-                c1, c2 = st.columns(2)
-                with c1:
-                    if st.button(sz["option_a"]["text"], key=f"a_{st.session_state.jahr}_{sz['id']}",
-                                 use_container_width=True):
-                        anwenden(sz["option_a"], sz["titel"], i)
-                        st.rerun()
-                with c2:
-                    if st.button(sz["option_b"]["text"], key=f"b_{st.session_state.jahr}_{sz['id']}",
-                                 use_container_width=True):
-                        anwenden(sz["option_b"], sz["titel"], i)
-                        st.rerun()
-            else:
-                st.info("✅ Entscheidung getroffen! Sieh dir das Dashboard unten an.")
-            st.divider()
+        if not alle_fertig:
+            st.markdown("Treffe eine Entscheidung für anstehende Ereignisse. **Sie verschwinden nach dem Klick!**")
+            # Zeige nur die Ereignisse, die noch NICHT entschieden wurden
+            for i, sz in enumerate(st.session_state.aktuelle_szenarien):
+                if not st.session_state.entscheidungen_getroffen[i]:
+                    st.markdown(f"### ⚡ {sz['titel']}")
+                    st.write(sz["text"])
 
-        if all(st.session_state.entscheidungen_getroffen):
-            st.success("Du hast alle Entscheidungen für dieses Jahr getroffen.")
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        if st.button(sz["option_a"]["text"], key=f"a_{st.session_state.jahr}_{sz['id']}",
+                                     use_container_width=True):
+                            anwenden(sz["option_a"], sz["titel"], i)
+                            st.rerun()
+                    with c2:
+                        if st.button(sz["option_b"]["text"], key=f"b_{st.session_state.jahr}_{sz['id']}",
+                                     use_container_width=True):
+                            anwenden(sz["option_b"], sz["titel"], i)
+                            st.rerun()
+                    st.divider()
+        else:
+            # Alle Entscheidungen getroffen
+            st.success("✅ Du hast alle Entscheidungen für dieses Jahr getroffen. Schau dir unten die Veränderungen an!")
             if st.button("➡️ Jahr abschließen & Nächstes Jahr starten", type="primary"):
                 naechstes_jahr()
     else:
@@ -285,7 +279,6 @@ if st.session_state.setup:
         st.line_chart(df, y="BIP", height=200)
 
 
-    # Hilfsfunktion, um das Logbuch für einen bestimmten Sektor schön anzuzeigen
     def zeige_logs(kategorie, sektor_key):
         for log in st.session_state.ereignis_logbuch:
             if sektor_key in log[kategorie]:
