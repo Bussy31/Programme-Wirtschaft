@@ -1,69 +1,121 @@
 import streamlit as st
-import json
-import requests
-from streamlit_lottie import st_lottie
+import streamlit.components.v1 as components
 
-# --- Seiten-Setup ---
-st.set_page_config(page_title="Vom Rätsel zum Kreislauf!", layout="wide")
+st.set_page_config(page_title="Kreislauf Animation", layout="wide")
 st.title("🧩 Baue den Wirtschaftskreislauf!")
-st.markdown("Verbinde die Akteure richtig. Wenn du es schaffst, erwacht die Wirtschaft zum Leben!")
 
+# --- Phase 1: Das Puzzle (stark vereinfacht für den Test) ---
+st.markdown("Verbinde die Akteure richtig, um den Kreislauf zu starten.")
 
-# --- Funktion zum Laden der Animation ---
-# Wir nutzen eine Beispiel-Animation, die Geldströme zeigt.
-# Du kannst hier die URL deiner Lieblings-Animation von LottieFiles einsetzen.
-def load_lottieurl(url: str):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
-
-
-# Beispiel-Lottie-Animation: "Economic Cycle" (Geldströme)
-# Du kannst diese URL durch eine beliebige Lottie-JSON-URL ersetzen.
-lottie_economy = load_lottieurl("https://lottie.host/a6e9a78a-c47d-419b-a083-d5d288d75242/f41E3w8w1T.json")
-
-# --- Phase 1: Das Puzzle (Logik wie gehabt) ---
-st.subheader("Schritt 1: Wer gibt wem was?")
-st.markdown("Wähle die richtige Richtung für jeden Strom aus.")
-
-# Wir vereinfachen das Quiz etwas, um den Fokus auf die Animation zu legen.
 col1, col2 = st.columns(2)
-
 with col1:
-    st.info("💵 GELDSTRÖME (z.B. Lohn)")
-    lohn_von = st.selectbox("Geld fließt von...", ["Bitte wählen", "Haushalte", "Unternehmen"], key="l_von")
-    lohn_zu = st.selectbox("...zu", ["Bitte wählen", "Haushalte", "Unternehmen"], key="l_zu")
+    lohn_von = st.selectbox("Geld fließt von...", ["Bitte wählen", "Unternehmen", "Haushalte"])
+    lohn_zu = st.selectbox("...zu", ["Bitte wählen", "Unternehmen", "Haushalte"])
 
-with col2:
-    st.info("📦 GÜTERSTRÖME (z.B. Arbeit)")
-    arbeit_von = st.selectbox("Arbeit fließt von...", ["Bitte wählen", "Haushalte", "Unternehmen"], key="a_von")
-    arbeit_zu = st.selectbox("...zu", ["Bitte wählen", "Haushalte", "Unternehmen"], key="a_zu")
+# Logik-Check (Nur wenn Unternehmen -> Haushalte gewählt ist, geht es los)
+if lohn_von == "Unternehmen" and lohn_zu == "Haushalte":
+    st.success("🎉 Richtig! Das Geld fließt.")
 
-# --- Phase 2: Logik-Prüfung ---
-lohn_richtig = (lohn_von == "Unternehmen" and lohn_zu == "Haushalte")
-arbeit_richtig = (arbeit_von == "Haushalte" and arbeit_zu == "Unternehmen")
+    # --- Phase 2: Unsere selbstgebaute, fließende Animation ---
+    # Wir schreiben ein kleines Stück HTML & CSS, das die Boxen und fliegenden Partikel zeichnet.
 
-alle_richtig = lohn_richtig and arbeit_richtig
-etwas_ausgewaehlt = (lohn_von != "Bitte wählen" or arbeit_von != "Bitte wählen")
+    html_animation = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        /* Das Spielfeld */
+        .kreislauf-box {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 300px;
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            margin: 0 auto;
+            border: 2px solid #e9ecef;
+            font-family: sans-serif;
+            overflow: hidden;
+        }
 
-st.divider()
+        /* Die zwei Hauptakteure */
+        .akteur {
+            position: absolute;
+            width: 120px;
+            height: 80px;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 80px;
+            font-weight: bold;
+            top: 110px;
+            z-index: 10;
+        }
+        .unternehmen { left: 40px; border-color: #2ca02c; }
+        .haushalte { right: 40px; border-color: #1f77b4; }
 
-if alle_richtig:
-    # --- Phase 3: Die Lottie-Belohnung (Der lebendige Kreislauf!) ---
-    st.success("🎉 Hervorragend! Du hast den Kreislauf geschlossen. Jetzt schau, wie das Geld fließt!")
+        /* Fließendes Geld (oben) */
+        .geld {
+            position: absolute;
+            font-size: 24px;
+            top: 60px;
+            left: 170px;
+            animation: moveRight 2.5s linear infinite;
+        }
 
-    # Animation anzeigen!
-    if lottie_economy:
-        # st_lottie zeigt die Animation an.
-        # height steuert die Größe.
-        # reverse=False heißt, die Animation läuft vorwärts.
-        # loop=True heißt, sie läuft unendlich.
-        # speed=1 heißt, sie läuft in normaler Geschwindigkeit.
-        st_lottie(lottie_economy, height=600, key="economy_sim", loop=True)
-        st.markdown("Siehst du die Münzen fließen? Siehst du die Pakete reisen? **Genau so hast du es gebaut!**")
-    else:
-        st.error("Upps! Die Animation konnte nicht geladen werden.")
+        /* Fließende Güter (unten) */
+        .gueter {
+            position: absolute;
+            font-size: 24px;
+            bottom: 60px;
+            right: 170px;
+            animation: moveLeft 2.5s linear infinite;
+        }
 
-elif etwas_ausgewaehlt:
-    st.warning("Noch ist der Kreislauf nicht geschlossen. Überlege nochmal: Wer bekommt Lohn für seine Arbeit?")
+        /* Die Animations-Routen */
+        @keyframes moveRight {
+            0% { left: 160px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: calc(100% - 190px); opacity: 0; }
+        }
+
+        @keyframes moveLeft {
+            0% { right: 160px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { right: calc(100% - 190px); opacity: 0; }
+        }
+
+        /* Beschriftung der Pfeile */
+        .label { position: absolute; width: 100%; text-align: center; color: #666; font-size: 14px; }
+        .label-top { top: 30px; }
+        .label-bottom { bottom: 30px; }
+    </style>
+    </head>
+    <body>
+        <div class="kreislauf-box">
+            <div class="label label-top">Einkommen / Löhne ➔</div>
+
+            <div class="akteur unternehmen">Unternehmen</div>
+
+            <div class="geld">💶</div>
+            <div class="geld" style="animation-delay: 1.25s;">💶</div>
+
+            <div class="akteur haushalte">Haushalte</div>
+
+            <div class="gueter">📦</div>
+            <div class="gueter" style="animation-delay: 1.25s;">📦</div>
+
+            <div class="label label-bottom">⬅ Arbeitskraft</div>
+        </div>
+    </body>
+    </html>
+    """
+
+    # Hier betten wir unser HTML in Streamlit ein
+    components.html(html_animation, height=350)
+
+else:
+    st.info("Wer zahlt die Löhne? Wähle oben das Richtige aus.")
