@@ -1,148 +1,185 @@
 import streamlit as st
-import random
 
-# --- Seitenkonfiguration ---
 st.set_page_config(page_title="Musterland BIP Simulator", layout="wide")
 
-# --- Initialisierung des Wirtschafts-Status (Session State) ---
-# Das ist wichtig, damit Streamlit die Werte beim Klicken nicht vergisst.
-if "init" not in st.session_state:
-    st.session_state.init = True
-    st.session_state.land_name = "Fantasia"
+# --- Initialisierung (Session State) ---
+if "setup_abgeschlossen" not in st.session_state:
+    st.session_state.setup_abgeschlossen = False
+    st.session_state.land_name = ""
     st.session_state.waehrung = "Taler"
+    st.session_state.nachricht = "Willkommen! Bitte gründe zuerst dein Land in der Seitenleiste."
 
-    # Basiswerte Entstehungsrechnung
-    st.session_state.ent_landwirtschaft = 2000
-    st.session_state.ent_industrie = 5000
-    st.session_state.ent_dienstleistung = 3000
+    # Wirtschaftsdaten
+    st.session_state.ent = {"landwirtschaft": 0, "industrie": 0, "dienstleistung": 0}
+    st.session_state.ver = {"konsum": 0, "investitionen": 0, "staat": 0, "export": 0}
+    st.session_state.vert = {"loehne": 0, "gewinne": 0}
 
-    # Basiswerte Verwendungsrechnung
-    st.session_state.ver_konsum = 6000
-    st.session_state.ver_investitionen = 2000
-    st.session_state.ver_staat = 1500
-    st.session_state.ver_export_netto = 500
-
-    # Basiswerte Verteilungsrechnung
-    st.session_state.vert_loehne = 6500
-    st.session_state.vert_gewinne = 3500
-
-    st.session_state.letztes_szenario = "Willkommen in deinem Musterland! Ziehe eine Ereigniskarte, um zu sehen, wie sich die Wirtschaft entwickelt."
-
-# --- Szenarien-Datenbank ---
-# Jedes Szenario verändert die Werte so, dass das BIP am Ende bei allen 3 Methoden gleich bleibt!
-szenarien = [
-    {
-        "titel": "Der Staat baut eine neue Autobahn",
-        "text": "Die Regierung investiert massiv in die Infrastruktur. Bauunternehmen haben volle Auftragsbücher und stellen neue Leute ein.",
-        "effekt_ent": {"ent_industrie": 1000},
-        "effekt_ver": {"ver_staat": 1000},
-        "effekt_vert": {"vert_loehne": 700, "vert_gewinne": 300}
+# --- Szenarien mit ENTSCHEIDUNGEN ---
+# Hier haben die Schüler jetzt die Wahl!
+szenarien = {
+    "krise": {
+        "titel": "🚨 Wirtschaftskrise: Die Nachfrage bricht ein!",
+        "text": "Die Bürger haben Angst vor der Zukunft und sparen ihr Geld, statt es auszugeben. Der Konsum sinkt. Was tust du?",
+        "option_a": {
+            "text": "Option A: Der Staat greift ein und baut neue Schulen (Staatsausgaben erhöhen).",
+            "effekt_ent": {"industrie": 1000},  # Bauwirtschaft brummt
+            "effekt_ver": {"staat": 1000},  # Staat zahlt
+            "effekt_vert": {"loehne": 800, "gewinne": 200},
+            "feedback": "Gute Wahl! Die Staatsausgaben haben die Krise abgefedert. Die Bauarbeiter haben gute Löhne bekommen."
+        },
+        "option_b": {
+            "text": "Option B: Steuern für Unternehmen senken, damit sie investieren.",
+            "effekt_ent": {"dienstleistung": 800},  # Mehr Aufträge für Berater/IT
+            "effekt_ver": {"investitionen": 800},
+            "effekt_vert": {"loehne": 200, "gewinne": 600},
+            "feedback": "Die Unternehmen freuen sich über die Steuergeschenke und investieren. Allerdings steigen vor allem die Gewinne, weniger die Löhne."
+        }
     },
-    {
-        "titel": "Unwetter zerstört Ernte",
-        "text": "Ein heftiger Sturm vernichtet einen Großteil der Apfelernte. Die Bauern machen Verluste und die Leute können weniger Obst kaufen.",
-        "effekt_ent": {"ent_landwirtschaft": -500},
-        "effekt_ver": {"ver_konsum": -500},
-        "effekt_vert": {"vert_gewinne": -500}
-    },
-    {
-        "titel": "Lohnkürzungen in der Fahrradfabrik",
-        "text": "Die Chefs der Industrie kürzen die Löhne der Arbeiter um 10%. Die Produktion bleibt gleich, aber die Arbeiter haben weniger Geld, während die Chefs mehr Gewinn verbuchen.",
-        "effekt_ent": {},  # Keine Änderung bei der Entstehung!
-        "effekt_ver": {},  # Keine Änderung bei der Verwendung (in diesem vereinfachten Modell)!
-        "effekt_vert": {"vert_loehne": -400, "vert_gewinne": 400}  # Nullsummenspiel
-    },
-    {
-        "titel": "Export-Boom bei Maschinen",
-        "text": "Das Ausland reißt uns unsere Industrieprodukte aus den Händen. Die Fabriken machen Rekordgewinne.",
-        "effekt_ent": {"ent_industrie": 800},
-        "effekt_ver": {"ver_export_netto": 800},
-        "effekt_vert": {"vert_gewinne": 800}
-    },
-    {
-        "titel": "Bürger gehen öfter ins Restaurant",
-        "text": "Die Stimmung ist gut! Die Menschen sparen weniger und geben ihr Geld lieber für Friseure, Restaurants und Kinos aus.",
-        "effekt_ent": {"ent_dienstleistung": 600},
-        "effekt_ver": {"ver_konsum": 600},
-        "effekt_vert": {"vert_loehne": 400, "vert_gewinne": 200}
+    "technologie": {
+        "titel": "🔬 technologischer Durchbruch!",
+        "text": "Eine neue Maschine wurde erfunden, die Fahrräder doppelt so schnell baut. Wie nutzt dein Land das?",
+        "option_a": {
+            "text": "Option A: Wir exportieren die Maschinen ins Ausland!",
+            "effekt_ent": {"industrie": 1200},
+            "effekt_ver": {"export": 1200},
+            "effekt_vert": {"loehne": 500, "gewinne": 700},
+            "feedback": "Dein Land wird zum Exportweltmeister! Die Industrie floriert und die Unternehmensgewinne schießen in die Höhe."
+        },
+        "option_b": {
+            "text": "Option B: Wir nutzen sie im Inland, um billigere Fahrräder für alle Bürger zu bauen.",
+            "effekt_ent": {"industrie": 800},
+            "effekt_ver": {"konsum": 800},
+            "effekt_vert": {"loehne": 400, "gewinne": 400},
+            "feedback": "Der private Konsum steigt, weil sich jetzt jeder ein Fahrrad leisten kann. Ein ausgeglichenes Wachstum!"
+        }
     }
-]
+}
 
 
-# --- Funktion zum Anwenden eines Szenarios ---
-def anwenden_szenario(szenario):
-    st.session_state.letztes_szenario = f"**{szenario['titel']}**\n\n{szenario['text']}"
+# --- Funktion zum Anwenden der Entscheidung ---
+def wende_entscheidung_an(option, feedback_text):
+    for key, val in option["effekt_ent"].items():
+        st.session_state.ent[key] += val
+    for key, val in option["effekt_ver"].items():
+        st.session_state.ver[key] += val
+    for key, val in option["effekt_vert"].items():
+        st.session_state.vert[key] += val
+    st.session_state.nachricht = f"✅ **Auswirkung:** {feedback_text}"
 
-    for key, val in szenario["effekt_ent"].items():
-        st.session_state[key] += val
-    for key, val in szenario["effekt_ver"].items():
-        st.session_state[key] += val
-    for key, val in szenario["effekt_vert"].items():
-        st.session_state[key] += val
 
-
-# --- UI Aufbau ---
-st.title("🌍 Mein Musterland: Der BIP-Simulator")
-st.markdown("Baue deine Wirtschaft auf und beobachte, wie sich Ereignisse auf das Bruttoinlandsprodukt auswirken!")
-
-# Sidebar für Steuerung
+# --- UI Aufbau: Seitenleiste (Gründungsphase) ---
 with st.sidebar:
-    st.header("⚙️ Steuerung")
-    st.session_state.land_name = st.text_input("Name deines Landes:", st.session_state.land_name)
-    st.session_state.waehrung = st.text_input("Währung:", st.session_state.waehrung)
+    st.header("🛠️ 1. Land gründen")
 
-    st.divider()
-    st.subheader("🎲 Ereigniskarte ziehen")
-    if st.button("Zufälliges Ereignis auslösen", type="primary"):
-        gewaehltes_szenario = random.choice(szenarien)
-        anwenden_szenario(gewaehltes_szenario)
+    if not st.session_state.setup_abgeschlossen:
+        land = st.text_input("Name deines Landes:", "Fantasia")
+        waehrung = st.text_input("Währung:", "Taler")
 
-    if st.button("Wirtschaft zurücksetzen"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
+        st.write("**Verteile 100% deiner Arbeitskräfte:**")
+        # Slider für die Wirtschaftssektoren
+        anteil_agrar = st.slider("Landwirtschaft (%)", 0, 100, 20)
+        anteil_industrie = st.slider("Industrie (%)", 0, 100 - anteil_agrar, 50)
+        anteil_dienst = 100 - (anteil_agrar + anteil_industrie)
+        st.info(f"Dienstleistungen: {anteil_dienst}% (wird automatisch berechnet)")
 
-# Ereignis-Anzeige
-st.info(st.session_state.letztes_szenario)
+        if st.button("Wirtschaft starten", type="primary"):
+            st.session_state.setup_abgeschlossen = True
+            st.session_state.land_name = land
+            st.session_state.waehrung = waehrung
 
-# --- Berechnungen für die Anzeige ---
-summe_ent = st.session_state.ent_landwirtschaft + st.session_state.ent_industrie + st.session_state.ent_dienstleistung
-summe_ver = st.session_state.ver_konsum + st.session_state.ver_investitionen + st.session_state.ver_staat + st.session_state.ver_export_netto
-summe_vert = st.session_state.vert_loehne + st.session_state.vert_gewinne
+            # Startwerte berechnen (1% = 100 Währungseinheiten)
+            st.session_state.ent["landwirtschaft"] = anteil_agrar * 100
+            st.session_state.ent["industrie"] = anteil_industrie * 100
+            st.session_state.ent["dienstleistung"] = anteil_dienst * 100
 
-st.header(f"Das Bruttoinlandsprodukt von {st.session_state.land_name}")
+            basis_bip = 100 * 100  # Gesamt-BIP am Start ist immer 10000
 
-# --- Tabs für die drei Berechnungsarten ---
-tab1, tab2, tab3 = st.tabs(["🏭 Entstehungsrechnung", "🛒 Verwendungsrechnung", "💰 Verteilungsrechnung"])
+            # Verwendungsrechnung Start (vereinfachte Standardverteilung)
+            st.session_state.ver["konsum"] = int(basis_bip * 0.55)
+            st.session_state.ver["investitionen"] = int(basis_bip * 0.20)
+            st.session_state.ver["staat"] = int(basis_bip * 0.20)
+            st.session_state.ver["export"] = int(basis_bip * 0.05)
 
-with tab1:
-    st.subheader("Wer hat den Wert erschaffen?")
-    st.markdown("Summe aller produzierten Güter und Dienstleistungen (Bruttowertschöpfung).")
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Landwirtschaft", f"{st.session_state.ent_landwirtschaft} {st.session_state.waehrung}")
-    col2.metric("Industrie", f"{st.session_state.ent_industrie} {st.session_state.waehrung}")
-    col3.metric("Dienstleistungen", f"{st.session_state.ent_dienstleistung} {st.session_state.waehrung}")
-    st.success(f"**BIP (Entstehung): {summe_ent} {st.session_state.waehrung}**")
+            # Verteilungsrechnung Start
+            st.session_state.vert["loehne"] = int(basis_bip * 0.70)
+            st.session_state.vert["gewinne"] = int(basis_bip * 0.30)
 
-with tab2:
-    st.subheader("Wer kauft die Produkte?")
-    st.markdown("Formel: Konsum + Investitionen + Staatsausgaben + Nettoexporte")
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Privater Konsum (C)", f"{st.session_state.ver_konsum} {st.session_state.waehrung}")
-    col2.metric("Investitionen (I)", f"{st.session_state.ver_investitionen} {st.session_state.waehrung}")
-    col3.metric("Staatsausgaben (G)", f"{st.session_state.ver_staat} {st.session_state.waehrung}")
-    col4.metric("Nettoexporte (NX)", f"{st.session_state.ver_export_netto} {st.session_state.waehrung}")
-    st.success(f"**BIP (Verwendung): {summe_ver} {st.session_state.waehrung}**")
+            st.session_state.nachricht = "Wirtschaft erfolgreich gestartet! Du bist jetzt Wirtschaftsminister."
+            st.rerun()
+    else:
+        st.success(f"Land: {st.session_state.land_name}")
+        if st.button("Neu starten"):
+            st.session_state.clear()
+            st.rerun()
 
-with tab3:
-    st.subheader("Wer bekommt das Geld?")
-    st.markdown("Aufteilung des Einkommens in Löhne (Arbeitnehmer) und Gewinne (Unternehmen).")
-    col1, col2 = st.columns(2)
-    col1.metric("Löhne (Arbeitnehmerentgelt)", f"{st.session_state.vert_loehne} {st.session_state.waehrung}")
-    col2.metric("Gewinne (Unternehmens-/Vermögenseinkommen)",
-                f"{st.session_state.vert_gewinne} {st.session_state.waehrung}")
-    st.success(f"**BIP (Verteilung): {summe_vert} {st.session_state.waehrung}**")
+# --- Hauptbereich ---
+st.title("🌍 Mein Musterland")
 
-# Sicherheitscheck für die Logik (Nur zur Kontrolle, ob du die Szenarien richtig programmiert hast)
-if not (summe_ent == summe_ver == summe_vert):
-    st.error("Achtung! Die makroökonomische Logik ist fehlerhaft. Das BIP der drei Methoden stimmt nicht überein!")
+if st.session_state.setup_abgeschlossen:
+    # 1. Feedback anzeigen
+    st.info(st.session_state.nachricht)
+
+    # 2. Entscheidungs-Bereich (Hier ist die Interaktivität!)
+    st.markdown("---")
+    st.subheader("⚖️ Als Wirtschaftsminister musst du entscheiden:")
+
+    # Für das Beispiel zeigen wir einfach beide Szenarien untereinander,
+    # man könnte sie später auch nacheinander aufrufen.
+    col_sz1, col_sz2 = st.columns(2)
+
+    with col_sz1:
+        st.write(f"**{szenarien['krise']['titel']}**")
+        st.write(szenarien['krise']['text'])
+        if st.button(szenarien['krise']['option_a']['text'], key="k_a"):
+            wende_entscheidung_an(szenarien['krise']['option_a'], szenarien['krise']['option_a']['feedback'])
+            st.rerun()
+        if st.button(szenarien['krise']['option_b']['text'], key="k_b"):
+            wende_entscheidung_an(szenarien['krise']['option_b'], szenarien['krise']['option_b']['feedback'])
+            st.rerun()
+
+    with col_sz2:
+        st.write(f"**{szenarien['technologie']['titel']}**")
+        st.write(szenarien['technologie']['text'])
+        if st.button(szenarien['technologie']['option_a']['text'], key="t_a"):
+            wende_entscheidung_an(szenarien['technologie']['option_a'],
+                                  szenarien['technologie']['option_a']['feedback'])
+            st.rerun()
+        if st.button(szenarien['technologie']['option_b']['text'], key="t_b"):
+            wende_entscheidung_an(szenarien['technologie']['option_b'],
+                                  szenarien['technologie']['option_b']['feedback'])
+            st.rerun()
+
+    st.markdown("---")
+
+    # 3. BIP Dashboard (Die drei Säulen)
+    summe_ent = sum(st.session_state.ent.values())
+    summe_ver = sum(st.session_state.ver.values())
+    summe_vert = sum(st.session_state.vert.values())
+
+    st.header(f"📊 Dashboard: Das BIP von {st.session_state.land_name}")
+
+    tab1, tab2, tab3 = st.tabs(["🏭 Entstehung", "🛒 Verwendung", "💰 Verteilung"])
+
+    with tab1:
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Landwirtschaft", f"{st.session_state.ent['landwirtschaft']} {st.session_state.waehrung}")
+        c2.metric("Industrie", f"{st.session_state.ent['industrie']} {st.session_state.waehrung}")
+        c3.metric("Dienstleistungen", f"{st.session_state.ent['dienstleistung']} {st.session_state.waehrung}")
+        st.success(f"BIP (Entstehung): {summe_ent} {st.session_state.waehrung}")
+
+    with tab2:
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Konsum", f"{st.session_state.ver['konsum']} {st.session_state.waehrung}")
+        c2.metric("Investitionen", f"{st.session_state.ver['investitionen']} {st.session_state.waehrung}")
+        c3.metric("Staat", f"{st.session_state.ver['staat']} {st.session_state.waehrung}")
+        c4.metric("Nettoexporte", f"{st.session_state.ver['export']} {st.session_state.waehrung}")
+        st.success(f"BIP (Verwendung): {summe_ver} {st.session_state.waehrung}")
+
+    with tab3:
+        c1, c2 = st.columns(2)
+        c1.metric("Löhne", f"{st.session_state.vert['loehne']} {st.session_state.waehrung}")
+        c2.metric("Gewinne", f"{st.session_state.vert['gewinne']} {st.session_state.waehrung}")
+        st.success(f"BIP (Verteilung): {summe_vert} {st.session_state.waehrung}")
+
+else:
+    st.warning("👈 Bitte richte dein Land in der linken Seitenleiste ein, um zu beginnen!")
