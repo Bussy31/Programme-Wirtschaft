@@ -298,9 +298,6 @@ html_code = f"""
     .e_ha {{ animation: m_ha {dauer}s linear infinite; }}
     .e_ah {{ animation: m_ah {dauer}s linear infinite; }}
     .e_ua {{ animation: m_ua {dauer}s linear infinite; }}
-    
-    .e_au {{ animation: m_au {dauer}s linear infinite; }}
-    
     .e_au {{ animation: m_au {dauer}s linear infinite; }}
     .e_hu_geld {{ animation: m_hu_geld {dauer}s linear infinite; }}
     .e_uh_gut {{ animation: m_uh_gut {dauer}s linear infinite; }}
