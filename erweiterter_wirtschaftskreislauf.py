@@ -207,7 +207,7 @@ dauer_sparen = max(0.5, dauer_sparen)
 dauer_kredit = max(0.5, dauer_kredit)
 
 # Exakt die halbe Zeit für den perfekten Doppel-Emoji-Fluss
-verzogerung_sparen = dauer_sparen / 2.5
+verzogerung_sparen = 1
 verzogerung_kredit = dauer_kredit / 2.5
 
 # --- HTML & CSS für das neue, verbesserte Design & Animation ---
