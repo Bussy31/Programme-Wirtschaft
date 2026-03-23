@@ -155,7 +155,7 @@ def erstelle_pdf():
     pdf.cell(0, 10, f"Stand: Jahr {st.session_state.jahr}", ln=True, align='C')
     pdf.ln(5)
 
-    # --- NEU: 1. Startbedingungen ---
+    # 1. Startbedingungen
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "1. Startbedingungen (Jahr 1):", ln=True)
     pdf.set_font("Arial", '', 12)
@@ -179,25 +179,11 @@ def erstelle_pdf():
              ln=True)
     pdf.ln(5)
 
-    # 3. Graph generieren
-    if len(st.session_state.bip_historie) > 0:
-        jahre = [d["Jahr"] for d in st.session_state.bip_historie] + [st.session_state.jahr]
-        bips = [d["BIP"] for d in st.session_state.bip_historie] + [bip]
+    # (Das Diagramm wurde hier zur Fehlervermeidung entfernt)
 
-        fig, ax = plt.subplots(figsize=(6, 3))
-        ax.plot(jahre, bips, marker='o', color='b')
-        ax.set_title("BIP Entwicklung")
-        ax.grid(True)
-
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches='tight')
-        plt.close(fig)
-        pdf.image(buf, x=10, w=150)
-        pdf.ln(5)
-
-    # 4. Historie der Entscheidungen (MIT AUSWIRKUNGEN)
+    # 3. Historie der Entscheidungen (MIT AUSWIRKUNGEN)
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, "4. Chronik der Ereignisse (Auswirkungen auf das BIP):", ln=True)
+    pdf.cell(0, 10, "3. Chronik der Ereignisse (Auswirkungen auf das BIP):", ln=True)
 
     letztes_jahr = 0
     for eintrag in st.session_state.alle_entscheidungen:
@@ -213,7 +199,7 @@ def erstelle_pdf():
         pdf.cell(0, 6, f"> {titel_sauber}", ln=True)
         pdf.set_font("Arial", '', 10)
 
-        # Hilfsfunktion, um die Dictionaries (z.B. {"industrie": 500}) in sauberen Text umzuwandeln
+        # Hilfsfunktion, um die Dictionaries in sauberen Text umzuwandeln
         def format_dict(d):
             teile = []
             for k, v in d.items():
@@ -228,7 +214,7 @@ def erstelle_pdf():
         ver_str = clean_text(format_dict(log['ver']))
         vert_str = clean_text(format_dict(log['vert']))
 
-        # Eingerückt in das PDF schreiben (10mm Abstand von links)
+        # Eingerückt in das PDF schreiben
         pdf.set_x(20)
         pdf.cell(0, 5, f"Entstehung: {ent_str}", ln=True)
         pdf.set_x(20)
