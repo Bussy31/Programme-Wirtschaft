@@ -389,14 +389,27 @@ if st.session_state.setup:
 
     st.markdown("---")
 
-    # --- DASHBOARD & DIAGRAMME MIT LOGBUCH ---
+    st.markdown("---")
+
+    # --- DASHBOARD & TABELLE/DIAGRAMM MIT LOGBUCH ---
     akt_bip = berechne_bip()
     st.header(f"📊 Wirtschafts-Dashboard (BIP: {akt_bip} {st.session_state.waehrung})")
 
     if len(st.session_state.bip_historie) > 0:
-        df = pd.DataFrame(st.session_state.bip_historie).set_index("Jahr")
-        df.loc[st.session_state.jahr] = akt_bip
-        st.line_chart(df, y="BIP", height=200)
+        # Historie inklusive aktuellem Jahr vorbereiten
+        historie_komplett = st.session_state.bip_historie + [{"Jahr": st.session_state.jahr, "BIP": akt_bip}]
+        df = pd.DataFrame(historie_komplett)
+
+        # Tabs für Tabelle und Diagramm erstellen (Tabelle ist zuerst = Standard)
+        tab_tabelle, tab_diagramm = st.tabs(["📋 Tabelle", "📈 Diagramm"])
+
+        with tab_tabelle:
+            st.dataframe(df, hide_index=True, use_container_width=True)
+
+        with tab_diagramm:
+            # Für das Diagramm nutzen wir das Jahr als Index
+            df_chart = df.set_index("Jahr")
+            st.line_chart(df_chart, y="BIP", height=200)
 
 
     def zeige_logs(kategorie, sektor_key):
