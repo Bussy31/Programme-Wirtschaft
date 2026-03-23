@@ -98,7 +98,7 @@ html_template = """
     }
 
     .objekt {
-        position: absolute; font-size: 26px; z-index: 5; background: #f8f9fa; border-radius: 50%;
+        position: absolute; font-size: 26px; z-index: 5; background: #f8f9fa; border-radius: 50%; opacity: 0;
     }
 
     /* HIER WERDEN DIE VARIABLEN EINGESETZT */
