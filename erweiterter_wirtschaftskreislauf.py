@@ -186,29 +186,6 @@ with col_regler2:
 dauer = 8.0 - (konjunktur * 0.6)
 verzogerung = dauer / 2  # Standard-Verzögerung für alle normalen Güter/Geldströme
 
-# --- Extreme Mathe für spürbares Tempo bei der EZB ---
-if zins == 2.5:
-    # Normalzins: Alles fließt im normalen Takt der Konjunktur
-    dauer_sparen = dauer
-    dauer_kredit = dauer
-elif zins > 2.5:
-    # Hoher Zins (bis 5.0) -> Sparen rast, Kredite schleichen!
-    intensitaet = (zins - 2.5) / 3.0  # Faktor von 0 bis 1
-    dauer_sparen = dauer * (1.0 - (intensitaet * 0.8))  # Bis zu 80% schneller!
-    dauer_kredit = dauer * (1.0 + (intensitaet * 3.0))  # Bis zu 300% langsamer!
-else:
-    # Niedriger Zins (bis 0.0) -> Kredite rasen, Sparen schleicht!
-    intensitaet = (2.5 - zins) / 2.0  # Faktor von 0 bis 1
-    dauer_kredit = dauer * (1.0 - (intensitaet * 0.8))  # Bis zu 80% schneller!
-    dauer_sparen = dauer * (1.0 + (intensitaet * 3.0))  # Bis zu 300% langsamer!
-
-# Limits setzen, damit die Animation nicht crasht (nicht unter 0.5 Sekunden)
-dauer_sparen = max(0.5, dauer_sparen)
-dauer_kredit = max(0.5, dauer_kredit)
-
-# Exakt die halbe Zeit für den perfekten Doppel-Emoji-Fluss
-verzogerung_sparen = 1
-verzogerung_kredit = dauer_kredit / 2.5
 
 # --- HTML & CSS für das neue, verbesserte Design & Animation ---
 html_code = f"""
@@ -379,13 +356,13 @@ html_code = f"""
         
         <div class="emoji e_su" title="Konsum" style="animation-delay: {verzogerung}s;">💶</div>
 
-        <div class="emoji e_sb" title="Ersparnisse" style="animation-delay: {verzogerung_sparen}s;">🐖</div>
+        <div class="emoji e_sb" title="Ersparnisse" style="animation-delay: {verzogerung}s;">🐖</div>
         
-        <div class="emoji e_bs" title="Schulden" style="animation-delay: {verzogerung_kredit}s;">🏦</div>
+        <div class="emoji e_bs" title="Schulden" style="animation-delay: {verzogerung}s;">🏦</div>
         
-        <div class="emoji e_hb" title="Spareinlagen" style="animation-delay: {verzogerung_sparen}s;">🐖</div>
+        <div class="emoji e_hb" title="Spareinlagen" style="animation-delay: {verzogerung}s;">🐖</div>
         
-        <div class="emoji e_bu" title="Investitionen" style="animation-delay: {verzogerung_kredit}s;">🏗️</div>
+        <div class="emoji e_bu" title="Investitionen" style="animation-delay: {verzogerung}s;">🏗️</div>
 
         <div class="emoji e_ha" title="Transfer ins Ausland" style="animation-delay: {verzogerung}s;">💸</div>
         
