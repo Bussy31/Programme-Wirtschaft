@@ -162,7 +162,7 @@ html_code = f"""
     .lbl-su {{ left: 650px; top: 215px; transform: translate(-50%, -50%); color: #d62728;}}
 
     .lbl-sb {{ left: 450px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
-    .lbl-bs {{ left: 600px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
+    .lbl-bs {{ left: 550px; top: 160px; transform: translate(-50%, -50%); color: #ff7f0e;}}
 
     .lbl-hb {{ left: 310px; top: 320px; transform: translate(-50%, -50%); color: #ff7f0e;}}
     .lbl-bu {{ left: 690px; top: 320px; transform: translate(-50%, -50%); color: #ff7f0e;}}
