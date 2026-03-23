@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 # --- Seiten-Setup ---
 st.set_page_config(page_title="Wirtschaftskreislauf", layout="wide")
 
-st.title("🔄 Baue den Wirtschaftskreislauf!")
+st.title("Der einfache Wirtschaftskreislauf")
 st.markdown(
     "Damit die Wirtschaft funktioniert, müssen **Geld** und **Güter/Dienstleistungen** in einem ewigen Tauschgeschäft fließen. Kannst du die Ströme richtig verbinden?")
 st.divider()

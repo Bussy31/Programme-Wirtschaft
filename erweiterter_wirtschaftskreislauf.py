@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 # --- Seiten-Setup ---
 st.set_page_config(page_title="Wirtschafts-Lab Pro", layout="wide")
 
-st.title("🌐 Eco-Lab: Das offene Wirtschaftssystem")
+st.title("Der erweiterte Wirtschaftskreislauf")
 st.markdown("Beobachte das Modell und ordne alle **Geld- und Güterströme** korrekt zu!")
 st.divider()
 
