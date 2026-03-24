@@ -205,7 +205,7 @@ with tab1:
     with col_w:
         st.number_input("AB-Wert (€):", min_value=0.0, step=100.0, key="kto_wert_input")
 
-    col1, col2, col3, col4, col5 = st.columns(5)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.button("🟢 Aktivkonto", use_container_width=True, on_click=add_konto, args=("Aktiv", "Soll"))
     with col2:
@@ -214,11 +214,6 @@ with tab1:
         st.button("🔴 Aufwandskonto", use_container_width=True, on_click=add_konto, args=("Aufwand", "Soll"))
     with col4:
         st.button("🟡 Ertragskonto", use_container_width=True, on_click=add_konto, args=("Ertrag", "Haben"))
-    with col5:
-        st.button("⚪ Konto (Spezialfall)", use_container_width=True, on_click=add_konto, args=("Spezialkonto", "Soll"))
-        st.markdown(
-            "<p style='text-align: center; font-size: 12px; color: gray; margin-top: -10px;'>Wird im Normalfall nicht gebraucht</p>",
-            unsafe_allow_html=True)
 
     st.write("")
     st.markdown("**Spezialkonten (mit 1 Klick anlegen):**")
@@ -253,9 +248,9 @@ with tab1:
         kat = werte.get("Kategorie", "Aktiv" if werte["Seite"] == "Soll" else "Passiv")
         konten_liste.append({"Konto": name, "Kategorie": kat, "Soll": s, "Haben": h, "Saldo": abs(s - h)})
 
-        if kat in ["Aktiv", "Konto", "Spezialkonto"] and werte["Soll"] and werte["Soll"][0][1] == "AB":
+        if kat in ["Aktiv", "Konto"] and werte["Soll"] and werte["Soll"][0][1] == "AB":
             sum_aktiv_ab += werte["Soll"][0][0]
-        if kat in ["Passiv", "Konto", "Spezialkonto"] and werte["Haben"] and werte["Haben"][0][1] == "AB":
+        if kat in ["Passiv", "Konto"] and werte["Haben"] and werte["Haben"][0][1] == "AB":
             sum_passiv_ab += werte["Haben"][0][0]
 
     diff = abs(sum_aktiv_ab - sum_passiv_ab)
@@ -292,7 +287,7 @@ with tab1:
                 with c_edit2:
                     new_k_ab = st.number_input("AB-Wert (€)", value=float(cur_ab), min_value=0.0, step=100.0)
                 with c_edit3:
-                    kat_options = ["Aktiv", "Passiv", "Aufwand", "Ertrag", "GuV", "Abschluss", "Spezialkonto"]
+                    kat_options = ["Aktiv", "Passiv", "Aufwand", "Ertrag", "GuV", "Abschluss"]
                     current_kat = k_daten.get("Kategorie", "Aktiv")
                     new_k_kat = st.selectbox("Kategorie", options=kat_options,
                                              index=kat_options.index(current_kat) if current_kat in kat_options else 0)
@@ -305,8 +300,7 @@ with tab1:
                         elif new_k_name != selected_kto and new_k_name in st.session_state.konten:
                             st.error("Konto existiert bereits!")
                         else:
-                            new_seite = "Soll" if new_k_kat in ["Aktiv", "Aufwand", "GuV", "Abschluss",
-                                                                "Spezialkonto"] else "Haben"
+                            new_seite = "Soll" if new_k_kat in ["Aktiv", "Aufwand", "GuV", "Abschluss"] else "Haben"
                             if new_k_kat in ["Aufwand", "Ertrag", "GuV"]:
                                 new_k_ab = 0.0
 
@@ -606,7 +600,7 @@ with tab4:
             if k in special_konten:
                 continue
             kat = v.get("Kategorie", "")
-            if kat in ["Aktiv", "Spezialkonto", "Konto", "Abschluss"]:
+            if kat in ["Aktiv", "Konto", "Abschluss"]:
                 kategorien["Aktiv"].append(k)
             elif kat == "Passiv":
                 kategorien["Passiv"].append(k)
@@ -965,7 +959,7 @@ with tab4:
                 pdf.set_x(10)
 
             aktiv_konten = [(k, v) for k, v in temp_konten.items() if
-                            v.get("Kategorie") in ["Aktiv", "Konto", "Abschluss", "Spezialkonto"]]
+                            v.get("Kategorie") in ["Aktiv", "Konto", "Abschluss"]]
             passiv_konten = [(k, v) for k, v in temp_konten.items() if v.get("Kategorie") == "Passiv"]
 
             for i in range(max(len(aktiv_konten), len(passiv_konten))):
