@@ -55,7 +55,8 @@ st.sidebar.write("Sichere hier deinen aktuellen Stand, um später weiterzuarbeit
 # --- SPEICHERN (Download) ---
 save_data = {
     "konten": st.session_state.konten,
-    "journal": st.session_state.journal
+    "journal": st.session_state.journal,
+    "sort_orders": st.session_state.get("sort_orders", {"Aktiv": [], "Passiv": [], "Aufwand": [], "Ertrag": []})
 }
 # Wandeln das Paket in einen speicherbaren Text um
 json_string = json.dumps(save_data, indent=4)
@@ -87,6 +88,8 @@ if st.sidebar.button("🔄 Daten aus Datei jetzt laden", use_container_width=Tru
             # Die aktuellen Daten im System überschreiben
             st.session_state.konten = loaded_data.get("konten", {})
             st.session_state.journal = loaded_data.get("journal", [])
+            if "sort_orders" in loaded_data:
+                st.session_state.sort_orders = loaded_data["sort_orders"]
 
             # NEU: Wir erhöhen den Zähler um 1.
             # Dadurch wirft Streamlit das alte Upload-Feld (inklusive Datei) weg und macht ein leeres hin!
@@ -599,6 +602,15 @@ with tab4:
         for k, v in st.session_state.konten.items():
             if k in special_konten:
                 continue
+
+            # --- NEU: Vor- und Umsatzsteuer mit Saldo 0 (abgeschlossen) ausblenden ---
+            if k in ["Vorsteuer", "Umsatzsteuer"]:
+                s_sum = sum(item[0] for item in v["Soll"])
+                h_sum = sum(item[0] for item in v["Haben"])
+                if abs(s_sum - h_sum) < 0.01:
+                    continue  # Saldo ist 0 -> Konto in der Sortierung verstecken!
+            # -------------------------------------------------------------------------
+
             kat = v.get("Kategorie", "")
             if kat in ["Aktiv", "Konto", "Abschluss"]:
                 kategorien["Aktiv"].append(k)
@@ -831,7 +843,10 @@ with tab4:
             # 2. Dann die vom Nutzer sortierten Konten hinzufügen
             for k in sorted_user_konten:
                 temp_konten[k] = copy.deepcopy(st.session_state.konten[k])
-            # -------------------------------------------------------------------------
+
+            for k in st.session_state.konten:
+                if k not in temp_konten:
+                    temp_konten[k] = copy.deepcopy(st.session_state.konten[k])
 
             temp_journal = copy.deepcopy(st.session_state.journal)
 
