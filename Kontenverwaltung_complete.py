@@ -626,7 +626,6 @@ with tab3:
 
                         rebuild_accounts()
                         st.success(f"Erfolgreich gebucht! Das Konto '{selected_t_kto}' ist nun abgeschlossen.")
-                        st.session_state.hide_closed_accounts = True
                         st.rerun()
 
 # ==========================================
