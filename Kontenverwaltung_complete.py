@@ -573,7 +573,7 @@ with tab3:
                     abs_seite = st.selectbox("Abschlussbuchung auf Seite:", ["Soll", "Haben"])
 
                 with c_abs2:
-                    abs_betrag = st.number_input("Abschlussbetrag (€):", min_value=0.0, step=100.0, format="%.2f", key="abs_betrag_input")
+                    abs_betrag = st.number_input("Abschlussbetrag (€):", min_value=0.0, step=100.0, format="%.2f")
 
                 with c_abs3:
                     kat = k_daten.get("Kategorie", "")
@@ -626,7 +626,6 @@ with tab3:
 
                         rebuild_accounts()
                         st.success(f"Erfolgreich gebucht! Das Konto '{selected_t_kto}' ist nun abgeschlossen.")
-                        st.session_state["abs_betrag_input"] = 0.0
                         st.session_state.hide_closed_accounts = True
                         st.rerun()
 
