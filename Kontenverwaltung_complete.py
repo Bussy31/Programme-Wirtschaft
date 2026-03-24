@@ -470,12 +470,9 @@ with tab3:
         # Checkbox ist nur aktiv ("drückbar"), wenn es abgeschlossene Konten gibt
         nur_offene_konten = st.checkbox(
             "Bereits abgeschlossene Konten ausblenden",
-            value=st.session_state.hide_closed_accounts,
+            key="hide_closed_accounts",  # <-- HIER WURDE VALUE DURCH KEY ERSETZT
             disabled=(closed_count == 0)
         )
-
-        # Den aktuellen Wert für den Rest des Programms speichern
-        st.session_state.hide_closed_accounts = nur_offene_konten
 
         if closed_count == 0:
             st.caption("💡 Diese Option wird klickbar, sobald das erste Konto abgeschlossen ist.")
