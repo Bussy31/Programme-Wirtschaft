@@ -305,36 +305,62 @@ if st.session_state.setup:
     # --- DASHBOARD & TABELLE/DIAGRAMM MIT LOGBUCH ---
     akt_bip = berechne_bip()
 
+    # Wachstum im Vergleich zum Vorjahr berechnen
+    alt_bip = st.session_state.get("alt_bip", st.session_state.start_bip)
+    bip_wachstum = akt_bip - alt_bip
 
-    # NEU: Hilfsfunktion für die Smileys
+
+    # Hilfsfunktion für die Smileys
     def get_wohlstand_smiley(wert):
         if wert >= 90:
-            return "🤩"  # Sternchen-Augen für Top-Werte
+            return "🤩"
         elif wert >= 75:
             return "😄"
         elif wert >= 60:
             return "🙂"
         elif wert >= 40:
-            return "😐"  # Neutral um die 50%
+            return "😐"
         elif wert >= 25:
             return "😕"
         elif wert >= 10:
             return "😢"
         else:
-            return "😭"  # Heulend bei totalem Absturz
+            return "😭"
 
 
-    # Smiley für den aktuellen Wert abrufen
     aktueller_smiley = get_wohlstand_smiley(st.session_state.wohlstand)
 
-    # --- DASHBOARD UI ---
+    # --- DASHBOARD UI (Symmetrisch aufgebaut) ---
     col_bip, col_wohl = st.columns(2)
+
     with col_bip:
-        st.header(f"📊 BIP: {akt_bip} {st.session_state.waehrung})")
+        # BIP mit coolem Trend-Pfeil
+        st.metric(label=f"📊 Bruttoinlandsprodukt ({st.session_state.waehrung})", value=akt_bip, delta=bip_wachstum)
+
+        # LOGS: Welcher Fall hat das BIP wie verändert?
+        if not st.session_state.get("spiel_ende", False):
+            for log in st.session_state.ereignis_logbuch:
+                # Wir summieren alle Entstehungs-Effekte, um den Gesamt-BIP-Effekt des Falls zu sehen
+                bip_effekt = sum(log["ent"].values())
+                if bip_effekt != 0:
+                    b_farbe = "green" if bip_effekt > 0 else "red"
+                    b_vorz = "+" if bip_effekt > 0 else ""
+                    st.caption(f"_{log['titel']}_: :{b_farbe}[**{b_vorz}{bip_effekt} {st.session_state.waehrung}**]")
+
     with col_wohl:
-        # Hier wird der Smiley jetzt direkt neben der Prozentzahl angezeigt!
-        st.header(f"Wohlstandsindex: {st.session_state.wohlstand}% {aktueller_smiley}")
+        # Wohlstand mit Smiley und Prozentzahl
+        st.metric(label=f"❤️ Wohlstandsindex {aktueller_smiley}", value=f"{st.session_state.wohlstand}%")
         st.progress(st.session_state.wohlstand / 100.0)  # Visueller Ladebalken
+
+        # LOGS: Welcher Fall hat den Wohlstand wie verändert?
+        if not st.session_state.get("spiel_ende", False):
+            for log in st.session_state.ereignis_logbuch:
+                if "wohlstand_delta" in log and log["wohlstand_delta"] != 0:
+                    w_wert = log["wohlstand_delta"]
+                    w_farbe = "green" if w_wert > 0 else "red"
+                    w_vorz = "+" if w_wert > 0 else ""
+                    st.caption(f"_{log['titel']}_: :{w_farbe}[**{w_vorz}{w_wert}%**]")
+
     st.write("---")
 
     if len(st.session_state.bip_historie) > 0:
