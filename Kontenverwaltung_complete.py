@@ -654,26 +654,34 @@ with tab4:
                             liste[i], liste[i + 1] = liste[i + 1], liste[i]
                             st.rerun()
 
-
             # 4. Das Layout auf dem Bildschirm aufbauen
             st.markdown("#### 🏛️ Bestandskonten")
             col_akt, col_pas = st.columns(2)
+
             with col_akt:
-                st.markdown("**Aktivkonten (Links)**")
-                draw_sortable_list("Aktiv")
+                # Packt die Liste in eine schöne Box mit Rahmen
+                with st.container(border=True):
+                    st.markdown("**Aktivkonten (Links)**")
+                    draw_sortable_list("Aktiv")
+
             with col_pas:
-                st.markdown("**Passivkonten (Rechts)**")
-                draw_sortable_list("Passiv")
+                with st.container(border=True):
+                    st.markdown("**Passivkonten (Rechts)**")
+                    draw_sortable_list("Passiv")
 
             st.write("")
             st.markdown("#### 📈 Erfolgskonten")
             col_auf, col_ert = st.columns(2)
+
             with col_auf:
-                st.markdown("**Aufwandskonten (Links)**")
-                draw_sortable_list("Aufwand")
+                with st.container(border=True):
+                    st.markdown("**Aufwandskonten (Links)**")
+                    draw_sortable_list("Aufwand")
+
             with col_ert:
-                st.markdown("**Ertragskonten (Rechts)**")
-                draw_sortable_list("Ertrag")
+                with st.container(border=True):
+                    st.markdown("**Ertragskonten (Rechts)**")
+                    draw_sortable_list("Ertrag")
 
         # 5. Für die PDF-Generierung alle sortierten Konten in einer langen Liste zusammenfassen
         sorted_user_konten = (
