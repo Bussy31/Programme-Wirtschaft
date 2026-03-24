@@ -489,19 +489,18 @@ with tab3:
             if abs(s_sum - h_sum) < 0.01:
                 closed_count += 1
 
-        # --- NEU: Checkbox direkt sichtbar (ohne Expander) ---
+        # --- NEU: Checkbox direkt an den Session State koppeln ---
         if "hide_closed_accounts" not in st.session_state:
             st.session_state.hide_closed_accounts = True
 
         # Checkbox ist nur aktiv ("drückbar"), wenn es abgeschlossene Konten gibt
         nur_offene_konten = st.checkbox(
             "Bereits abgeschlossene Konten ausblenden",
-            value=st.session_state.hide_closed_accounts,
+            key="hide_closed_accounts",  # <-- HIER IST DIE MAGIE
             disabled=(closed_count == 0)
         )
 
-        # Den aktuellen Wert für den Rest des Programms speichern
-        st.session_state.hide_closed_accounts = nur_offene_konten
+        # HINWEIS: Die alte Zeile zum manuellen Speichern fällt hier komplett weg!
 
         if closed_count == 0:
             st.caption("💡 Diese Option wird klickbar, sobald das erste Konto abgeschlossen ist.")
