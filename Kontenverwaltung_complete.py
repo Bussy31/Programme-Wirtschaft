@@ -464,19 +464,18 @@ with tab3:
                 closed_count += 1
 
         # --- NEU: Einklappbares Menü (Expander) ---
-        with st.expander("⚙️ Ansicht anpassen", expanded=False):
-            if "hide_closed_accounts" not in st.session_state:
-                st.session_state.hide_closed_accounts = True
+        if "hide_closed_accounts" not in st.session_state:
+            st.session_state.hide_closed_accounts = True
 
-            # Checkbox ist nur aktiv ("drückbar"), wenn es abgeschlossene Konten gibt
-            nur_offene_konten = st.checkbox(
-                "☑️ Bereits abgeschlossene Konten ausblenden",
-                key="hide_closed_accounts",
-                disabled=(closed_count == 0)
-            )
+        # Checkbox ist nur aktiv ("drückbar"), wenn es abgeschlossene Konten gibt
+        nur_offene_konten = st.checkbox(
+            "☑Bereits abgeschlossene Konten ausblenden",
+            key="hide_closed_accounts",
+            disabled=(closed_count == 0)
+        )
 
-            if closed_count == 0:
-                st.caption("💡 Diese Option wird klickbar, sobald das erste Konto abgeschlossen ist.")
+        if closed_count == 0:
+            st.caption("💡 Diese Option wird klickbar, sobald das erste Konto abgeschlossen ist.")
 
         # --- Liste aufbauen ---
         kto_namen_t = []
