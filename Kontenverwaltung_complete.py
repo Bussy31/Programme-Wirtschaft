@@ -603,13 +603,22 @@ with tab4:
             if k in special_konten:
                 continue
 
-            # --- NEU: Vor- und Umsatzsteuer mit Saldo 0 (abgeschlossen) ausblenden ---
+            # --- NEU: Vor- und Umsatzsteuer Logik (Verrechnung vs. SBK) ---
             if k in ["Vorsteuer", "Umsatzsteuer"]:
                 s_sum = sum(item[0] for item in v["Soll"])
                 h_sum = sum(item[0] for item in v["Haben"])
-                if abs(s_sum - h_sum) < 0.01:
-                    continue  # Saldo ist 0 -> Konto in der Sortierung verstecken!
-            # -------------------------------------------------------------------------
+
+                # Prüfen, ob "SBK" bei diesem Konto irgendwo als Gegenkonto auftaucht
+                has_sbk = any(gkto == "SBK" for _, _, gkto in v["Soll"]) or \
+                          any(gkto == "SBK" for _, _, gkto in v["Haben"])
+
+                # Verstecken NUR dann, wenn:
+                # 1. Beträge drauf sind (nicht komplett unbenutzt)
+                # 2. Der Saldo 0 ist (wurde abgeschlossen)
+                # 3. Es NICHT ins SBK ging (wurde also gegen das andere Steuerkonto verrechnet)
+                if (s_sum > 0 or h_sum > 0) and abs(s_sum - h_sum) < 0.01 and not has_sbk:
+                    continue
+                    # -------------------------------------------------------------------------
 
             kat = v.get("Kategorie", "")
             if kat in ["Aktiv", "Konto", "Abschluss"]:
