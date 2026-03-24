@@ -1053,6 +1053,22 @@ with tab4:
             else:
                 pdf.ln(10)
 
+            # Schöne Überschrift für die Bestandskonten hinzufügen
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 8, "Hauptbuch - Bestandskonten", ln=True)
+
+            # --- NEU: Gemischte Konten (KKK) suchen und als großes Konto ganz oben zeichnen ---
+            gemischte_konten = [(k, v) for k, v in list(temp_konten.items()) if
+                                v.get("Kategorie") == "Gemischt"]
+            for gk_name, gk_data in gemischte_konten:
+                if pdf.get_y() > 200:
+                    pdf.add_page()
+                # Zeichnet das Konto über die volle Breite
+                next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), f"{gk_name} (Gemischtes Konto)", gk_data)
+                pdf.set_y(next_y + 5)
+                # Konto aus der Liste werfen, damit es nicht unten nochmal als kleines Konto gezeichnet wird
+                temp_konten.pop(gk_name, None)
+
             pdf.set_font("Helvetica", "I", 10)
             pdf.cell(0, 6, "(Aktivkonten links & Passivkonten rechts)", ln=True)
             pdf.ln(4)
