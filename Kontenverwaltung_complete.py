@@ -628,7 +628,7 @@ with tab4:
                     st.session_state.sort_orders[gruppe].append(k)
 
         # --- AB HIER STARTET DIE EINKLAPPBARE BOX ---
-        with st.expander("⚙️ Reihenfolge der Konten für den PDF-Export anpassen", expanded=False):
+        with st.expander("⚙️ Reihenfolge der Konten anpassen (richtige Reihenfolge in der Bilanz)", expanded=False):
             st.write(
                 "Verschiebe die Konten innerhalb ihrer Kategorie nach oben oder unten. Die Steuerkonten, GuV und SBK werden im PDF automatisch an die richtigen Stellen gesetzt.")
 
