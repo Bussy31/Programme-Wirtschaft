@@ -739,12 +739,16 @@ with tab4:
                                     unsafe_allow_html=True)
                     with c_up:
                         if st.button("⬆️", key=f"up_{gruppe}_{kto}", disabled=(i == 0), use_container_width=True):
-                            liste[i], liste[i - 1] = liste[i - 1], liste[i]
+                            # DIREKT im Session State tauschen, damit Streamlit es nicht vergisst!
+                            st.session_state.sort_orders[gruppe][i], st.session_state.sort_orders[gruppe][i - 1] = \
+                                st.session_state.sort_orders[gruppe][i - 1], st.session_state.sort_orders[gruppe][i]
                             st.rerun()
                     with c_down:
                         if st.button("⬇️", key=f"down_{gruppe}_{kto}", disabled=(i == len(liste) - 1),
                                      use_container_width=True):
-                            liste[i], liste[i + 1] = liste[i + 1], liste[i]
+                            # DIREKT im Session State tauschen, damit Streamlit es nicht vergisst!
+                            st.session_state.sort_orders[gruppe][i], st.session_state.sort_orders[gruppe][i + 1] = \
+                                st.session_state.sort_orders[gruppe][i + 1], st.session_state.sort_orders[gruppe][i]
                             st.rerun()
 
             # 4. Das Layout auf dem Bildschirm aufbauen
