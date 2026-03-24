@@ -601,9 +601,12 @@ with tab4:
         st.write(
             "Verschiebe die Konten innerhalb ihrer Kategorie nach oben oder unten. Die Steuerkonten, GuV und SBK werden im PDF automatisch an die richtigen Stellen gesetzt.")
 
+        # --- NEU: Reihenfolge der Konten anpassen (EINKLAPPBAR & 2 SPALTEN) ---
+        st.divider()
+
         special_konten = ["Vorsteuer", "Umsatzsteuer", "GuV", "SBK"]
 
-        # 1. Konten nach Kategorien sortieren
+        # 1. Konten nach Kategorien sortieren (Logik im Hintergrund)
         kategorien = {"Aktiv": [], "Passiv": [], "Aufwand": [], "Ertrag": []}
 
         for k, v in st.session_state.konten.items():
@@ -631,48 +634,53 @@ with tab4:
                 if k not in st.session_state.sort_orders[gruppe]:
                     st.session_state.sort_orders[gruppe].append(k)
 
-
-        # 3. Hilfsfunktion, um eine Liste mit Pfeilen zu zeichnen
-        def draw_sortable_list(gruppe):
-            liste = st.session_state.sort_orders[gruppe]
-            if not liste:
-                st.write(f"<span style='color:gray; font-size:14px;'>Keine {gruppe}konten vorhanden</span>",
-                         unsafe_allow_html=True)
-            for i, kto in enumerate(liste):
-                c_name, c_up, c_down = st.columns([5, 1, 1])
-                with c_name:
-                    st.markdown(f"<div style='padding-top: 5px; font-size: 15px;'><b>{i + 1}.</b> {kto}</div>",
-                                unsafe_allow_html=True)
-                with c_up:
-                    if st.button("⬆️", key=f"up_{gruppe}_{kto}", disabled=(i == 0), use_container_width=True):
-                        liste[i], liste[i - 1] = liste[i - 1], liste[i]
-                        st.rerun()
-                with c_down:
-                    if st.button("⬇️", key=f"down_{gruppe}_{kto}", disabled=(i == len(liste) - 1),
-                                 use_container_width=True):
-                        liste[i], liste[i + 1] = liste[i + 1], liste[i]
-                        st.rerun()
+        # --- AB HIER STARTET DIE EINKLAPPBARE BOX ---
+        with st.expander("⚙️ Reihenfolge der Konten für den PDF-Export anpassen", expanded=False):
+            st.write(
+                "Verschiebe die Konten innerhalb ihrer Kategorie nach oben oder unten. Die Steuerkonten, GuV und SBK werden im PDF automatisch an die richtigen Stellen gesetzt.")
 
 
-        # 4. Das Layout auf dem Bildschirm aufbauen (Bestands- und Erfolgskonten)
-        st.markdown("#### 🏛️ Bestandskonten")
-        col_akt, col_pas = st.columns(2)
-        with col_akt:
-            st.markdown("**Aktivkonten**")
-            draw_sortable_list("Aktiv")
-        with col_pas:
-            st.markdown("**Passivkonten**")
-            draw_sortable_list("Passiv")
+            # 3. Hilfsfunktion, um eine Liste mit Pfeilen zu zeichnen
+            def draw_sortable_list(gruppe):
+                liste = st.session_state.sort_orders[gruppe]
+                if not liste:
+                    st.write(f"<span style='color:gray; font-size:14px;'>Keine {gruppe}konten vorhanden</span>",
+                             unsafe_allow_html=True)
+                for i, kto in enumerate(liste):
+                    c_name, c_up, c_down = st.columns([5, 1, 1])
+                    with c_name:
+                        st.markdown(f"<div style='padding-top: 5px; font-size: 15px;'><b>{i + 1}.</b> {kto}</div>",
+                                    unsafe_allow_html=True)
+                    with c_up:
+                        if st.button("⬆️", key=f"up_{gruppe}_{kto}", disabled=(i == 0), use_container_width=True):
+                            liste[i], liste[i - 1] = liste[i - 1], liste[i]
+                            st.rerun()
+                    with c_down:
+                        if st.button("⬇️", key=f"down_{gruppe}_{kto}", disabled=(i == len(liste) - 1),
+                                     use_container_width=True):
+                            liste[i], liste[i + 1] = liste[i + 1], liste[i]
+                            st.rerun()
 
-        st.write("")
-        st.markdown("#### 📈 Erfolgskonten")
-        col_auf, col_ert = st.columns(2)
-        with col_auf:
-            st.markdown("**Aufwandskonten**")
-            draw_sortable_list("Aufwand")
-        with col_ert:
-            st.markdown("**Ertragskonten**")
-            draw_sortable_list("Ertrag")
+
+            # 4. Das Layout auf dem Bildschirm aufbauen
+            st.markdown("#### 🏛️ Bestandskonten")
+            col_akt, col_pas = st.columns(2)
+            with col_akt:
+                st.markdown("**Aktivkonten (Links)**")
+                draw_sortable_list("Aktiv")
+            with col_pas:
+                st.markdown("**Passivkonten (Rechts)**")
+                draw_sortable_list("Passiv")
+
+            st.write("")
+            st.markdown("#### 📈 Erfolgskonten")
+            col_auf, col_ert = st.columns(2)
+            with col_auf:
+                st.markdown("**Aufwandskonten (Links)**")
+                draw_sortable_list("Aufwand")
+            with col_ert:
+                st.markdown("**Ertragskonten (Rechts)**")
+                draw_sortable_list("Ertrag")
 
         # 5. Für die PDF-Generierung alle sortierten Konten in einer langen Liste zusammenfassen
         sorted_user_konten = (
@@ -683,7 +691,7 @@ with tab4:
         )
         st.divider()
 
-        ##
+
         st.subheader("Jahresabschluss als PDF exportieren")
         st.markdown("Das System druckt nun den genauen Stand deiner Buchhaltung aus.")
 
