@@ -452,12 +452,51 @@ with tab3:
     if not st.session_state.konten:
         st.info("Bitte lege zuerst unter '1. Konten & Eröffnung' Konten an.")
     else:
-        st.write("Wähle ein Konto aus, um die Buchungen zu überprüfen und es manuell abzuschließen. Abschlussbuchungen können Sie im Grundbuch wieder löschen")
-        kto_namen_t = list(st.session_state.konten.keys())
-        selected_t_kto = st.selectbox("Wähle ein Konto aus:", options=kto_namen_t)
+        st.write(
+            "Wähle ein Konto aus, um die Buchungen zu überprüfen und es manuell abzuschließen. Abschlussbuchungen können Sie im Grundbuch wieder löschen")
 
-        if selected_t_kto:
-            k_daten = st.session_state.konten[selected_t_kto]
+        # --- NEU: Zählen, ob es bereits abgeschlossene Konten gibt ---
+        closed_count = 0
+        for k, v in st.session_state.konten.items():
+            s_sum = sum(item[0] for item in v["Soll"])
+            h_sum = sum(item[0] for item in v["Haben"])
+            if abs(s_sum - h_sum) < 0.01:
+                closed_count += 1
+
+        # --- NEU: Einklappbares Menü (Expander) ---
+        with st.expander("⚙️ Ansicht anpassen", expanded=False):
+            if "hide_closed_accounts" not in st.session_state:
+                st.session_state.hide_closed_accounts = True
+
+            # Checkbox ist nur aktiv ("drückbar"), wenn es abgeschlossene Konten gibt
+            nur_offene_konten = st.checkbox(
+                "☑️ Bereits abgeschlossene Konten ausblenden",
+                key="hide_closed_accounts",
+                disabled=(closed_count == 0)
+            )
+
+            if closed_count == 0:
+                st.caption("💡 Diese Option wird klickbar, sobald das erste Konto abgeschlossen ist.")
+
+        # --- Liste aufbauen ---
+        kto_namen_t = []
+        for k, v in st.session_state.konten.items():
+            s_sum = sum(item[0] for item in v["Soll"])
+            h_sum = sum(item[0] for item in v["Haben"])
+
+            # Wenn der Haken drin ist, überspringen wir Konten mit Saldo 0
+            if nur_offene_konten and abs(s_sum - h_sum) < 0.01:
+                continue
+
+            kto_namen_t.append(k)
+
+        if not kto_namen_t and nur_offene_konten:
+            st.success("🎉 Glückwunsch! Alle Konten sind ausgeglichen und abgeschlossen.")
+        else:
+            selected_t_kto = st.selectbox("Wähle ein Konto aus:", options=kto_namen_t)
+
+            if selected_t_kto:
+                k_daten = st.session_state.konten[selected_t_kto]
 
             st.write("")
             st.markdown(
@@ -585,6 +624,7 @@ with tab3:
 
                         rebuild_accounts()
                         st.success(f"Erfolgreich gebucht! Das Konto '{selected_t_kto}' ist nun abgeschlossen.")
+                        st.session_state.hide_closed_accounts = True
                         st.rerun()
 
 # ==========================================
@@ -1031,7 +1071,6 @@ with tab4:
                     key=lambda x: sorted_user_konten.index(x[2]) if x[2] in sorted_user_konten else 999)
                 sbk_data["Haben"].sort(
                     key=lambda x: sorted_user_konten.index(x[2]) if x[2] in sorted_user_konten else 999)
-                # --------------------------------------------------------------------------
 
                 next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), "Schlussbilanzkonto (SBK)", sbk_data)
                 pdf.set_y(next_y + 5)
