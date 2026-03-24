@@ -952,10 +952,15 @@ with tab4:
             # 1. Eröffnungsbilanz
             eb_aktiv, eb_passiv = [], []
             for name, daten in temp_konten.items():
-                if daten.get("Kategorie") in ["Aktiv", "Konto"] and daten["Soll"] and daten["Soll"][0][1] == "AB":
-                    eb_aktiv.append((name, daten["Soll"][0][0]))
-                if daten.get("Kategorie") in ["Passiv", "Konto"] and daten["Haben"] and daten["Haben"][0][1] == "AB":
-                    eb_passiv.append((name, daten["Haben"][0][0]))
+                # Durchsucht alle Soll-Einträge nach einem "AB" (erfasst auch gemischte Konten)
+                for val, ref, _ in daten["Soll"]:
+                    if ref == "AB":
+                        eb_aktiv.append((name, val))
+
+                # Durchsucht alle Haben-Einträge nach einem "AB" (erfasst auch gemischte Konten)
+                for val, ref, _ in daten["Haben"]:
+                    if ref == "AB":
+                        eb_passiv.append((name, val))
 
             draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv, eb_passiv)
 
