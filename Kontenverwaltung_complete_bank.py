@@ -699,13 +699,17 @@ with tab4:
                     # -------------------------------------------------------------------------
 
             kat = v.get("Kategorie", "")
+
             if kat in ["Aktiv", "Konto", "Abschluss", "Gemischt"]:
                 kategorien["Aktiv"].append(k)
-            elif kat in ["Passiv", "Gemischt"]:
+
+            if kat in ["Passiv", "Gemischt"]:
                 kategorien["Passiv"].append(k)
-            elif kat == "Aufwand":
+
+            if kat == "Aufwand":
                 kategorien["Aufwand"].append(k)
-            elif kat == "Ertrag":
+
+            if kat == "Ertrag":
                 kategorien["Ertrag"].append(k)
 
         # 2. Session State (Gedächtnis) für die 4 Listen anlegen/aktualisieren
