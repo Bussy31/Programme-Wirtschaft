@@ -31,7 +31,11 @@ def sichere_vorjahr():
 
 def naechstes_jahr():
     sichere_vorjahr()
-    st.session_state.bip_historie.append({"Jahr": st.session_state.jahr, "BIP": berechne_bip()})
+    st.session_state.bip_historie.append({
+        "Jahr": st.session_state.jahr,
+        "BIP": berechne_bip(),
+        "Wohlstand (%)": st.session_state.wohlstand
+    })
     st.session_state.jahr += 1
 
     st.session_state.aktuelle_szenarien = ziehe_3_szenarien()
@@ -167,6 +171,12 @@ def anwenden(option, titel, index):
             ereignis_log["vert"][effekt["basis"]] = ereignis_log["vert"].get(effekt["basis"], 0) + delta
             ereignis_log["vert"][anderes_ziel] = ereignis_log["vert"].get(anderes_ziel, 0) - delta
 
+        elif effekt["typ"] == "wohlstand":
+            neuer_wert = st.session_state.wohlstand + effekt["delta"]
+            # max(0, min(100, x)) sorgt dafür, dass der Wert nie unter 0 oder über 100 geht!
+            st.session_state.wohlstand = max(0, min(100, neuer_wert))
+            ereignis_log["wohlstand_delta"] = effekt["delta"]
+
     st.session_state.ereignis_logbuch.append(ereignis_log)
     st.session_state.alle_entscheidungen.append({"jahr": st.session_state.jahr, "log": ereignis_log})
     st.session_state.entscheidungen_getroffen[index] = True
@@ -178,6 +188,7 @@ if "setup" not in st.session_state:
     st.session_state.jahr = 1
     st.session_state.ziel_jahre = 5  # Standardwert
     st.session_state.bip_historie = []
+    st.session_state.wohlstand = 50
 
     st.session_state.uebrige_szenarien = alle_szenarien.copy()
     random.shuffle(st.session_state.uebrige_szenarien)
@@ -293,7 +304,14 @@ if st.session_state.setup:
 
     # --- DASHBOARD & TABELLE/DIAGRAMM MIT LOGBUCH ---
     akt_bip = berechne_bip()
-    st.header(f"📊 Wirtschafts-Dashboard (BIP: {akt_bip} {st.session_state.waehrung})")
+
+    col_bip, col_wohl = st.columns(2)
+    with col_bip:
+        st.header(f"📊 BIP: {akt_bip} {st.session_state.waehrung}")
+    with col_wohl:
+        st.header(f"❤️ Wohlstandsindex: {st.session_state.wohlstand}%")
+        st.progress(st.session_state.wohlstand / 100.0)  # Visueller Balken
+    st.write("---")
 
     if len(st.session_state.bip_historie) > 0:
         # Historie inklusive aktuellem Jahr vorbereiten
