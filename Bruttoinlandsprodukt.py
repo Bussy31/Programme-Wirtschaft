@@ -302,7 +302,7 @@ if st.session_state.setup:
 
     st.markdown("---")
 
-    # --- DASHBOARD UI (FINALISIERT) ---
+    # --- DASHBOARD UI (VOLLSTÄNDIG & KORRIGIERT) ---
     akt_bip = berechne_bip()
     alt_bip = st.session_state.get("alt_bip", st.session_state.start_bip)
     bip_wachstum = akt_bip - alt_bip
@@ -312,14 +312,32 @@ if st.session_state.setup:
     for log in st.session_state.ereignis_logbuch:
         wohl_wachstum_runde += log.get("wohlstand_delta", 0)
 
-    # Smiley-Logik holen
+
+    # Hilfsfunktion für die Smileys (Wieder eingefügt)
+    def get_wohlstand_smiley(wert):
+        if wert >= 90:
+            return "🤩"
+        elif wert >= 75:
+            return "😄"
+        elif wert >= 60:
+            return "🙂"
+        elif wert >= 40:
+            return "😐"
+        elif wert >= 25:
+            return "😕"
+        elif wert >= 10:
+            return "😢"
+        else:
+            return "😭"
+
+
     aktueller_smiley = get_wohlstand_smiley(st.session_state.wohlstand)
 
     # Layout mit zwei Spalten
     col_bip, col_wohl = st.columns(2)
 
     with col_bip:
-        # BIP Darstellung: Große Überschrift + Wert + Delta (mit Währung) in einer Zeile
+        # BIP: Überschrift, Wert und Delta (mit Währung) in einer Zeile
         b_farbe = "#28a745" if bip_wachstum >= 0 else "#dc3545"
         b_pfeil = "▲" if bip_wachstum >= 0 else "▼"
         b_plus = "+" if bip_wachstum >= 0 else ""
@@ -333,18 +351,18 @@ if st.session_state.setup:
                 </div>
             """.replace(",", "."), unsafe_allow_html=True)
 
-        # Details (Logs) darunter: Text neutral, nur die Zahl ist farbig
+        # Logs: Text neutral, nur die Zahl ist farbig
         if not st.session_state.get("spiel_ende", False):
             for log in st.session_state.ereignis_logbuch:
                 bip_effekt = sum(log["ent"].values())
                 if bip_effekt != 0:
                     farbe = "green" if bip_effekt > 0 else "red"
                     vorz = "+" if bip_effekt > 0 else ""
-                    # Neutraler Text, farbige Zahl (wie in der unteren Tabelle)
+                    # Neutraler Text, farbige Zahl
                     st.caption(f"{log['titel']}: :{farbe}[**{vorz}{bip_effekt} {st.session_state.waehrung}**]")
 
     with col_wohl:
-        # Wohlstand Darstellung: Dynamischer Smiley + Überschrift + Wert + Delta in einer Zeile
+        # Wohlstand: Smiley als Icon, Wert und Delta daneben
         w_farbe = "#28a745" if wohl_wachstum_runde >= 0 else "#dc3545"
         w_pfeil = "▲" if wohl_wachstum_runde >= 0 else "▼"
         w_plus = "+" if wohl_wachstum_runde >= 0 else ""
@@ -358,7 +376,7 @@ if st.session_state.setup:
                 </div>
             """, unsafe_allow_html=True)
 
-        # Details (Logs) darunter: Text neutral, nur die Zahl ist farbig
+        # Logs: Text neutral, nur die Prozentzahl ist farbig
         if not st.session_state.get("spiel_ende", False):
             for log in st.session_state.ereignis_logbuch:
                 if "wohlstand_delta" in log and log["wohlstand_delta"] != 0:
