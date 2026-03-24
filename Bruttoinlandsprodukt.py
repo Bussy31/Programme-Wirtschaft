@@ -302,15 +302,18 @@ if st.session_state.setup:
 
     st.markdown("---")
 
-    # --- DASHBOARD & TABELLE/DIAGRAMM MIT LOGBUCH ---
+    # --- DASHBOARD UI (NEU GESTALTET) ---
     akt_bip = berechne_bip()
-
-    # Wachstum im Vergleich zum Vorjahr berechnen
     alt_bip = st.session_state.get("alt_bip", st.session_state.start_bip)
     bip_wachstum = akt_bip - alt_bip
 
+    # Summe der Wohlstands-Änderungen aus der aktuellen Runde berechnen
+    wohl_wachstum_runde = 0
+    for log in st.session_state.ereignis_logbuch:
+        wohl_wachstum_runde += log.get("wohlstand_delta", 0)
 
-    # Hilfsfunktion für die Smileys
+
+    # Smiley-Logik
     def get_wohlstand_smiley(wert):
         if wert >= 90:
             return "🤩"
@@ -330,36 +333,55 @@ if st.session_state.setup:
 
     aktueller_smiley = get_wohlstand_smiley(st.session_state.wohlstand)
 
-    # --- DASHBOARD UI (Symmetrisch aufgebaut) ---
+    # Layout mit zwei Spalten
     col_bip, col_wohl = st.columns(2)
 
     with col_bip:
-        # BIP mit coolem Trend-Pfeil
-        st.metric(label=f"📊 Bruttoinlandsprodukt ({st.session_state.waehrung})", value=akt_bip, delta=bip_wachstum)
+        # BIP Darstellung: Überschrift, Wert und Delta in einer Zeile
+        b_farbe = "#28a745" if bip_wachstum >= 0 else "#dc3545"
+        b_pfeil = "▲" if bip_wachstum >= 0 else "▼"
+        b_plus = "+" if bip_wachstum >= 0 else ""
 
-        # LOGS: Welcher Fall hat das BIP wie verändert?
+        st.markdown(f"""
+                <div style="display: flex; align-items: baseline; gap: 15px;">
+                    <h2 style="margin: 0;">📊 BIP: {akt_bip:,} {st.session_state.waehrung}</h2>
+                    <span style="color: {b_farbe}; font-weight: bold; font-size: 1.2em;">
+                        {b_pfeil} {b_plus}{bip_wachstum:,}
+                    </span>
+                </div>
+            """.replace(",", "."), unsafe_allow_html=True)
+
+        # Details (Logs) darunter
         if not st.session_state.get("spiel_ende", False):
             for log in st.session_state.ereignis_logbuch:
-                # Wir summieren alle Entstehungs-Effekte, um den Gesamt-BIP-Effekt des Falls zu sehen
                 bip_effekt = sum(log["ent"].values())
                 if bip_effekt != 0:
-                    b_farbe = "green" if bip_effekt > 0 else "red"
-                    b_vorz = "+" if bip_effekt > 0 else ""
-                    st.caption(f"_{log['titel']}_: :{b_farbe}[**{b_vorz}{bip_effekt} {st.session_state.waehrung}**]")
+                    farbe = "green" if bip_effekt > 0 else "red"
+                    st.caption(f":{farbe}[{'+' if bip_effekt > 0 else ''}{bip_effekt} durch {log['titel']}]")
 
     with col_wohl:
-        # Wohlstand mit Smiley und Prozentzahl
-        st.metric(label=f"❤️ Wohlstandsindex {aktueller_smiley}", value=f"{st.session_state.wohlstand}%")
-        st.progress(st.session_state.wohlstand / 100.0)  # Visueller Ladebalken
+        # Wohlstand Darstellung: Überschrift, Wert, Delta und Smiley in einer Zeile
+        w_farbe = "#28a745" if wohl_wachstum_runde >= 0 else "#dc3545"
+        w_pfeil = "▲" if wohl_wachstum_runde >= 0 else "▼"
+        w_plus = "+" if wohl_wachstum_runde >= 0 else ""
 
-        # LOGS: Welcher Fall hat den Wohlstand wie verändert?
+        st.markdown(f"""
+                <div style="display: flex; align-items: baseline; gap: 15px;">
+                    <h2 style="margin: 0;">❤️ Wohlstand: {st.session_state.wohlstand}%</h2>
+                    <span style="color: {w_farbe}; font-weight: bold; font-size: 1.2em;">
+                        {w_pfeil} {w_plus}{wohl_wachstum_runde}%
+                    </span>
+                    <span style="font-size: 1.5em;">{aktueller_smiley}</span>
+                </div>
+            """, unsafe_allow_html=True)
+
+        # Details (Logs) darunter
         if not st.session_state.get("spiel_ende", False):
             for log in st.session_state.ereignis_logbuch:
                 if "wohlstand_delta" in log and log["wohlstand_delta"] != 0:
                     w_wert = log["wohlstand_delta"]
-                    w_farbe = "green" if w_wert > 0 else "red"
-                    w_vorz = "+" if w_wert > 0 else ""
-                    st.caption(f"_{log['titel']}_: :{w_farbe}[**{w_vorz}{w_wert}%**]")
+                    farbe = "green" if w_wert > 0 else "red"
+                    st.caption(f":{farbe}[{'+' if w_wert > 0 else ''}{w_wert}% durch {log['titel']}]")
 
     st.write("---")
 
