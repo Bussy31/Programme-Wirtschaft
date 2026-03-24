@@ -330,7 +330,7 @@ if st.session_state.setup:
     # --- DASHBOARD UI ---
     col_bip, col_wohl = st.columns(2)
     with col_bip:
-        st.header(f"📊 Wirtschafts-Dashboard (BIP: {akt_bip} {st.session_state.waehrung})")
+        st.header(f"📊 BIP: {akt_bip} {st.session_state.waehrung})")
     with col_wohl:
         # Hier wird der Smiley jetzt direkt neben der Prozentzahl angezeigt!
         st.header(f"Wohlstandsindex: {st.session_state.wohlstand}% {aktueller_smiley}")
