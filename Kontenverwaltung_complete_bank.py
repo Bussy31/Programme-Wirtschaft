@@ -234,7 +234,7 @@ with tab1:
 
     # --- NEU: Gemischtes Konto (Kontokorrent / Bank) ---
     st.write("")
-    st.markdown("**🏦 Gemischtes Konto:**")
+    st.markdown("**Gemischtes Konto:**")
     c_b1, c_b2, c_b3, c_b4 = st.columns([2, 1, 1, 1])
     with c_b1:
         bank_name = st.text_input("Name:", value="Kundenkontokorrent", key="bank_name")
@@ -243,7 +243,7 @@ with tab1:
     with c_b3:
         bank_ab_haben = st.number_input("AB Haben (Guthaben):", min_value=0.0, step=100.0, key="bank_haben")
     with c_b4:
-        st.write("")  # Abstandhalter
+        st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
         if st.button("🏦 Eröffnen", use_container_width=True):
             if bank_name and bank_name not in st.session_state.konten:
                 st.session_state.konten[bank_name] = {"Kategorie": "Gemischt", "Seite": "Soll", "Soll": [],
