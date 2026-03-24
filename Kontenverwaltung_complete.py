@@ -597,11 +597,6 @@ with tab4:
     if not st.session_state.konten:
         st.info("Bitte erst Konten anlegen.")
     else:
-        st.subheader("Jahresabschluss als PDF exportieren")
-        st.markdown("Das System druckt nun den genauen Stand deiner Buchhaltung aus.")
-
-        # --- NEU: Reihenfolge der Konten anpassen (2 SPALTEN & KATEGORIEN) ---
-        st.divider()
         st.markdown("### ↕️ Reihenfolge der Konten festlegen")
         st.write(
             "Verschiebe die Konten innerhalb ihrer Kategorie nach oben oder unten. Die Steuerkonten, GuV und SBK werden im PDF automatisch an die richtigen Stellen gesetzt.")
@@ -663,20 +658,20 @@ with tab4:
         st.markdown("#### 🏛️ Bestandskonten")
         col_akt, col_pas = st.columns(2)
         with col_akt:
-            st.markdown("**Aktivkonten (Links)**")
+            st.markdown("**Aktivkonten**")
             draw_sortable_list("Aktiv")
         with col_pas:
-            st.markdown("**Passivkonten (Rechts)**")
+            st.markdown("**Passivkonten**")
             draw_sortable_list("Passiv")
 
         st.write("")
         st.markdown("#### 📈 Erfolgskonten")
         col_auf, col_ert = st.columns(2)
         with col_auf:
-            st.markdown("**Aufwandskonten (Links)**")
+            st.markdown("**Aufwandskonten**")
             draw_sortable_list("Aufwand")
         with col_ert:
-            st.markdown("**Ertragskonten (Rechts)**")
+            st.markdown("**Ertragskonten**")
             draw_sortable_list("Ertrag")
 
         # 5. Für die PDF-Generierung alle sortierten Konten in einer langen Liste zusammenfassen
@@ -688,7 +683,8 @@ with tab4:
         )
         st.divider()
 
-
+        st.subheader("Jahresabschluss als PDF exportieren")
+        st.markdown("Das System druckt nun den genauen Stand deiner Buchhaltung aus.")
 
         def draw_bilanz_pdf(pdf, title, links, rechts):
             pdf.set_font("Helvetica", "B", 14)
