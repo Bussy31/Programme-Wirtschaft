@@ -600,38 +600,52 @@ with tab4:
         st.subheader("Jahresabschluss als PDF exportieren")
         st.markdown("Das System druckt nun den genauen Stand deiner Buchhaltung aus.")
 
-        # --- NEU: Reihenfolge der Konten anpassen ---
+        # --- NEU: Reihenfolge der Konten anpassen (MIT PFEILEN) ---
         st.divider()
         st.markdown("### ↕️ Reihenfolge der Bestands- und Erfolgskonten festlegen")
         st.write(
-            "Die Steuerkonten, das GuV- und SBK-Konto werden im PDF automatisch an ihren festen, korrekten Plätzen positioniert. Hier kannst du die Reihenfolge der restlichen Konten anpassen.")
+            "Verschiebe die Konten mit den Pfeilen nach oben oder unten. Die Steuerkonten, GuV und SBK werden im PDF automatisch an die richtigen Stellen gesetzt.")
 
-        # Nur normale Konten filtern (Spezialkonten ausblenden)
         special_konten = ["Vorsteuer", "Umsatzsteuer", "GuV", "SBK"]
         sortable_konten = [k for k in st.session_state.konten.keys() if k not in special_konten]
 
-        if sortable_konten:
-            order_df = pd.DataFrame({
-                "Reihenfolge": range(1, len(sortable_konten) + 1),
-                "Konto": sortable_konten
-            })
+        # 1. Eigene Liste im Gedächtnis anlegen, falls noch nicht da
+        if "sort_order" not in st.session_state:
+            st.session_state.sort_order = []
 
-            # Editierbare Tabelle für den Nutzer anzeigen
-            edited_df = st.data_editor(
-                order_df,
-                column_config={
-                    "Reihenfolge": st.column_config.NumberColumn("Reihenfolge", min_value=1, step=1),
-                    "Konto": st.column_config.TextColumn("Konto", disabled=True)
-                },
-                hide_index=True,
-                use_container_width=True
-            )
-            # Sortierte Liste der Kontennamen anhand der Nutzeingabe erstellen
-            sorted_user_konten = edited_df.sort_values(by="Reihenfolge")["Konto"].tolist()
-        else:
-            sorted_user_konten = []
+        # 2. Liste aktualisieren (falls neue Konten dazu kamen oder gelöscht wurden)
+        st.session_state.sort_order = [k for k in st.session_state.sort_order if k in sortable_konten]
+        for k in sortable_konten:
+            if k not in st.session_state.sort_order:
+                st.session_state.sort_order.append(k)
 
+        # 3. Pfeil-Menü aufbauen
+        if st.session_state.sort_order:
+            for i, kto in enumerate(st.session_state.sort_order):
+                c_name, c_up, c_down, _ = st.columns([5, 1, 1, 3])  # Spalten-Layout
+
+                with c_name:
+                    st.markdown(f"<div style='padding-top: 5px;'><b>{i + 1}.</b> {kto}</div>", unsafe_allow_html=True)
+
+                with c_up:
+                    # Pfeil hoch (deaktiviert beim ersten Element)
+                    if st.button("⬆️", key=f"up_{kto}", disabled=(i == 0), use_container_width=True):
+                        st.session_state.sort_order[i], st.session_state.sort_order[i - 1] = \
+                        st.session_state.sort_order[i - 1], st.session_state.sort_order[i]
+                        st.rerun()
+
+                with c_down:
+                    # Pfeil runter (deaktiviert beim letzten Element)
+                    if st.button("⬇️", key=f"down_{kto}", disabled=(i == len(st.session_state.sort_order) - 1),
+                                 use_container_width=True):
+                        st.session_state.sort_order[i], st.session_state.sort_order[i + 1] = \
+                        st.session_state.sort_order[i + 1], st.session_state.sort_order[i]
+                        st.rerun()
+
+        # Diese Liste wird dann unten vom PDF-Button verarbeitet
+        sorted_user_konten = st.session_state.sort_order
         st.divider()
+
 
 
         def draw_bilanz_pdf(pdf, title, links, rechts):
