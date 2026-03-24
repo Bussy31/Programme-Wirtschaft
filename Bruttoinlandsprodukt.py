@@ -302,18 +302,16 @@ if st.session_state.setup:
 
     st.markdown("---")
 
-    # --- DASHBOARD UI (VOLLSTÄNDIG & KORRIGIERT) ---
+    # --- DASHBOARD LOGIK ---
     akt_bip = berechne_bip()
     alt_bip = st.session_state.get("alt_bip", st.session_state.start_bip)
     bip_wachstum = akt_bip - alt_bip
 
-    # Summe der Wohlstands-Änderungen aus der aktuellen Runde berechnen
     wohl_wachstum_runde = 0
     for log in st.session_state.ereignis_logbuch:
         wohl_wachstum_runde += log.get("wohlstand_delta", 0)
 
 
-    # Hilfsfunktion für die Smileys (Wieder eingefügt)
     def get_wohlstand_smiley(wert):
         if wert >= 90:
             return "🤩"
@@ -332,58 +330,65 @@ if st.session_state.setup:
 
 
     aktueller_smiley = get_wohlstand_smiley(st.session_state.wohlstand)
+    spiel_ende = st.session_state.get("spiel_ende", False)
 
-    # Layout mit zwei Spalten
+    # --- DASHBOARD UI ---
     col_bip, col_wohl = st.columns(2)
 
     with col_bip:
-        # BIP: Überschrift, Wert und Delta (mit Währung) in einer Zeile
+        # BIP Anzeige
         b_farbe = "#28a745" if bip_wachstum >= 0 else "#dc3545"
         b_pfeil = "▲" if bip_wachstum >= 0 else "▼"
         b_plus = "+" if bip_wachstum >= 0 else ""
 
+        # Veränderung nur anzeigen, wenn das Spiel NOCH LÄUFT
+        delta_bip_html = f"""
+                <span style="color: {b_farbe}; font-weight: bold; font-size: 1.2em;">
+                    {b_pfeil} {b_plus}{bip_wachstum:,} {st.session_state.waehrung}
+                </span>
+            """ if not spiel_ende else ""
+
         st.markdown(f"""
                 <div style="display: flex; align-items: baseline; gap: 15px;">
                     <h2 style="margin: 0;">📊 BIP: {akt_bip:,} {st.session_state.waehrung}</h2>
-                    <span style="color: {b_farbe}; font-weight: bold; font-size: 1.2em;">
-                        {b_pfeil} {b_plus}{bip_wachstum:,} {st.session_state.waehrung}
-                    </span>
+                    {delta_bip_html}
                 </div>
             """.replace(",", "."), unsafe_allow_html=True)
 
-        # Logs: Text neutral, nur die Zahl ist farbig
-        if not st.session_state.get("spiel_ende", False):
+        if not spiel_ende:
             for log in st.session_state.ereignis_logbuch:
                 bip_effekt = sum(log["ent"].values())
                 if bip_effekt != 0:
                     farbe = "green" if bip_effekt > 0 else "red"
-                    vorz = "+" if bip_effekt > 0 else ""
-                    # Neutraler Text, farbige Zahl
-                    st.caption(f"{log['titel']}: :{farbe}[**{vorz}{bip_effekt} {st.session_state.waehrung}**]")
+                    st.caption(
+                        f"{log['titel']}: :{farbe}[**{'+' if bip_effekt > 0 else ''}{bip_effekt} {st.session_state.waehrung}**]")
 
     with col_wohl:
-        # Wohlstand: Smiley als Icon, Wert und Delta daneben
+        # Wohlstand Anzeige
         w_farbe = "#28a745" if wohl_wachstum_runde >= 0 else "#dc3545"
         w_pfeil = "▲" if wohl_wachstum_runde >= 0 else "▼"
         w_plus = "+" if wohl_wachstum_runde >= 0 else ""
 
+        # Veränderung nur anzeigen, wenn das Spiel NOCH LÄUFT
+        delta_wohl_html = f"""
+                <span style="color: {w_farbe}; font-weight: bold; font-size: 1.2em;">
+                    {w_pfeil} {w_plus}{wohl_wachstum_runde}%
+                </span>
+            """ if not spiel_ende else ""
+
         st.markdown(f"""
                 <div style="display: flex; align-items: baseline; gap: 15px;">
                     <h2 style="margin: 0;">{aktueller_smiley} Wohlstand: {st.session_state.wohlstand}%</h2>
-                    <span style="color: {w_farbe}; font-weight: bold; font-size: 1.2em;">
-                        {w_pfeil} {w_plus}{wohl_wachstum_runde}%
-                    </span>
+                    {delta_wohl_html}
                 </div>
             """, unsafe_allow_html=True)
 
-        # Logs: Text neutral, nur die Prozentzahl ist farbig
-        if not st.session_state.get("spiel_ende", False):
+        if not spiel_ende:
             for log in st.session_state.ereignis_logbuch:
                 if "wohlstand_delta" in log and log["wohlstand_delta"] != 0:
                     w_wert = log["wohlstand_delta"]
                     farbe = "green" if w_wert > 0 else "red"
-                    vorz = "+" if w_wert > 0 else ""
-                    st.caption(f"{log['titel']}: :{farbe}[**{vorz}{w_wert}%**]")
+                    st.caption(f"{log['titel']}: :{farbe}[**{'+' if w_wert > 0 else ''}{w_wert}%**]")
 
     st.write("---")
 
