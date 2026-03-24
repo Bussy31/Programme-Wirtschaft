@@ -453,7 +453,7 @@ with tab3:
         st.info("Bitte lege zuerst unter '1. Konten & Eröffnung' Konten an.")
     else:
         st.write(
-            "Wähle ein Konto aus, um die Buchungen zu überprüfen und es manuell abzuschließen. Abschlussbuchungen können Sie im Grundbuch wieder löschen")
+            "Wähle ein Konto aus, um die Buchungen zu überprüfen und es manuell abzuschließen. Abschlussbuchungen können Sie im Grundbuch wieder löschen.")
 
         # --- NEU: Zählen, ob es bereits abgeschlossene Konten gibt ---
         closed_count = 0
@@ -463,16 +463,19 @@ with tab3:
             if abs(s_sum - h_sum) < 0.01:
                 closed_count += 1
 
-        # --- NEU: Einklappbares Menü (Expander) ---
+        # --- NEU: Checkbox direkt sichtbar (ohne Expander) ---
         if "hide_closed_accounts" not in st.session_state:
             st.session_state.hide_closed_accounts = True
 
         # Checkbox ist nur aktiv ("drückbar"), wenn es abgeschlossene Konten gibt
         nur_offene_konten = st.checkbox(
-            "Bereits abgeschlossene Konten ausblenden",
-            key="hide_closed_accounts",
+            "☑️ Bereits abgeschlossene Konten ausblenden",
+            value=st.session_state.hide_closed_accounts,
             disabled=(closed_count == 0)
         )
+
+        # Den aktuellen Wert für den Rest des Programms speichern
+        st.session_state.hide_closed_accounts = nur_offene_konten
 
         if closed_count == 0:
             st.caption("💡 Diese Option wird klickbar, sobald das erste Konto abgeschlossen ist.")
