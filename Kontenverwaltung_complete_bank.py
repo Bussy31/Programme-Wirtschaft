@@ -701,7 +701,7 @@ with tab4:
             kat = v.get("Kategorie", "")
             if kat in ["Aktiv", "Konto", "Abschluss", "Gemischt"]:
                 kategorien["Aktiv"].append(k)
-            elif kat == "Passiv":
+            elif kat in ["Passiv", "Gemischt"]:
                 kategorien["Passiv"].append(k)
             elif kat == "Aufwand":
                 kategorien["Aufwand"].append(k)
