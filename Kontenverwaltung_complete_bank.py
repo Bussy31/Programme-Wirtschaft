@@ -960,7 +960,12 @@ with tab4:
                 for val, ref, _ in daten["Haben"]:
                     if ref == "AB":
                         eb_passiv.append((name, val))
-
+            eb_aktiv.sort(key=lambda x: st.session_state.sort_orders["Aktiv"].index(x[0]) if x[0] in
+                                                                                             st.session_state.sort_orders[
+                                                                                                 "Aktiv"] else 999)
+            eb_passiv.sort(key=lambda x: st.session_state.sort_orders["Passiv"].index(x[0]) if x[0] in
+                                                                                               st.session_state.sort_orders[
+                                                                                                   "Passiv"] else 999)
             gemischte_namen = [k for k, v in st.session_state.konten.items() if
                                v.get("Kategorie") == "Gemischt"]
 
@@ -1138,11 +1143,15 @@ with tab4:
             pdf.ln(4)
 
             if sbk_data:
-                # --- NEU: Einträge im T-Konto des SBK nach deiner Reihenfolge sortieren ---
+                # --- NEU: Einträge im T-Konto des SBK getrennt nach Aktiv und Passiv sortieren ---
                 sbk_data["Soll"].sort(
-                    key=lambda x: sorted_user_konten.index(x[2]) if x[2] in sorted_user_konten else 999)
+                    key=lambda x: st.session_state.sort_orders["Aktiv"].index(x[2]) if x[2] in
+                                                                                       st.session_state.sort_orders[
+                                                                                           "Aktiv"] else 999)
                 sbk_data["Haben"].sort(
-                    key=lambda x: sorted_user_konten.index(x[2]) if x[2] in sorted_user_konten else 999)
+                    key=lambda x: st.session_state.sort_orders["Passiv"].index(x[2]) if x[2] in
+                                                                                        st.session_state.sort_orders[
+                                                                                            "Passiv"] else 999)
 
                 next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), "Schlussbilanzkonto (SBK)", sbk_data)
                 pdf.set_y(next_y + 5)
@@ -1162,9 +1171,13 @@ with tab4:
                 sb_aktiv = [(gkto, val) for val, ref, gkto in sbk_data["Soll"]]
                 sb_passiv = [(gkto, val) for val, ref, gkto in sbk_data["Haben"]]
 
-                # NEU: Schlussbilanz exakt nach der Nutzersortierung ordnen
-                sb_aktiv.sort(key=lambda x: sorted_user_konten.index(x[0]) if x[0] in sorted_user_konten else 999)
-                sb_passiv.sort(key=lambda x: sorted_user_konten.index(x[0]) if x[0] in sorted_user_konten else 999)
+                # NEU: Schlussbilanz exakt nach der Nutzersortierung ordnen (GETRENNT!)
+                sb_aktiv.sort(key=lambda x: st.session_state.sort_orders["Aktiv"].index(x[0]) if x[0] in
+                                                                                                 st.session_state.sort_orders[
+                                                                                                     "Aktiv"] else 999)
+                sb_passiv.sort(key=lambda x: st.session_state.sort_orders["Passiv"].index(x[0]) if x[0] in
+                                                                                                   st.session_state.sort_orders[
+                                                                                                       "Passiv"] else 999)
 
                 # --- NEU: Gemischte Konten in der Bilanz umbenennen (Aktiv = Debitoren, Passiv = Kreditoren) ---
                 gemischte_namen = [k for k, v in st.session_state.konten.items() if v.get("Kategorie") == "Gemischt"]
