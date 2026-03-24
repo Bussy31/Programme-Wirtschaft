@@ -597,13 +597,6 @@ with tab4:
     if not st.session_state.konten:
         st.info("Bitte erst Konten anlegen.")
     else:
-        st.markdown("### ↕️ Reihenfolge der Konten festlegen")
-        st.write(
-            "Verschiebe die Konten innerhalb ihrer Kategorie nach oben oder unten. Die Steuerkonten, GuV und SBK werden im PDF automatisch an die richtigen Stellen gesetzt.")
-
-        # --- NEU: Reihenfolge der Konten anpassen (EINKLAPPBAR & 2 SPALTEN) ---
-        st.divider()
-
         special_konten = ["Vorsteuer", "Umsatzsteuer", "GuV", "SBK"]
 
         # 1. Konten nach Kategorien sortieren (Logik im Hintergrund)
