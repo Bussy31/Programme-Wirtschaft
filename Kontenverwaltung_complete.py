@@ -591,7 +591,7 @@ with tab4:
     if not st.session_state.konten:
         st.info("Bitte erst Konten anlegen.")
     else:
-        special_konten = ["Vorsteuer", "Umsatzsteuer", "GuV", "SBK"]
+        special_konten = ["GuV", "SBK"]
 
         # 1. Konten nach Kategorien sortieren (Logik im Hintergrund)
         kategorien = {"Aktiv": [], "Passiv": [], "Aufwand": [], "Ertrag": []}
@@ -824,7 +824,7 @@ with tab4:
             temp_konten = {}
 
             # 1. Spezialkonten unberührt lassen (werden im PDF-Skript ohnehin fest positioniert)
-            for k in ["Vorsteuer", "Umsatzsteuer", "GuV", "SBK"]:
+            for k in ["GuV", "SBK"]:
                 if k in st.session_state.konten:
                     temp_konten[k] = copy.deepcopy(st.session_state.konten[k])
 
@@ -938,25 +938,11 @@ with tab4:
             else:
                 pdf.ln(10)
 
-            pdf.set_font("Helvetica", "B", 12)
-            pdf.cell(0, 8, "Hauptbuch - Bestandskonten", ln=True)
             pdf.set_font("Helvetica", "I", 10)
-            pdf.cell(0, 6, "(Steuerkonten zu Beginn, danach Aktiv- links & Passivkonten rechts)", ln=True)
+            pdf.cell(0, 6, "(Aktivkonten links & Passivkonten rechts)", ln=True)
             pdf.ln(4)
 
-            vst_data = temp_konten.pop("Vorsteuer", None)
-            ust_data = temp_konten.pop("Umsatzsteuer", None)
             sbk_data = temp_konten.pop("SBK", None)
-
-            if vst_data or ust_data:
-                start_y = pdf.get_y()
-                if start_y > 230: pdf.add_page(); start_y = pdf.get_y()
-                y_left = start_y
-                y_right = start_y
-                if vst_data: y_left = draw_single_t_konto(pdf, 10, start_y, "Vorsteuer", vst_data)
-                if ust_data: y_right = draw_single_t_konto(pdf, 105, start_y, "Umsatzsteuer", ust_data)
-                pdf.set_y(max(y_left, y_right) + 5)
-                pdf.set_x(10)
 
             aktiv_konten = [(k, v) for k, v in temp_konten.items() if
                             v.get("Kategorie") in ["Aktiv", "Konto", "Abschluss"]]
@@ -1033,6 +1019,10 @@ with tab4:
 
                 sb_aktiv = [(gkto, val) for val, ref, gkto in sbk_data["Soll"]]
                 sb_passiv = [(gkto, val) for val, ref, gkto in sbk_data["Haben"]]
+
+                # NEU: Schlussbilanz exakt nach der Nutzersortierung ordnen
+                sb_aktiv.sort(key=lambda x: sorted_user_konten.index(x[0]) if x[0] in sorted_user_konten else 999)
+                sb_passiv.sort(key=lambda x: sorted_user_konten.index(x[0]) if x[0] in sorted_user_konten else 999)
 
                 draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv, sb_passiv)
 
