@@ -682,8 +682,6 @@ with tab4:
                 st.session_state.sort_orders["Aufwand"] +
                 st.session_state.sort_orders["Ertrag"]
         )
-        st.divider()
-
 
         st.subheader("Jahresabschluss als PDF exportieren")
         st.markdown("Das System druckt nun den genauen Stand deiner Buchhaltung aus.")
