@@ -600,50 +600,92 @@ with tab4:
         st.subheader("Jahresabschluss als PDF exportieren")
         st.markdown("Das System druckt nun den genauen Stand deiner Buchhaltung aus.")
 
-        # --- NEU: Reihenfolge der Konten anpassen (MIT PFEILEN) ---
+        # --- NEU: Reihenfolge der Konten anpassen (2 SPALTEN & KATEGORIEN) ---
         st.divider()
-        st.markdown("### ↕️ Reihenfolge der Bestands- und Erfolgskonten festlegen")
+        st.markdown("### ↕️ Reihenfolge der Konten festlegen")
         st.write(
-            "Verschiebe die Konten mit den Pfeilen nach oben oder unten. Die Steuerkonten, GuV und SBK werden im PDF automatisch an die richtigen Stellen gesetzt.")
+            "Verschiebe die Konten innerhalb ihrer Kategorie nach oben oder unten. Die Steuerkonten, GuV und SBK werden im PDF automatisch an die richtigen Stellen gesetzt.")
 
         special_konten = ["Vorsteuer", "Umsatzsteuer", "GuV", "SBK"]
-        sortable_konten = [k for k in st.session_state.konten.keys() if k not in special_konten]
 
-        # 1. Eigene Liste im Gedächtnis anlegen, falls noch nicht da
-        if "sort_order" not in st.session_state:
-            st.session_state.sort_order = []
+        # 1. Konten nach Kategorien sortieren
+        kategorien = {"Aktiv": [], "Passiv": [], "Aufwand": [], "Ertrag": []}
 
-        # 2. Liste aktualisieren (falls neue Konten dazu kamen oder gelöscht wurden)
-        st.session_state.sort_order = [k for k in st.session_state.sort_order if k in sortable_konten]
-        for k in sortable_konten:
-            if k not in st.session_state.sort_order:
-                st.session_state.sort_order.append(k)
+        for k, v in st.session_state.konten.items():
+            if k in special_konten:
+                continue
+            kat = v.get("Kategorie", "")
+            if kat in ["Aktiv", "Spezialkonto", "Konto", "Abschluss"]:
+                kategorien["Aktiv"].append(k)
+            elif kat == "Passiv":
+                kategorien["Passiv"].append(k)
+            elif kat == "Aufwand":
+                kategorien["Aufwand"].append(k)
+            elif kat == "Ertrag":
+                kategorien["Ertrag"].append(k)
 
-        # 3. Pfeil-Menü aufbauen
-        if st.session_state.sort_order:
-            for i, kto in enumerate(st.session_state.sort_order):
-                c_name, c_up, c_down, _ = st.columns([5, 1, 1, 3])  # Spalten-Layout
+        # 2. Session State (Gedächtnis) für die 4 Listen anlegen/aktualisieren
+        if "sort_orders" not in st.session_state:
+            st.session_state.sort_orders = {"Aktiv": [], "Passiv": [], "Aufwand": [], "Ertrag": []}
 
+        for gruppe, konten in kategorien.items():
+            # Alte (gelöschte) Konten entfernen
+            st.session_state.sort_orders[gruppe] = [k for k in st.session_state.sort_orders[gruppe] if k in konten]
+            # Neue Konten unten anhängen
+            for k in konten:
+                if k not in st.session_state.sort_orders[gruppe]:
+                    st.session_state.sort_orders[gruppe].append(k)
+
+
+        # 3. Hilfsfunktion, um eine Liste mit Pfeilen zu zeichnen
+        def draw_sortable_list(gruppe):
+            liste = st.session_state.sort_orders[gruppe]
+            if not liste:
+                st.write(f"<span style='color:gray; font-size:14px;'>Keine {gruppe}konten vorhanden</span>",
+                         unsafe_allow_html=True)
+            for i, kto in enumerate(liste):
+                c_name, c_up, c_down = st.columns([5, 1, 1])
                 with c_name:
-                    st.markdown(f"<div style='padding-top: 5px;'><b>{i + 1}.</b> {kto}</div>", unsafe_allow_html=True)
-
+                    st.markdown(f"<div style='padding-top: 5px; font-size: 15px;'><b>{i + 1}.</b> {kto}</div>",
+                                unsafe_allow_html=True)
                 with c_up:
-                    # Pfeil hoch (deaktiviert beim ersten Element)
-                    if st.button("⬆️", key=f"up_{kto}", disabled=(i == 0), use_container_width=True):
-                        st.session_state.sort_order[i], st.session_state.sort_order[i - 1] = \
-                        st.session_state.sort_order[i - 1], st.session_state.sort_order[i]
+                    if st.button("⬆️", key=f"up_{gruppe}_{kto}", disabled=(i == 0), use_container_width=True):
+                        liste[i], liste[i - 1] = liste[i - 1], liste[i]
                         st.rerun()
-
                 with c_down:
-                    # Pfeil runter (deaktiviert beim letzten Element)
-                    if st.button("⬇️", key=f"down_{kto}", disabled=(i == len(st.session_state.sort_order) - 1),
+                    if st.button("⬇️", key=f"down_{gruppe}_{kto}", disabled=(i == len(liste) - 1),
                                  use_container_width=True):
-                        st.session_state.sort_order[i], st.session_state.sort_order[i + 1] = \
-                        st.session_state.sort_order[i + 1], st.session_state.sort_order[i]
+                        liste[i], liste[i + 1] = liste[i + 1], liste[i]
                         st.rerun()
 
-        # Diese Liste wird dann unten vom PDF-Button verarbeitet
-        sorted_user_konten = st.session_state.sort_order
+
+        # 4. Das Layout auf dem Bildschirm aufbauen (Bestands- und Erfolgskonten)
+        st.markdown("#### 🏛️ Bestandskonten")
+        col_akt, col_pas = st.columns(2)
+        with col_akt:
+            st.markdown("**Aktivkonten (Links)**")
+            draw_sortable_list("Aktiv")
+        with col_pas:
+            st.markdown("**Passivkonten (Rechts)**")
+            draw_sortable_list("Passiv")
+
+        st.write("")
+        st.markdown("#### 📈 Erfolgskonten")
+        col_auf, col_ert = st.columns(2)
+        with col_auf:
+            st.markdown("**Aufwandskonten (Links)**")
+            draw_sortable_list("Aufwand")
+        with col_ert:
+            st.markdown("**Ertragskonten (Rechts)**")
+            draw_sortable_list("Ertrag")
+
+        # 5. Für die PDF-Generierung alle sortierten Konten in einer langen Liste zusammenfassen
+        sorted_user_konten = (
+                st.session_state.sort_orders["Aktiv"] +
+                st.session_state.sort_orders["Passiv"] +
+                st.session_state.sort_orders["Aufwand"] +
+                st.session_state.sort_orders["Ertrag"]
+        )
         st.divider()
 
 
