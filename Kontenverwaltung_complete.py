@@ -683,6 +683,7 @@ with tab4:
         )
         st.divider()
 
+        ##
         st.subheader("Jahresabschluss als PDF exportieren")
         st.markdown("Das System druckt nun den genauen Stand deiner Buchhaltung aus.")
 
