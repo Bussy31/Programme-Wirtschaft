@@ -239,9 +239,9 @@ with tab1:
     with c_b1:
         bank_name = st.text_input("Name:", value="Kundenkontokorrent", key="bank_name")
     with c_b2:
-        bank_ab_soll = st.number_input("AB Soll (Dispo):", min_value=0.0, step=100.0, key="bank_soll")
+        bank_ab_soll = st.number_input("AB Soll (Debitoren):", min_value=0.0, step=100.0, key="bank_soll")
     with c_b3:
-        bank_ab_haben = st.number_input("AB Haben (Guthaben):", min_value=0.0, step=100.0, key="bank_haben")
+        bank_ab_haben = st.number_input("AB Haben (Kreditoren):", min_value=0.0, step=100.0, key="bank_haben")
     with c_b4:
         st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
         if st.button("🏦 Eröffnen", use_container_width=True):
