@@ -302,7 +302,7 @@ if st.session_state.setup:
 
     st.markdown("---")
 
-    # --- DASHBOARD UI (NEU GESTALTET) ---
+    # --- DASHBOARD UI (FINALISIERT) ---
     akt_bip = berechne_bip()
     alt_bip = st.session_state.get("alt_bip", st.session_state.start_bip)
     bip_wachstum = akt_bip - alt_bip
@@ -312,32 +312,14 @@ if st.session_state.setup:
     for log in st.session_state.ereignis_logbuch:
         wohl_wachstum_runde += log.get("wohlstand_delta", 0)
 
-
-    # Smiley-Logik
-    def get_wohlstand_smiley(wert):
-        if wert >= 90:
-            return "🤩"
-        elif wert >= 75:
-            return "😄"
-        elif wert >= 60:
-            return "🙂"
-        elif wert >= 40:
-            return "😐"
-        elif wert >= 25:
-            return "😕"
-        elif wert >= 10:
-            return "😢"
-        else:
-            return "😭"
-
-
+    # Smiley-Logik holen
     aktueller_smiley = get_wohlstand_smiley(st.session_state.wohlstand)
 
     # Layout mit zwei Spalten
     col_bip, col_wohl = st.columns(2)
 
     with col_bip:
-        # BIP Darstellung: Überschrift, Wert und Delta in einer Zeile
+        # BIP Darstellung: Große Überschrift + Wert + Delta (mit Währung) in einer Zeile
         b_farbe = "#28a745" if bip_wachstum >= 0 else "#dc3545"
         b_pfeil = "▲" if bip_wachstum >= 0 else "▼"
         b_plus = "+" if bip_wachstum >= 0 else ""
@@ -346,42 +328,44 @@ if st.session_state.setup:
                 <div style="display: flex; align-items: baseline; gap: 15px;">
                     <h2 style="margin: 0;">📊 BIP: {akt_bip:,} {st.session_state.waehrung}</h2>
                     <span style="color: {b_farbe}; font-weight: bold; font-size: 1.2em;">
-                        {b_pfeil} {b_plus}{bip_wachstum:,}
+                        {b_pfeil} {b_plus}{bip_wachstum:,} {st.session_state.waehrung}
                     </span>
                 </div>
             """.replace(",", "."), unsafe_allow_html=True)
 
-        # Details (Logs) darunter
+        # Details (Logs) darunter: Text neutral, nur die Zahl ist farbig
         if not st.session_state.get("spiel_ende", False):
             for log in st.session_state.ereignis_logbuch:
                 bip_effekt = sum(log["ent"].values())
                 if bip_effekt != 0:
                     farbe = "green" if bip_effekt > 0 else "red"
-                    st.caption(f":{farbe}[{'+' if bip_effekt > 0 else ''}{bip_effekt} durch {log['titel']}]")
+                    vorz = "+" if bip_effekt > 0 else ""
+                    # Neutraler Text, farbige Zahl (wie in der unteren Tabelle)
+                    st.caption(f"{log['titel']}: :{farbe}[**{vorz}{bip_effekt} {st.session_state.waehrung}**]")
 
     with col_wohl:
-        # Wohlstand Darstellung: Überschrift, Wert, Delta und Smiley in einer Zeile
+        # Wohlstand Darstellung: Dynamischer Smiley + Überschrift + Wert + Delta in einer Zeile
         w_farbe = "#28a745" if wohl_wachstum_runde >= 0 else "#dc3545"
         w_pfeil = "▲" if wohl_wachstum_runde >= 0 else "▼"
         w_plus = "+" if wohl_wachstum_runde >= 0 else ""
 
         st.markdown(f"""
                 <div style="display: flex; align-items: baseline; gap: 15px;">
-                    <h2 style="margin: 0;">❤️ Wohlstand: {st.session_state.wohlstand}%</h2>
+                    <h2 style="margin: 0;">{aktueller_smiley} Wohlstand: {st.session_state.wohlstand}%</h2>
                     <span style="color: {w_farbe}; font-weight: bold; font-size: 1.2em;">
                         {w_pfeil} {w_plus}{wohl_wachstum_runde}%
                     </span>
-                    <span style="font-size: 1.5em;">{aktueller_smiley}</span>
                 </div>
             """, unsafe_allow_html=True)
 
-        # Details (Logs) darunter
+        # Details (Logs) darunter: Text neutral, nur die Zahl ist farbig
         if not st.session_state.get("spiel_ende", False):
             for log in st.session_state.ereignis_logbuch:
                 if "wohlstand_delta" in log and log["wohlstand_delta"] != 0:
                     w_wert = log["wohlstand_delta"]
                     farbe = "green" if w_wert > 0 else "red"
-                    st.caption(f":{farbe}[{'+' if w_wert > 0 else ''}{w_wert}% durch {log['titel']}]")
+                    vorz = "+" if w_wert > 0 else ""
+                    st.caption(f"{log['titel']}: :{farbe}[**{vorz}{w_wert}%**]")
 
     st.write("---")
 
