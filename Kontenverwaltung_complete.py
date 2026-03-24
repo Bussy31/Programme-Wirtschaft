@@ -600,6 +600,39 @@ with tab4:
         st.subheader("Jahresabschluss als PDF exportieren")
         st.markdown("Das System druckt nun den genauen Stand deiner Buchhaltung aus.")
 
+        # --- NEU: Reihenfolge der Konten anpassen ---
+        st.divider()
+        st.markdown("### ↕️ Reihenfolge der Bestands- und Erfolgskonten festlegen")
+        st.write(
+            "Die Steuerkonten, das GuV- und SBK-Konto werden im PDF automatisch an ihren festen, korrekten Plätzen positioniert. Hier kannst du die Reihenfolge der restlichen Konten anpassen.")
+
+        # Nur normale Konten filtern (Spezialkonten ausblenden)
+        special_konten = ["Vorsteuer", "Umsatzsteuer", "GuV", "SBK"]
+        sortable_konten = [k for k in st.session_state.konten.keys() if k not in special_konten]
+
+        if sortable_konten:
+            order_df = pd.DataFrame({
+                "Reihenfolge": range(1, len(sortable_konten) + 1),
+                "Konto": sortable_konten
+            })
+
+            # Editierbare Tabelle für den Nutzer anzeigen
+            edited_df = st.data_editor(
+                order_df,
+                column_config={
+                    "Reihenfolge": st.column_config.NumberColumn("Reihenfolge", min_value=1, step=1),
+                    "Konto": st.column_config.TextColumn("Konto", disabled=True)
+                },
+                hide_index=True,
+                use_container_width=True
+            )
+            # Sortierte Liste der Kontennamen anhand der Nutzeingabe erstellen
+            sorted_user_konten = edited_df.sort_values(by="Reihenfolge")["Konto"].tolist()
+        else:
+            sorted_user_konten = []
+
+        st.divider()
+
 
         def draw_bilanz_pdf(pdf, title, links, rechts):
             pdf.set_font("Helvetica", "B", 14)
@@ -734,7 +767,18 @@ with tab4:
 
 
         if st.button("📄 PDF generieren", type="primary"):
-            temp_konten = copy.deepcopy(st.session_state.konten)
+            temp_konten = {}
+
+            # 1. Spezialkonten unberührt lassen (werden im PDF-Skript ohnehin fest positioniert)
+            for k in ["Vorsteuer", "Umsatzsteuer", "GuV", "SBK"]:
+                if k in st.session_state.konten:
+                    temp_konten[k] = copy.deepcopy(st.session_state.konten[k])
+
+            # 2. Dann die vom Nutzer sortierten Konten hinzufügen
+            for k in sorted_user_konten:
+                temp_konten[k] = copy.deepcopy(st.session_state.konten[k])
+            # -------------------------------------------------------------------------
+
             temp_journal = copy.deepcopy(st.session_state.journal)
 
             # --- PDF ERSTELLUNG START ---
