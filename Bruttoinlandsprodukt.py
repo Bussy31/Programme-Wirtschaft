@@ -67,6 +67,7 @@ def erstelle_pdf():
     pdf.cell(0, 10, "1. Startbedingungen (Jahr 1):", ln=True)
     pdf.set_font("Arial", '', 12)
     pdf.cell(0, 8, f"Anfangs-BIP: {st.session_state.start_bip} {waehrung}", ln=True)
+    pdf.cell(0, 8, f"Start-Wohlstand: 50 %", ln=True)
     pdf.ln(5)
 
     # 2. Aktuelle Zahlen
@@ -75,6 +76,7 @@ def erstelle_pdf():
     pdf.set_font("Arial", '', 12)
     bip = berechne_bip()
     pdf.cell(0, 8, f"BIP Gesamt: {bip} {waehrung}", ln=True)
+    pdf.cell(0, 8, f"Aktueller Wohlstandsindex: {st.session_state.wohlstand} %", ln=True)
     pdf.cell(0, 8,
              f"Entstehungsrechnung: Agrar ({st.session_state.ent['landwirtschaft']}), Industrie ({st.session_state.ent['industrie']}), Dienstleistung ({st.session_state.ent['dienstleistung']})",
              ln=True)
@@ -128,6 +130,11 @@ def erstelle_pdf():
         pdf.cell(0, 5, f"Verwendungsrechnung: {ver_str}", ln=True)
         pdf.set_x(20)
         pdf.cell(0, 5, f"Verteilungsrechnung: {vert_str}", ln=True)
+        if "wohlstand_delta" in log and log["wohlstand_delta"] != 0:
+            w_delta = log["wohlstand_delta"]
+            w_vorz = "+" if w_delta > 0 else ""
+            pdf.set_x(20)
+            pdf.cell(0, 5, f"Wohlstandsindex: {w_vorz}{w_delta}%", ln=True)
         pdf.ln(2)  # Kleine Lücke zwischen den Ereignissen
 
     return bytes(pdf.output(dest='S'), encoding='latin1')
