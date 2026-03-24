@@ -469,7 +469,7 @@ with tab3:
 
         # Checkbox ist nur aktiv ("drückbar"), wenn es abgeschlossene Konten gibt
         nur_offene_konten = st.checkbox(
-            "☑Bereits abgeschlossene Konten ausblenden",
+            "Bereits abgeschlossene Konten ausblenden",
             key="hide_closed_accounts",
             disabled=(closed_count == 0)
         )
