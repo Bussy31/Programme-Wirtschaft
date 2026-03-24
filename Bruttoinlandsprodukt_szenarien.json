@@ -4,11 +4,11 @@
         "text": "Die Weltwirtschaft schwächelt. Die Leute kaufen weniger ein.",
         "option_a": {"text": "Staatliche Bauprojekte starten", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.15, "ver": {"staat": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
-            {"typ": "wohlstand", "delta": 3}
+            {"typ": "wohlstand", "delta": 2}
         ]},
         "option_b": {"text": "Steuern für Unternehmen senken", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
-            {"typ": "wohlstand", "delta": -1}
+            {"typ": "wohlstand", "delta": -2}
         ]}
     },
     {
@@ -19,7 +19,7 @@
         ]},
         "option_b": {"text": "Im Inland nutzen & Preise senken", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.15, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
-            {"typ": "wohlstand", "delta": 4}
+            {"typ": "wohlstand", "delta": 3}
         ]}
     },
     {
@@ -42,7 +42,7 @@
         ]},
         "option_b": {"text": "Streik polizeilich auflösen", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": -0.10, "ver": {"export": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
-            {"typ": "wohlstand", "delta": -3}
+            {"typ": "wohlstand", "delta": -4}
         ]}
     },
     {
@@ -53,7 +53,7 @@
         ]},
         "option_b": {"text": "Naturparks fördern (Fokus Inland)", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.15, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.7, "gewinne": 0.3}},
-            {"typ": "wohlstand", "delta": 4}
+            {"typ": "wohlstand", "delta": 3}
         ]}
     },
     {
@@ -76,7 +76,7 @@
         ]},
         "option_b": {"text": "Aufkäufe durch Großkonzerne zulassen", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.30, "ver": {"export": 1.0}, "vert": {"loehne": 0.1, "gewinne": 0.9}},
-            {"typ": "wohlstand", "delta": -1}
+            {"typ": "wohlstand", "delta": -2}
         ]}
     },
     {
@@ -88,18 +88,18 @@
         ]},
         "option_b": {"text": "Warten und hoffen", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": -0.20, "ver": {"export": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
-            {"typ": "wohlstand", "delta": -2}
+            {"typ": "wohlstand", "delta": -3}
         ]}
     },
     {
         "id": "9", "titel": "🍎 Bio-Trend", "text": "Die Menschen wollen gesünder essen und zahlen mehr für gute Lebensmittel.",
         "option_a": {"text": "Bio-Siegel staatlich pushen", "effekte": [
             {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.25, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
-            {"typ": "wohlstand", "delta": 4}
+            {"typ": "wohlstand", "delta": 3}
         ]},
         "option_b": {"text": "Massenproduktion für Export beibehalten", "effekte": [
             {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.10, "ver": {"export": 1.0}, "vert": {"loehne": 0.1, "gewinne": 0.9}},
-            {"typ": "wohlstand", "delta": -1}
+            {"typ": "wohlstand", "delta": -2}
         ]}
     },
     {
@@ -122,7 +122,7 @@
         ]},
         "option_b": {"text": "Preise direkt an Bürger weitergeben", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": -0.15, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
-            {"typ": "wohlstand", "delta": -3}
+            {"typ": "wohlstand", "delta": -4}
         ]}
     },
     {
@@ -133,14 +133,14 @@
         ]},
         "option_b": {"text": "Automatisierung & Roboter massiv fördern", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.15, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
-            {"typ": "wohlstand", "delta": -1}
+            {"typ": "wohlstand", "delta": -2}
         ]}
     },
     {
         "id": "13", "titel": "⚔️ Handelskrieg", "text": "Ein wichtiger Handelspartner belegt deine Exporte mit hohen Strafzöllen.",
         "option_a": {"text": "Gegenzölle einführen (Protektionismus)", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": -0.12, "ver": {"export": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
-            {"typ": "wohlstand", "delta": -2}
+            {"typ": "wohlstand", "delta": -3}
         ]},
         "option_b": {"text": "Neue Märkte in Übersee suchen", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.08, "ver": {"investitionen": 0.5, "export": 0.5}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
@@ -151,7 +151,7 @@
         "id": "14", "titel": "🛤️ Infrastruktur-Marasmus", "text": "Brücken und Schienen sind marode. Logistik wird langsam und teuer.",
         "option_a": {"text": "Großes staatliches Sanierungspaket", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.10, "ver": {"staat": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
-            {"typ": "wohlstand", "delta": 4}
+            {"typ": "wohlstand", "delta": 3}
         ]},
         "option_b": {"text": "Privatisierung der Netze", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.05, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
@@ -208,7 +208,7 @@
         "option_a": {"text": "Reiche stärker besteuern", "effekte": [
             {"typ": "verteilung_shift", "basis": "loehne", "prozent": 0.15},
             {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.02, "ver": {"konsum": 1.0}, "vert": {"loehne": 1.0, "gewinne": 0.0}},
-            {"typ": "wohlstand", "delta": 4}
+            {"typ": "wohlstand", "delta": 3}
         ]},
         "option_b": {"text": "Wirtschaftswachstum priorisieren", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.12, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
@@ -231,11 +231,11 @@
         "option_a": {"text": "Mindestlohn auf 15€ anheben", "effekte": [
             {"typ": "verteilung_shift", "basis": "loehne", "prozent": 0.20},
             {"typ": "wachstum", "basis": "landwirtschaft", "prozent": -0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 1.0, "gewinne": 0.0}},
-            {"typ": "wohlstand", "delta": 4}
+            {"typ": "wohlstand", "delta": 3}
         ]},
         "option_b": {"text": "Löhne dem Markt überlassen", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.10, "ver": {"export": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
-            {"typ": "wohlstand", "delta": -2}
+            {"typ": "wohlstand", "delta": -3}
         ]}
     },
     {
@@ -246,7 +246,7 @@
         ]},
         "option_b": {"text": "Abbaurechte an Weltmarktführer verkaufen", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.15, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
-            {"typ": "wohlstand", "delta": -1}
+            {"typ": "wohlstand", "delta": -2}
         ]}
     },
     {
@@ -291,7 +291,7 @@
         ]},
         "option_b": {"text": "Überstunden steuerlich fördern", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.12, "ver": {"export": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
-            {"typ": "wohlstand", "delta": -2}
+            {"typ": "wohlstand", "delta": -3}
         ]}
     },
     {
@@ -313,7 +313,7 @@
         ]},
         "option_b": {"text": "Baurecht lockern für Luxus-Investoren", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.20, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
-            {"typ": "wohlstand", "delta": -2}
+            {"typ": "wohlstand", "delta": -3}
         ]}
     },
     {
@@ -331,7 +331,7 @@
         "id": "30", "titel": "🛡️ Aufrüstung", "text": "Die geopolitische Lage spitzt sich zu. Das Militär fordert modernes Gerät.",
         "option_a": {"text": "Großaufträge an heimische Rüstungsfirmen", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.25, "ver": {"staat": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
-            {"typ": "wohlstand", "delta": -1}
+            {"typ": "wohlstand", "delta": -2}
         ]},
         "option_b": {"text": "Abrüstung & Fokus auf Diplomatie", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
@@ -343,7 +343,7 @@
         "option_a": {"text": "Leitzins erhöhen (Sparen fördern)", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.10, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
             {"typ": "verteilung_shift", "basis": "gewinne", "prozent": 0.05},
-            {"typ": "wohlstand", "delta": -1}
+            {"typ": "wohlstand", "delta": -2}
         ]},
         "option_b": {"text": "Preiskontrollen für Grundnahrungsmittel", "effekte": [
             {"typ": "wachstum", "basis": "landwirtschaft", "prozent": -0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
@@ -387,7 +387,7 @@
         "id": "35", "titel": "📉 Rohstoff-Abhängigkeit", "text": "Ein Nachbarland stoppt die Lieferung von Eisenerz.",
         "option_a": {"text": "Recycling-Industrie fördern", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": -0.05, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
-            {"typ": "wohlstand", "delta": 2}
+            {"typ": "wohlstand", "delta": 3}
         ]},
         "option_b": {"text": "Teure Importe aus Übersee", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": -0.15, "ver": {"export": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
@@ -398,7 +398,7 @@
         "id": "36", "titel": "🏢 Bürokratie-Monster", "text": "Firmen beschweren sich über zu viele Formulare und Regeln.",
         "option_a": {"text": "Radikaler Bürokratieabbau", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.12, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
-            {"typ": "wohlstand", "delta": 1}
+            {"typ": "wohlstand", "delta": 2}
         ]},
         "option_b": {"text": "Digitalisierung der Behörden", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"staat": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
@@ -442,7 +442,7 @@
         "id": "40", "titel": "🎲 Glücksspiel-Legalisierung", "text": "Ein neues Gesetz erlaubt große Casinos im ganzen Land.",
         "option_a": {"text": "Tourismus-Zentren (Las Vegas Stil)", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.22, "ver": {"export": 0.6, "konsum": 0.4}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
-            {"typ": "wohlstand", "delta": -2}
+            {"typ": "wohlstand", "delta": -3}
         ]},
         "option_b": {"text": "Strenge staatliche Kontrolle", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.08, "ver": {"staat": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
@@ -464,11 +464,11 @@
         "id": "42", "titel": "📉 Banken-Panik", "text": "Gerüchte über eine Pleite führen dazu, dass alle ihr Geld abheben wollen.",
         "option_a": {"text": "Staatsgarantie für alle Einlagen", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.05, "ver": {"staat": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
-            {"typ": "wohlstand", "delta": 4}
+            {"typ": "wohlstand", "delta": 3}
         ]},
         "option_b": {"text": "Börse für eine Woche schließen", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.20, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
-            {"typ": "wohlstand", "delta": -3}
+            {"typ": "wohlstand", "delta": -4}
         ]}
     },
     {
@@ -486,12 +486,12 @@
         "id": "44", "titel": "👵 Rentenalter-Debatte", "text": "Die Menschen leben länger. Die Rentenkasse wird leer.",
         "option_a": {"text": "Rente erst ab 70", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.10, "ver": {"staat": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
-            {"typ": "wohlstand", "delta": -4}
+            {"typ": "wohlstand", "delta": -5}
         ]},
         "option_b": {"text": "Rentenbeiträge erhöhen", "effekte": [
             {"typ": "verteilung_shift", "basis": "loehne", "prozent": -0.05},
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 1.0, "gewinne": 0.0}},
-            {"typ": "wohlstand", "delta": -2}
+            {"typ": "wohlstand", "delta": -3}
         ]}
     },
     {
@@ -524,7 +524,7 @@
         ]},
         "option_b": {"text": "Auf Qualität & Luxus-Nische setzen", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.10, "ver": {"export": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
-            {"typ": "wohlstand", "delta": 1}
+            {"typ": "wohlstand", "delta": 2}
         ]}
     },
     {
@@ -580,7 +580,7 @@
         ]},
         "option_b": {"text": "Präsenzpflicht (Produktivität schützen)", "effekte": [
             {"typ": "wachstum", "basis": "industrie", "prozent": 0.05, "ver": {"export": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
-            {"typ": "wohlstand", "delta": -2}
+            {"typ": "wohlstand", "delta": -3}
         ]}
     },
     {
@@ -598,7 +598,7 @@
         "id": "54", "titel": "🦟 Tropenkrankheit", "text": "Durch die Erwärmung breitet sich ein Virus aus. Erntehelfer fallen aus.",
         "option_a": {"text": "Landwirtschaft automatisieren", "effekte": [
             {"typ": "wachstum", "basis": "landwirtschaft", "prozent": -0.10, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
-            {"typ": "wohlstand", "delta": -1}
+            {"typ": "wohlstand", "delta": -2}
         ]},
         "option_b": {"text": "Impfpflicht & Notfallkliniken", "effekte": [
             {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.05, "ver": {"staat": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
@@ -658,7 +658,7 @@
         "option_b": {"text": "Arbeitszeitgesetz verschärfen", "effekte": [
             {"typ": "verteilung_shift", "basis": "loehne", "prozent": 0.05},
             {"typ": "wachstum", "basis": "industrie", "prozent": -0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 1.0, "gewinne": 0.0}},
-            {"typ": "wohlstand", "delta": -3}
+            {"typ": "wohlstand", "delta": -4}
         ]}
     },
     {
@@ -670,6 +670,452 @@
         "option_b": {"text": "Steuern für Kinderlose erhöhen", "effekte": [
             {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.02, "ver": {"staat": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
             {"typ": "wohlstand", "delta": -4}
+        ]}
+    },
+    {
+        "id": "61", "titel": "🖨️ 3D-Druck Revolution", "text": "Jeder Haushalt kann sich alltägliche Dinge plötzlich selbst ausdrucken.",
+        "option_a": {"text": "Patente streng schützen (Konzerne stärken)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.10, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
+            {"typ": "wohlstand", "delta": -2}
+        ]},
+        "option_b": {"text": "Open-Source Druckpläne für alle fördern", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.15, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 3}
+        ]}
+    },
+    {
+        "id": "62", "titel": "🪙 Krypto-Währung als Standard", "text": "Soll Bitcoin als offizielles Zahlungsmittel eingeführt werden?",
+        "option_a": {"text": "Einführen (Tech-Investoren anlocken)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.18, "ver": {"investitionen": 0.5, "export": 0.5}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
+            {"typ": "wohlstand", "delta": -1}
+        ]},
+        "option_b": {"text": "Verbieten (Fokus auf eigene Währung)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.05, "ver": {"staat": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": 1}
+        ]}
+    },
+    {
+        "id": "63", "titel": "🌋 Vulkanausbruch in Übersee", "text": "Eine riesige Aschewolke legt den globalen Flugverkehr lahm.",
+        "option_a": {"text": "Airlines mit Steuergeldern retten", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.15, "ver": {"staat": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
+            {"typ": "wohlstand", "delta": 1}
+        ]},
+        "option_b": {"text": "Nichts tun (Freier Markt)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.25, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
+            {"typ": "wohlstand", "delta": -3}
+        ]}
+    },
+    {
+        "id": "64", "titel": "💸 Grundeinkommens-Test", "text": "Ein Dorf bekommt probeweise ein Bedingungsloses Grundeinkommen.",
+        "option_a": {"text": "Test erfolgreich: Auf ganzes Land ausweiten", "effekte": [
+            {"typ": "verteilung_shift", "basis": "loehne", "prozent": 0.15},
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"konsum": 1.0}, "vert": {"loehne": 1.0, "gewinne": 0.0}},
+            {"typ": "wohlstand", "delta": 4}
+        ]},
+        "option_b": {"text": "Test abbrechen (Zu teuer für den Staat)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.08, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "65", "titel": "🚰 Wasser-Privatisierung", "text": "Ausländische Investoren wollen das staatliche Wassernetz aufkaufen.",
+        "option_a": {"text": "Verkaufen (Bündel an Geld für den Staat)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.15, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.1, "gewinne": 0.9}},
+            {"typ": "wohlstand", "delta": -4}
+        ]},
+        "option_b": {"text": "Wasser bleibt in Staatshand", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.05, "ver": {"staat": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 2}
+        ]}
+    },
+    {
+        "id": "66", "titel": "🪲 Insekten statt Rindfleisch", "text": "Ein Startup entwickelt günstige Protein-Burger aus Heuschrecken.",
+        "option_a": {"text": "Massiv staatlich fördern (Klimaschutz)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.12, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": -0.10, "ver": {"export": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Klassische Bauernhöfe stattdessen stützen", "effekte": [
+            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.10, "ver": {"staat": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
+            {"typ": "wohlstand", "delta": -1}
+        ]}
+    },
+    {
+        "id": "67", "titel": "🚂 Kostenloser Nahverkehr", "text": "Busse und Bahnen sollen für alle Bürger gratis sein.",
+        "option_a": {"text": "Einführen (Finanziert durch Schulden)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.15, "ver": {"staat": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 4}
+        ]},
+        "option_b": {"text": "Tickets beibehalten & Züge privatisieren", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "68", "titel": "🚫 Bargeldabschaffung", "text": "Die Notenbank plant, Geldscheine und Münzen komplett zu verbieten.",
+        "option_a": {"text": "Komplett auf Digitalgeld umsteigen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.12, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": -2}
+        ]},
+        "option_b": {"text": "Recht auf Bargeld in die Verfassung", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.05, "ver": {"staat": 1.0}, "vert": {"loehne": 0.7, "gewinne": 0.3}},
+            {"typ": "wohlstand", "delta": 2}
+        ]}
+    },
+    {
+        "id": "69", "titel": "🍬 Zuckersteuer", "text": "Die Gesundheitskosten explodieren wegen zu viel Süßkram.",
+        "option_a": {"text": "Hohe Steuer auf Limo & Süßigkeiten", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.10, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": 3}
+        ]},
+        "option_b": {"text": "Lebensmittelindustrie selbst regulieren lassen", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.08, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "70", "titel": "🎖️ Wehrpflicht-Debatte", "text": "Das Militär klagt über starken Personalmangel.",
+        "option_a": {"text": "1 Jahr Zwangsdienst für alle einführen", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.05, "ver": {"staat": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": -3}
+        ]},
+        "option_b": {"text": "Berufsarmee besser bezahlen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"staat": 1.0}, "vert": {"loehne": 0.9, "gewinne": 0.1}},
+            {"typ": "wohlstand", "delta": 1}
+        ]}
+    },
+    {
+        "id": "71", "titel": "🛑 Verbot von Kurzstreckenflügen", "text": "Sollen Inlandsflüge verboten werden, um Emissionen zu senken?",
+        "option_a": {"text": "Strenges Verbot einführen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Fluglinien steuerlich entlasten", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.12, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "72", "titel": "🔋 Gigafabrik brennt ab", "text": "Die wichtigste Batterie-Fabrik des Landes wurde durch ein Feuer zerstört.",
+        "option_a": {"text": "Sofort mit Steuergeldern neu aufbauen", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.15, "ver": {"staat": 1.0}, "vert": {"loehne": 0.7, "gewinne": 0.3}},
+            {"typ": "wohlstand", "delta": -1}
+        ]},
+        "option_b": {"text": "Batterien ab sofort teuer importieren", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.25, "ver": {"export": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": -3}
+        ]}
+    },
+    {
+        "id": "73", "titel": "💼 Obergrenze für Boni", "text": "Das Volk ärgert sich über Millionen-Boni für gescheiterte Manager.",
+        "option_a": {"text": "Hartes Gesetz: Boni kappen", "effekte": [
+            {"typ": "verteilung_shift", "basis": "loehne", "prozent": 0.08},
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.05, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 3}
+        ]},
+        "option_b": {"text": "Vertragsfreiheit für Konzerne belassen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.1, "gewinne": 0.9}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "74", "titel": "🎨 Rettung der Theater", "text": "Kinos, Theater und Museen stehen kurz vor der kollektiven Pleite.",
+        "option_a": {"text": "Kultur-Rettungsschirm aufspannen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.08, "ver": {"staat": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 3}
+        ]},
+        "option_b": {"text": "Kunst muss sich selbst finanzieren", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.10, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "75", "titel": "🛥️ Luxus-Steuer", "text": "Soll es eine extra hohe Steuer auf Yachten, Privatjets und Sportwagen geben?",
+        "option_a": {"text": "Einführen & Einnahmen verteilen", "effekte": [
+            {"typ": "verteilung_shift", "basis": "loehne", "prozent": 0.10},
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.9, "gewinne": 0.1}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Verwerfen (Investoren nicht abschrecken)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.10, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
+            {"typ": "wohlstand", "delta": -1}
+        ]}
+    },
+    {
+        "id": "76", "titel": "🏥 Hacker in der Notaufnahme", "text": "Erpresser haben die IT-Systeme der größten Krankenhäuser verschlüsselt.",
+        "option_a": {"text": "Lösegeld heimlich zahlen (Schnelle Rettung)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.08, "ver": {"staat": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": -1}
+        ]},
+        "option_b": {"text": "Nicht verhandeln, IT mühsam neu aufbauen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.15, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": -3}
+        ]}
+    },
+    {
+        "id": "77", "titel": "🌾 Super-Weizen entwickelt", "text": "Agrarforscher haben Getreide gezüchtet, das keine Pestizide mehr braucht.",
+        "option_a": {"text": "Saatgut dem Staat überschreiben", "effekte": [
+            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.20, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.7, "gewinne": 0.3}},
+            {"typ": "wohlstand", "delta": 3}
+        ]},
+        "option_b": {"text": "Saatgut an Chemiekonzern verkaufen", "effekte": [
+            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.25, "ver": {"export": 1.0}, "vert": {"loehne": 0.1, "gewinne": 0.9}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "78", "titel": "🛌 Recht auf Siesta", "text": "Durch Hitzewellen fordern Gewerkschaften eine dreistündige Mittagspause.",
+        "option_a": {"text": "Siesta gesetzlich vorschreiben", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.12, "ver": {"export": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 3}
+        ]},
+        "option_b": {"text": "Arbeitszeiten stur beibehalten", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.05, "ver": {"export": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "79", "titel": "🛒 Werbeverbot im Freien", "text": "Plakate und Bildschirme mit Werbung sollen aus den Straßen verschwinden.",
+        "option_a": {"text": "Ja, für ein schöneres Stadtbild", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.08, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Nein, das zerstört die Werbebranche", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.05, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": -1}
+        ]}
+    },
+    {
+        "id": "80", "titel": "📉 Nachbarstaat ist bankrott", "text": "Ein wichtiges angrenzendes Land kann seine Schulden nicht mehr zahlen.",
+        "option_a": {"text": "Rettungskredite gewähren", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.10, "ver": {"staat": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": 1}
+        ]},
+        "option_b": {"text": "Grenzen dicht machen (Kein Geld verschenken)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.20, "ver": {"export": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
+            {"typ": "wohlstand", "delta": -3}
+        ]}
+    },
+    {
+        "id": "81", "titel": "🧫 Labor-Fleisch Freigabe", "text": "Schnitzel aus dem Reagenzglas sind reif für den Supermarkt.",
+        "option_a": {"text": "Verkauf erlauben (Agrar-Lobby tobt)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.15, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": -0.10, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Verkauf zum Schutz der Bauern verbieten", "effekte": [
+            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.05, "ver": {"export": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": -1}
+        ]}
+    },
+    {
+        "id": "82", "titel": "🌊 Gezeiten-Kraftwerke", "text": "Die Küste bietet perfektes Potenzial für Energie aus Meeresströmung.",
+        "option_a": {"text": "Milliarden in den Bau stecken", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.12, "ver": {"staat": 1.0}, "vert": {"loehne": 0.7, "gewinne": 0.3}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Zu teuer – lieber billigen Kohlestrom importieren", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.10, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "83", "titel": "🚧 Autobahn-Tempolimit", "text": "Ein Tempolimit von 120 km/h soll Unfallzahlen und Abgase senken.",
+        "option_a": {"text": "Tempolimit rigoros einführen", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Freie Fahrt für freie Bürger!", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.05, "ver": {"export": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
+            {"typ": "wohlstand", "delta": -1}
+        ]}
+    },
+    {
+        "id": "84", "titel": "👩‍🏫 Extremer Lehrermangel", "text": "Klassen haben oft über 35 Kinder, der Unterricht fällt ständig aus.",
+        "option_a": {"text": "Gehälter massiv erhöhen & Quereinsteiger holen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"staat": 1.0}, "vert": {"loehne": 0.9, "gewinne": 0.1}},
+            {"typ": "wohlstand", "delta": 3}
+        ]},
+        "option_b": {"text": "Klassengrößen auf 45 anheben (Kosten sparen)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.05, "ver": {"staat": 1.0}, "vert": {"loehne": 0.1, "gewinne": 0.9}},
+            {"typ": "wohlstand", "delta": -4}
+        ]}
+    },
+    {
+        "id": "85", "titel": "👗 Fast-Fashion Steuer", "text": "Billigkleidung aus Übersee müllt das Land zu.",
+        "option_a": {"text": "Strafsteuer auf extrem billige Kleidung", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.08, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Handel nicht einschränken", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "86", "titel": "🏖️ Sechs-Stunden-Tag", "text": "Ein Gesetz soll die tägliche Arbeitszeit bei vollem Lohnausgleich reduzieren.",
+        "option_a": {"text": "Ja, Gesundheit geht vor", "effekte": [
+            {"typ": "verteilung_shift", "basis": "loehne", "prozent": 0.10},
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 4}
+        ]},
+        "option_b": {"text": "Nein, das macht Firmen kaputt", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.10, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "87", "titel": "🐶 Hundesteuer-Explosion", "text": "Um Straßen sauberer zu halten, fordert die Opposition 1000€ Hundesteuer im Jahr.",
+        "option_a": {"text": "Idee umsetzen (Mehr Geld für Städte)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.05, "ver": {"staat": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
+            {"typ": "wohlstand", "delta": -3}
+        ]},
+        "option_b": {"text": "Ablehnen (Tiere sind wichtig fürs Gemüt)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.02, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 1}
+        ]}
+    },
+    {
+        "id": "88", "titel": "📱 Staatliches Social Media", "text": "Ausländische Apps werden gesperrt. Eine eigene Staats-App soll sie ersetzen.",
+        "option_a": {"text": "Strenge Überwachungs-App einführen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.15, "ver": {"staat": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": -4}
+        ]},
+        "option_b": {"text": "Internet komplett zensurfrei lassen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.08, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.7, "gewinne": 0.3}},
+            {"typ": "wohlstand", "delta": 2}
+        ]}
+    },
+    {
+        "id": "89", "titel": "🌊 Algenfarmen im Ozean", "text": "Algen können als Bio-Plastik, Nahrung und Dünger extrem nützlich sein.",
+        "option_a": {"text": "Fischerei einschränken, Algen fördern", "effekte": [
+            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.12, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Fischfang-Flotten weiter ausbauen", "effekte": [
+            {"typ": "wachstum", "basis": "landwirtschaft", "prozent": 0.15, "ver": {"export": 1.0}, "vert": {"loehne": 0.3, "gewinne": 0.7}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "90", "titel": "🧑‍⚕️ Globale Ärzte-Abwerbung", "text": "Dir fehlen Ärzte. Soll man sie systematisch aus ärmeren Ländern abwerben?",
+        "option_a": {"text": "Ja, hohe Startprämien zahlen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"staat": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Nein, stattdessen eigene Medizinstudienplätze verdoppeln", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.05, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.7, "gewinne": 0.3}},
+            {"typ": "wohlstand", "delta": 1}
+        ]}
+    },
+    {
+        "id": "91", "titel": "🏗️ Mega-Staudamm Projekt", "text": "Ein riesiger Damm soll grünen Strom liefern, aber 10.000 Menschen müssten umziehen.",
+        "option_a": {"text": "Damm bauen (Zwangsumsiedlung)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.20, "ver": {"staat": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": -3}
+        ]},
+        "option_b": {"text": "Projekt absagen (Fokus auf kleine Solar-Dächer)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 2}
+        ]}
+    },
+    {
+        "id": "92", "titel": "💻 Open-Source in Behörden", "text": "Alle Ministerien sollen von teurer US-Software auf kostenlose Linux-Systeme wechseln.",
+        "option_a": {"text": "Wechsel knallhart durchziehen", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.05, "ver": {"staat": 1.0}, "vert": {"loehne": 0.9, "gewinne": 0.1}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Milliarden-Vertrag mit US-Konzern verlängern", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.10, "ver": {"staat": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
+            {"typ": "wohlstand", "delta": -1}
+        ]}
+    },
+    {
+        "id": "93", "titel": "🚀 Weltraum-Tourismus", "text": "Milliardäre wollen vom eigenen Land aus Raketen für Weltraum-Touristen starten.",
+        "option_a": {"text": "Startrampen genehmigen & Steuern kassieren", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.18, "ver": {"export": 1.0}, "vert": {"loehne": 0.1, "gewinne": 0.9}},
+            {"typ": "wohlstand", "delta": -2}
+        ]},
+        "option_b": {"text": "Verbieten (Klimaschutz und Lärmbelästigung)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.05, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": 2}
+        ]}
+    },
+    {
+        "id": "94", "titel": "🧬 Nationale Gen-Datenbank", "text": "Um Krankheiten besser zu heilen, soll die DNA jedes Bürgers gespeichert werden.",
+        "option_a": {"text": "Pflicht-Datenbank einführen (Großes Datenschutz-Risiko)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.15, "ver": {"staat": 1.0}, "vert": {"loehne": 0.6, "gewinne": 0.4}},
+            {"typ": "wohlstand", "delta": -3}
+        ]},
+        "option_b": {"text": "Freiwillig auf Spenden-Basis", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.05, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": 1}
+        ]}
+    },
+    {
+        "id": "95", "titel": "🧓 Steuerfrei ab 65", "text": "Sollen Rentner komplett von der Einkommenssteuer befreit werden?",
+        "option_a": {"text": "Ja, als Dank für ihre Lebensleistung", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.08, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.9, "gewinne": 0.1}},
+            {"typ": "wohlstand", "delta": 3}
+        ]},
+        "option_b": {"text": "Nein, Steuern lieber für junge Familien senken", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.08, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.9, "gewinne": 0.1}},
+            {"typ": "wohlstand", "delta": 2}
+        ]}
+    },
+    {
+        "id": "96", "titel": "⛏️ Krypto-Mining Verbot", "text": "Riesige Serverfarmen verbrauchen Strom ohne Ende, um Coins zu berechnen.",
+        "option_a": {"text": "Mining sofort verbieten (Strom sparen)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.10, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Mining fördern (IT-Standort pushen)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.15, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.2, "gewinne": 0.8}},
+            {"typ": "wohlstand", "delta": -2}
+        ]}
+    },
+    {
+        "id": "97", "titel": "🛰️ Internet per Satellit", "text": "Soll der Staat tausende Mini-Satelliten kaufen, um im ganzen Land 5G zu haben?",
+        "option_a": {"text": "Steuergelder massiv in Satelliten stecken", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.12, "ver": {"staat": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": 2}
+        ]},
+        "option_b": {"text": "Auf langsame Kabel im Boden vertrauen", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.05, "ver": {"investitionen": 1.0}, "vert": {"loehne": 0.7, "gewinne": 0.3}},
+            {"typ": "wohlstand", "delta": -1}
+        ]}
+    },
+    {
+        "id": "98", "titel": "🌍 Austritt aus Handelsabkommen", "text": "Bürger beschweren sich über unfaire Konkurrenz durch ausländische Produkte.",
+        "option_a": {"text": "Austreten & Grenzen abschotten (Protektionismus)", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.20, "ver": {"export": 1.0}, "vert": {"loehne": 0.8, "gewinne": 0.2}},
+            {"typ": "wohlstand", "delta": -3}
+        ]},
+        "option_b": {"text": "Im Abkommen bleiben & Freihandel stärken", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.15, "ver": {"export": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": 1}
+        ]}
+    },
+    {
+        "id": "99", "titel": "🚲 Radwege statt Parkplätze", "text": "Die Hauptstadt plant, 50% der Auto-Parkplätze in breite Radwege umzuwandeln.",
+        "option_a": {"text": "Rad-Revolution durchsetzen", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": -0.05, "ver": {"staat": 1.0}, "vert": {"loehne": 0.7, "gewinne": 0.3}},
+            {"typ": "wohlstand", "delta": 3}
+        ]},
+        "option_b": {"text": "Parkplätze für die Auto-Pendler bewahren", "effekte": [
+            {"typ": "wachstum", "basis": "industrie", "prozent": 0.08, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.4, "gewinne": 0.6}},
+            {"typ": "wohlstand", "delta": -1}
+        ]}
+    },
+    {
+        "id": "100", "titel": "🔌 Nationaler Offline-Tag", "text": "Einmal im Monat soll das Internet für Privathaushalte für 24 Stunden abgeschaltet werden.",
+        "option_a": {"text": "Einführen (Fokus auf Familie und Natur)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": -0.15, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": 4}
+        ]},
+        "option_b": {"text": "Ablehnen (Das ist absolute Bevormundung!)", "effekte": [
+            {"typ": "wachstum", "basis": "dienstleistung", "prozent": 0.05, "ver": {"konsum": 1.0}, "vert": {"loehne": 0.5, "gewinne": 0.5}},
+            {"typ": "wohlstand", "delta": -1}
         ]}
     }
 ]
