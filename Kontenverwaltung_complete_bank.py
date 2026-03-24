@@ -962,7 +962,13 @@ with tab4:
                     if ref == "AB":
                         eb_passiv.append((name, val))
 
-            draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv, eb_passiv)
+            gemischte_namen = [k for k, v in st.session_state.konten.items() if
+                               v.get("Kategorie") == "Gemischt"]
+
+            eb_aktiv_bilanz = [("Debitoren" if n in gemischte_namen else n, v) for n, v in eb_aktiv]
+            eb_passiv_bilanz = [("Kreditoren" if n in gemischte_namen else n, v) for n, v in eb_passiv]
+
+            draw_bilanz_pdf(pdf, "Eröffnungsbilanz", eb_aktiv_bilanz, eb_passiv_bilanz)
 
             # 1.5 Eröffnungsbilanzkonto (EBK) generieren (Seitenverkehrt zur EB)
             if eb_aktiv or eb_passiv:
@@ -1161,7 +1167,13 @@ with tab4:
                 sb_aktiv.sort(key=lambda x: sorted_user_konten.index(x[0]) if x[0] in sorted_user_konten else 999)
                 sb_passiv.sort(key=lambda x: sorted_user_konten.index(x[0]) if x[0] in sorted_user_konten else 999)
 
-                draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv, sb_passiv)
+                # --- NEU: Gemischte Konten in der Bilanz umbenennen (Aktiv = Debitoren, Passiv = Kreditoren) ---
+                gemischte_namen = [k for k, v in st.session_state.konten.items() if v.get("Kategorie") == "Gemischt"]
+
+                sb_aktiv_bilanz = [("Debitoren" if n in gemischte_namen else n, v) for n, v in sb_aktiv]
+                sb_passiv_bilanz = [("Kreditoren" if n in gemischte_namen else n, v) for n, v in sb_passiv]
+
+                draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv_bilanz, sb_passiv_bilanz)
 
             temp_pdf_path = "temp_loesung.pdf"
             pdf.output(temp_pdf_path)
