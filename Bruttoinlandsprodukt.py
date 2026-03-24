@@ -305,17 +305,42 @@ if st.session_state.setup:
     # --- DASHBOARD & TABELLE/DIAGRAMM MIT LOGBUCH ---
     akt_bip = berechne_bip()
 
+
+    # NEU: Hilfsfunktion für die Smileys
+    def get_wohlstand_smiley(wert):
+        if wert >= 90:
+            return "🤩"  # Sternchen-Augen für Top-Werte
+        elif wert >= 75:
+            return "😄"
+        elif wert >= 60:
+            return "🙂"
+        elif wert >= 40:
+            return "😐"  # Neutral um die 50%
+        elif wert >= 25:
+            return "😕"
+        elif wert >= 10:
+            return "😢"
+        else:
+            return "😭"  # Heulend bei totalem Absturz
+
+
+    # Smiley für den aktuellen Wert abrufen
+    aktueller_smiley = get_wohlstand_smiley(st.session_state.wohlstand)
+
+    # --- DASHBOARD UI ---
     col_bip, col_wohl = st.columns(2)
     with col_bip:
-        st.header(f"📊 BIP: {akt_bip} {st.session_state.waehrung}")
+        st.header(f"📊 Wirtschafts-Dashboard (BIP: {akt_bip} {st.session_state.waehrung})")
     with col_wohl:
-        st.header(f"❤️ Wohlstandsindex: {st.session_state.wohlstand}%")
-        st.progress(st.session_state.wohlstand / 100.0)  # Visueller Balken
+        # Hier wird der Smiley jetzt direkt neben der Prozentzahl angezeigt!
+        st.header(f"Wohlstandsindex: {st.session_state.wohlstand}% {aktueller_smiley}")
+        st.progress(st.session_state.wohlstand / 100.0)  # Visueller Ladebalken
     st.write("---")
 
     if len(st.session_state.bip_historie) > 0:
         # Historie inklusive aktuellem Jahr vorbereiten
-        historie_komplett = st.session_state.bip_historie + [{"Jahr": st.session_state.jahr, "BIP": akt_bip}]
+        historie_komplett = st.session_state.bip_historie + [
+            {"Jahr": st.session_state.jahr, "BIP": akt_bip, "Wohlstand (%)": st.session_state.wohlstand}]
         df = pd.DataFrame(historie_komplett)
 
         # Tabs für Tabelle und Diagramm erstellen (Tabelle ist zuerst = Standard)
