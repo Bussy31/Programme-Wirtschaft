@@ -1163,15 +1163,11 @@ with tab4:
 
             # 6. Schlussbilanz aus dem SBK generieren
             if sbk_data:
-                if pdf.get_y() > 220:
-                    pdf.add_page()
-                else:
-                    pdf.ln(10)
-
+                # 1. Daten holen
                 sb_aktiv = [(gkto, val) for val, ref, gkto in sbk_data["Soll"]]
                 sb_passiv = [(gkto, val) for val, ref, gkto in sbk_data["Haben"]]
 
-                # NEU: Schlussbilanz exakt nach der Nutzersortierung ordnen (GETRENNT!)
+                # 2. Sortieren
                 sb_aktiv.sort(key=lambda x: st.session_state.sort_orders["Aktiv"].index(x[0]) if x[0] in
                                                                                                  st.session_state.sort_orders[
                                                                                                      "Aktiv"] else 999)
@@ -1179,12 +1175,23 @@ with tab4:
                                                                                                    st.session_state.sort_orders[
                                                                                                        "Passiv"] else 999)
 
-                # --- NEU: Gemischte Konten in der Bilanz umbenennen (Aktiv = Debitoren, Passiv = Kreditoren) ---
-                gemischte_namen = [k for k, v in st.session_state.konten.items() if v.get("Kategorie") == "Gemischt"]
-
+                # 3. Umbenennen
+                gemischte_namen = [k for k, v in st.session_state.konten.items() if
+                                   v.get("Kategorie") == "Gemischt"]
                 sb_aktiv_bilanz = [("Debitoren" if n in gemischte_namen else n, v) for n, v in sb_aktiv]
                 sb_passiv_bilanz = [("Kreditoren" if n in gemischte_namen else n, v) for n, v in sb_passiv]
 
+                # --- NEU: Dynamischer Seitenumbruch ---
+                # Berechnet den Platz: 25mm für Kopf/Summe + 6mm pro Konto-Eintrag (nimmt die längere Seite)
+                benoetigte_hoehe = 25 + (max(len(sb_aktiv_bilanz), len(sb_passiv_bilanz)) * 6)
+
+                # Wenn der aktuelle Platz + benötigte Höhe über das Seitenende (280mm) hinausgeht -> Neue Seite!
+                if pdf.get_y() + benoetigte_hoehe > 280:
+                    pdf.add_page()
+                else:
+                    pdf.ln(10)
+
+                # 4. Bilanz zeichnen
                 draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv_bilanz, sb_passiv_bilanz)
 
             temp_pdf_path = "temp_loesung.pdf"
