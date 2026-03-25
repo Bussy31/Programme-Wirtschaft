@@ -1102,13 +1102,15 @@ with tab4:
                 pdf.set_x(10)
 
             # 4. Hauptbuch - Erfolgskonten
-            if pdf.get_y() > 220:
+            if pdf.get_y() > 190:
                 pdf.add_page()
             else:
                 pdf.ln(10)
 
             pdf.set_font("Helvetica", "B", 12)
             pdf.cell(0, 8, "Hauptbuch - Erfolgskonten", ln=True)
+            pdf.set_font("Helvetica", "I", 10)
+            pdf.cell(0, 6, "(Aufwandskonten links & Ertragskonten rechts)", ln=True)
             pdf.ln(4)
 
             guv_data = temp_konten.pop("GuV", None)
