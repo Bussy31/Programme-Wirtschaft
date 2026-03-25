@@ -1153,6 +1153,11 @@ with tab4:
                                                                                         st.session_state.sort_orders[
                                                                                             "Passiv"] else 999)
 
+                benoetigte_hoehe_sbk = 35 + (max(len(sbk_data["Soll"]), len(sbk_data["Haben"])) * 6)
+                if pdf.get_y() + benoetigte_hoehe_sbk > 265:  # <-- Wir brechen viel früher um!
+                    pdf.add_page()
+                else:
+                    pdf.ln(10)
                 next_y = draw_wide_t_konto(pdf, 10, pdf.get_y(), "Schlussbilanzkonto (SBK)", sbk_data)
                 pdf.set_y(next_y + 5)
             else:
@@ -1181,12 +1186,10 @@ with tab4:
                 sb_aktiv_bilanz = [("Debitoren" if n in gemischte_namen else n, v) for n, v in sb_aktiv]
                 sb_passiv_bilanz = [("Kreditoren" if n in gemischte_namen else n, v) for n, v in sb_passiv]
 
-                # --- NEU: Dynamischer Seitenumbruch ---
-                # Berechnet den Platz: 25mm für Kopf/Summe + 6mm pro Konto-Eintrag (nimmt die längere Seite)
-                benoetigte_hoehe = 25 + (max(len(sb_aktiv_bilanz), len(sb_passiv_bilanz)) * 6)
+                # --- NEU: Sehr strikter Seitenumbruch für die Bilanz ---
+                benoetigte_hoehe_sb = 35 + (max(len(sb_aktiv_bilanz), len(sb_passiv_bilanz)) * 6)
 
-                # Wenn der aktuelle Platz + benötigte Höhe über das Seitenende (280mm) hinausgeht -> Neue Seite!
-                if pdf.get_y() + benoetigte_hoehe > 280:
+                if pdf.get_y() + benoetigte_hoehe_sb > 265:  # <-- Wir brechen viel früher um!
                     pdf.add_page()
                 else:
                     pdf.ln(10)
