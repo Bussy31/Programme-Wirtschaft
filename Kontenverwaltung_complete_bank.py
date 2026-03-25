@@ -1143,7 +1143,7 @@ with tab4:
             pdf.ln(4)
 
             if sbk_data:
-                # --- NEU: Einträge im T-Konto des SBK getrennt nach Aktiv und Passiv sortieren ---
+                # --- NEU: Einträge im T-Konto des SBK getrennt nach Aktiv und Passiv sortieren --
                 sbk_data["Soll"].sort(
                     key=lambda x: st.session_state.sort_orders["Aktiv"].index(x[2]) if x[2] in
                                                                                        st.session_state.sort_orders[
