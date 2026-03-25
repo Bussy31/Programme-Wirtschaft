@@ -1135,15 +1135,6 @@ with tab4:
                 pdf.set_x(10)
 
             # 5. Schlussbilanzkonto (SBK)
-            if pdf.get_y() > 200:
-                pdf.add_page()
-            else:
-                pdf.ln(10)
-
-            pdf.set_font("Helvetica", "B", 12)
-            pdf.cell(0, 8, "Schlussbilanzkonto (SBK)", ln=True)
-            pdf.ln(4)
-
             if sbk_data:
                 # --- NEU: Einträge im T-Konto des SBK getrennt nach Aktiv und Passiv sortieren --
                 sbk_data["Soll"].sort(
