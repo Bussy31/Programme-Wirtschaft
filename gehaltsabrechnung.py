@@ -176,7 +176,7 @@ with tab4:
     st.download_button(
         label="📥 Gehaltsabrechnung als PDF herunterladen",
         data=pdf_bytes,
-        file_name="Gehaltsabrechnung_2026.pdf",
+        file_name="Gehaltsabrechnung.pdf",
         mime="application/pdf",
         type="primary"
     )
