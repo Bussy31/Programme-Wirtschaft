@@ -21,7 +21,7 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
 
     pdf.set_font("helvetica", "B", 18)
     pdf.set_fill_color(*grau_bg)
-    pdf.cell(0, 15, " Gehaltsabrechnung 2026", border=0, ln=True, align="L", fill=True)
+    pdf.cell(0, 15, "Entgeltabrechnung", border=0, ln=True, align="L", fill=True)
     pdf.ln(5)
 
     pdf.set_font("helvetica", "B", 11)
