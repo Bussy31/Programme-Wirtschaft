@@ -185,7 +185,6 @@ if st.button("🚀 Gehalt berechnen & Auswerten", type="primary", use_container_
 
         st.dataframe(pd.DataFrame(daten), use_container_width=True, hide_index=True)
 
-        st.success("### 💰 Deine Auszahlung")
         col_end1, col_end2 = st.columns(2)
         col_end1.metric("Dein Nettogehalt", f"{netto:.2f} €")
         col_end2.metric("Tatsächliche Überweisung", f"{ueberweisung:.2f} €")
