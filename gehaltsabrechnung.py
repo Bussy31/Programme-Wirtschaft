@@ -3,19 +3,13 @@ import pandas as pd
 from fpdf import FPDF
 
 
-# --- HILFSFUNKTIONEN ---
-
-# Verhindert Fehler, wenn Felder noch leer (None) sind
-def val(x):
-    return x if x is not None else 0.0
-
-
+# --- HILFSFUNKTION FÜR DEN PDF-EXPORT ---
 def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer, kist, kv_an, rv_an, av_an, pv_an, netto, vs, ueberweisung):
     pdf = FPDF()
     pdf.add_page()
 
     pdf.set_font("helvetica", "B", 16)
-    pdf.cell(0, 15, "Deine Gehaltsabrechnung 2026", ln=True, align="C")
+    pdf.cell(0, 15, "Gehaltsabrechnung erstellen", ln=True, align="C")
     pdf.ln(5)
 
     pdf.set_font("helvetica", size=12)
@@ -60,63 +54,55 @@ st.set_page_config(page_title="Gehaltsabrechnung interaktiv", page_icon="💶", 
 
 st.title("💶 Deine Gehaltsabrechnung (2026)")
 st.markdown("""
-Fülle das folgende Formular vollständig aus. 
+Fülle das folgende Formular vollständig aus. Nutze die Tastenfeld-Eingabe oder die +/- Buttons.
 Du musst alle Werte, Beitragsbemessungsgrenzen und Beitragssätze komplett eigenständig eintragen. 
 """)
 
 st.header("1. Grunddaten")
 col1, col2 = st.columns(2)
 with col1:
-    brutto_input = st.number_input("Bruttogehalt (€):", min_value=0.0, value=None)
-    vl_ag_input = st.number_input("VL Arbeitgeber (€):", min_value=0.0, value=None)
+    brutto = st.number_input("Bruttogehalt (€):", min_value=0.0, value=0.0, step=100.0)
+    vl_ag = st.number_input("VL Arbeitgeber (€):", min_value=0.0, value=0.0, step=10.0)
 with col2:
-    lohnsteuer_input = st.number_input("Lohnsteuer (€):", min_value=0.0, value=None)
-    vs_input = st.number_input("Vermögensw. Sparen (€):", min_value=0.0, value=None)
+    lohnsteuer = st.number_input("Lohnsteuer (€):", min_value=0.0, value=0.0, step=10.0)
+    vs = st.number_input("Vermögensw. Sparen (€):", min_value=0.0, value=0.0, step=10.0)
 
 st.header("2. Kirchensteuer")
-kist_satz_input = st.number_input("Kirchensteuersatz (in %):", min_value=0.0, max_value=10.0, value=None)
+kist_satz_input = st.number_input("Kirchensteuersatz (in %):", min_value=0.0, max_value=10.0, value=0.0, step=1.0)
 
 st.header("3. Beitragsbemessungsgrenzen (BBG)")
 col_bbg1, col_bbg2 = st.columns(2)
 with col_bbg1:
-    bbg_kv_pv_input = st.number_input("BBG für KV & PV (€):", min_value=0.0, value=None)
+    bbg_kv_pv = st.number_input("BBG für KV & PV (€):", min_value=0.0, value=0.0, step=100.0)
 with col_bbg2:
-    bbg_rv_av_input = st.number_input("BBG für RV & AV (€):", min_value=0.0, value=None)
+    bbg_rv_av = st.number_input("BBG für RV & AV (€):", min_value=0.0, value=0.0, step=100.0)
 
 st.header("4. Sozialversicherungen (Arbeitnehmeranteil)")
 col_satz1, col_satz2 = st.columns(2)
 with col_satz1:
-    kv_an_input = st.number_input("Krankenversicherung (%):", min_value=0.0, value=None)
-    rv_an_input = st.number_input("Rentenversicherung (%):", min_value=0.0, value=None)
+    kv_an_input = st.number_input("Krankenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
+    rv_an_input = st.number_input("Rentenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
 with col_satz2:
-    av_an_input = st.number_input("Arbeitslosenversicherung (%):", min_value=0.0, value=None)
-    pv_an_input = st.number_input("Pflegeversicherung (%):", min_value=0.0, value=None)
+    av_an_input = st.number_input("Arbeitslosenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
+    pv_an_input = st.number_input("Pflegeversicherung (%):", min_value=0.0, value=0.0, step=0.1)
 
 st.divider()
 
 # Alles wird erst berechnet, wenn dieser Button gedrückt wird
 if st.button("Gehalt berechnen & Auswerten", type="primary"):
-    # Werte auslesen (leere Felder werden zu 0.0)
-    brutto = val(brutto_input)
-    vl_ag = val(vl_ag_input)
-    lohnsteuer = val(lohnsteuer_input)
-    vs = val(vs_input)
-
     st_sv_gehalt = brutto + vl_ag
 
-    kist_satz = val(kist_satz_input) / 100
+    kist_satz = kist_satz_input / 100
     kist = lohnsteuer * kist_satz
 
-    bbg_kv_pv = val(bbg_kv_pv_input)
-    bbg_rv_av = val(bbg_rv_av_input)
-
+    # Kappen bei der Beitragsbemessungsgrenze (wenn 0 eingetragen ist, rechne zur Sicherheit mit vollem Gehalt, um Fehler der SuS aufzuzeigen)
     basis_kv_pv = min(st_sv_gehalt, bbg_kv_pv) if bbg_kv_pv > 0 else st_sv_gehalt
     basis_rv_av = min(st_sv_gehalt, bbg_rv_av) if bbg_rv_av > 0 else st_sv_gehalt
 
-    kv_an = basis_kv_pv * (val(kv_an_input) / 100)
-    rv_an = basis_rv_av * (val(rv_an_input) / 100)
-    av_an = basis_rv_av * (val(av_an_input) / 100)
-    pv_an = basis_kv_pv * (val(pv_an_input) / 100)
+    kv_an = basis_kv_pv * (kv_an_input / 100)
+    rv_an = basis_rv_av * (rv_an_input / 100)
+    av_an = basis_rv_av * (av_an_input / 100)
+    pv_an = basis_kv_pv * (pv_an_input / 100)
 
     abzuege_gesamt = lohnsteuer + kist + kv_an + rv_an + av_an + pv_an
     netto = st_sv_gehalt - abzuege_gesamt
