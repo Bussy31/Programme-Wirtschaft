@@ -62,7 +62,7 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
     pdf.ln(4)
 
     pdf.set_text_color(0, 0, 0)
-    zeile("Überweisungsbetrag", f"{ueberweisung:.2f} EUR", font_style="B", font_size=14, border=1, fill=True)
+    zeile("Überweisungsbetrag", f"{ueberweisung:.2f} EUR", font_style="B", border=1, fill=True)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         pdf.output(tmp.name)
