@@ -9,7 +9,7 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer, kist, kv_an, rv_an, av
     pdf.add_page()
 
     pdf.set_font("helvetica", "B", 16)
-    pdf.cell(0, 15, "Gehaltsabrechnung", ln=True, align="C")
+    pdf.cell(0, 15, "Gehaltsabrechnung erstellen", ln=True, align="C")
     pdf.ln(5)
 
     pdf.set_font("helvetica", size=12)
@@ -52,7 +52,7 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer, kist, kv_an, rv_an, av
 
 st.set_page_config(page_title="Gehaltsabrechnung interaktiv", page_icon="💶", layout="centered")
 
-st.title("💶 Deine Gehaltsabrechnung (2026)")
+st.title("Gehaltsabrechnung erstellen")
 st.markdown("""
 Fülle das folgende Formular vollständig aus. Nutze die Tastenfeld-Eingabe oder die +/- Buttons.
 Du musst alle Werte, Beitragsbemessungsgrenzen und Beitragssätze komplett eigenständig eintragen. 
