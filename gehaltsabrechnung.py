@@ -144,46 +144,29 @@ if st.button("🚀 Gehalt berechnen & Auswerten", type="primary", use_container_
     with st.container(border=True):
         st.header("🎯 Ergebnis deiner Abrechnung")
 
-        # 1. Das Erfolgserlebnis (die Auszahlung) sofort ganz oben anzeigen
-        st.success("### 💰 Deine Auszahlung")
-        col_end1, col_end2 = st.columns(2)
-        col_end1.metric("Dein Nettogehalt", f"{netto:.2f} €")
-        col_end2.metric("Tatsächliche Überweisung", f"{ueberweisung:.2f} €")
-
-        st.divider()
-
-        # 2. Einklappbare Tabelle (Expander)
+        # Einklappbare Tabelle (Expander)
         with st.expander("📋 Detaillierte Abrechnungstabelle anzeigen", expanded=False):
-            daten = {
-                "Position": [
-                    "Bruttogehalt", "+ VL Arbeitgeber", "======================", "Steuer- / SV-Brutto",
-                    "- Lohnsteuer",
-                    f"- Kirchensteuer ({kist_satz_input:g} %)",
-                    f"- Krankenversicherung ({kv_an_input:g} %)",
-                    f"- Rentenversicherung ({rv_an_input:g} %)",
-                    f"- Arbeitslosenversicherung ({av_an_input:g} %)",
-                    f"- Pflegeversicherung ({pv_an_input:g} %)",
-                    "======================",
-                    "Nettogehalt", "- Vermögenswirksames Sparen", "======================", "Überweisungsbetrag"
-                ],
-                "Betrag (€)": [
-                    f"{brutto:.2f}", f"{vl_ag:.2f}", "---", f"{st_sv_gehalt:.2f}",
-                    f"-{lohnsteuer:.2f}",
-                    f"-{kist:.2f}",
-                    f"-{kv_an:.2f}",
-                    f"-{rv_an:.2f}",
-                    f"-{av_an:.2f}",
-                    f"-{pv_an:.2f}",
-                    "---", f"{netto:.2f}", f"-{vs:.2f}", "---", f"{ueberweisung:.2f}"
-                ]
-            }
+            # Wir nutzen hier eine Markdown-Tabelle. Das erlaubt uns, Zwischensummen fett zu machen
+            # und das Design passt sich perfekt an den Hell/Dunkel-Modus von Streamlit an.
+            tabelle_markdown = f"""
+| Position | Betrag (€) |
+| :--- | ---: |
+| Bruttogehalt | {brutto:.2f} |
+| + VL Arbeitgeber | {vl_ag:.2f} |
+| **Steuer- / SV-Brutto** | **{st_sv_gehalt:.2f}** |
+| - Lohnsteuer | -{lohnsteuer:.2f} |
+| - Kirchensteuer ({kist_satz_input:g} %) | -{kist:.2f} |
+| - Krankenversicherung ({kv_an_input:g} %) | -{kv_an:.2f} |
+| - Rentenversicherung ({rv_an_input:g} %) | -{rv_an:.2f} |
+| - Arbeitslosenversicherung ({av_an_input:g} %) | -{av_an:.2f} |
+| - Pflegeversicherung ({pv_an_input:g} %) | -{pv_an:.2f} |
+| **Nettogehalt** | **{netto:.2f}** |
+| - Vermögenswirksames Sparen | -{vs:.2f} |
+| **Überweisungsbetrag** | **{ueberweisung:.2f}** |
+"""
+            st.markdown(tabelle_markdown)
 
-            # height=600 sorgt dafür, dass alle 15 Zeilen ohne Scrollen auf einen Blick sichtbar sind
-            st.dataframe(pd.DataFrame(daten), use_container_width=True, hide_index=True, height=600)
-
-        # 3. PDF Button immer sichtbar darunter (außerhalb des Expanders)
         st.divider()
-        st.subheader("📄 Ergebnisse sichern")
 
         pdf_bytes = erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
                                  kist, kist_satz_input,
