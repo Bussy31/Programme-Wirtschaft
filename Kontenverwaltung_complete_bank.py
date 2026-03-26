@@ -3,6 +3,8 @@ import pandas as pd
 from fpdf import FPDF
 import copy
 import json
+import os
+import uuid
 
 # ---  SEITEN-KONFIGURATION  ---
 st.set_page_config(page_title="Buchhaltungstrainer 2026", layout="wide")

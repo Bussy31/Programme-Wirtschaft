@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 import tempfile
-import os
-import uuid
 
 
 # --- HILFSFUNKTION FÜR DEN PDF-EXPORT ---
