@@ -148,6 +148,13 @@ if st.button("🚀 Gehalt berechnen & Auswerten", type="primary", use_container_
         with st.expander("📋 Detaillierte Abrechnungstabelle anzeigen", expanded=False):
             # Wir nutzen hier eine Markdown-Tabelle. Das erlaubt uns, Zwischensummen fett zu machen
             # und das Design passt sich perfekt an den Hell/Dunkel-Modus von Streamlit an.
+            st.markdown("""
+                            <style>
+                            table {
+                                width: 100%;
+                            }
+                            </style>
+                        """, unsafe_allow_html=True)
             tabelle_markdown = f"""
 | Position | Betrag (€) |
 | :--- | ---: |
