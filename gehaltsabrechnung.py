@@ -9,50 +9,74 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer, kist, kv_an, rv_an, av
     pdf = FPDF()
     pdf.add_page()
 
-    pdf.set_font("helvetica", "B", 16)
-    pdf.cell(0, 15, "Gehaltsabrechnung", ln=True, align="C")
+    # Farben definieren (RGB)
+    schwarz = (0, 0, 0)
+    dunkelgrau = (100, 100, 100)
+    grau_bg = (240, 240, 240)
+
+    # --- HEADER ---
+    pdf.set_font("helvetica", "B", 18)
+    pdf.set_fill_color(*grau_bg)
+    pdf.cell(0, 15, " Gehaltsabrechnung 2026", border=0, ln=True, align="L", fill=True)
     pdf.ln(5)
 
-    pdf.set_font("helvetica", size=12)
+    # --- TABELLENKOPF ---
+    pdf.set_font("helvetica", "B", 11)
+    pdf.cell(130, 8, "Position", border="B")
+    pdf.cell(60, 8, "Betrag", border="B", ln=True, align="R")
+    pdf.ln(2)
 
-    abrechnungs_daten = [
-        ("Bruttogehalt", f"{brutto:.2f} EUR"),
-        ("+ VL Arbeitgeber", f"{vl_ag:.2f} EUR"),
-        ("Steuer- / SV-Brutto", f"{st_sv_gehalt:.2f} EUR"),
-        ("", ""),
-        ("- Lohnsteuer", f"{lohnsteuer:.2f} EUR"),
-        ("- Kirchensteuer", f"{kist:.2f} EUR"),
-        ("- Krankenversicherung (KV)", f"{kv_an:.2f} EUR"),
-        ("- Rentenversicherung (RV)", f"{rv_an:.2f} EUR"),
-        ("- Arbeitslosenversicherung (AV)", f"{av_an:.2f} EUR"),
-        ("- Pflegeversicherung (PV)", f"{pv_an:.2f} EUR"),
-        ("", ""),
-        ("Nettogehalt", f"{netto:.2f} EUR"),
-        ("- Vermoegenswirksames Sparen", f"{vs:.2f} EUR"),
-        ("", ""),
-    ]
+    # --- HILFSFUNKTION FÜR ZEILEN ---
+    def zeile(pos, betrag, font_style="", font_size=11, text_color=schwarz, border=0, fill=False):
+        pdf.set_font("helvetica", font_style, font_size)
+        pdf.set_text_color(*text_color)
+        if fill:
+            pdf.set_fill_color(*grau_bg)
+        pdf.cell(130, 8, pos, border=border, fill=fill)
+        pdf.cell(60, 8, betrag, border=border, ln=True, align="R", fill=fill)
 
-    for position, betrag in abrechnungs_daten:
-        if position == "":
-            pdf.cell(0, 5, "-" * 60, ln=True)
-        else:
-            pdf.cell(120, 10, position)
-            pdf.cell(50, 10, betrag, ln=True, align="R")
+    # --- DATEN EINTRAGEN ---
+    # 1. Brutto
+    zeile("Bruttogehalt", f"{brutto:.2f} EUR")
+    zeile("+ Vermögenswirksame Leistungen (AG)", f"{vl_ag:.2f} EUR")
 
-    pdf.set_font("helvetica", "B", 12)
-    pdf.cell(120, 10, "Ueberweisungsbetrag")
-    pdf.cell(50, 10, f"{ueberweisung:.2f} EUR", ln=True, align="R")
+    # Zwischensumme: SV-Brutto
+    zeile("Steuer- / SV-Brutto", f"{st_sv_gehalt:.2f} EUR", font_style="B", border="T", fill=True)
+    pdf.ln(3)
 
-    # --- DER NEUE, SICHERE EXPORT-WEG ---
-    # Erstellt eine unsichtbare temporäre Datei, speichert das PDF dort,
-    # liest es als fehlerfreie Bytes ein und gibt sie an Streamlit weiter.
+    # 2. Steuern
+    zeile("Steuern", "", font_style="I", font_size=9, text_color=dunkelgrau)
+    zeile("- Lohnsteuer", f"{lohnsteuer:.2f} EUR")
+    zeile("- Kirchensteuer", f"{kist:.2f} EUR")
+    pdf.ln(2)
+
+    # 3. Sozialversicherungen
+    zeile("Sozialversicherungsbeiträge (AN-Anteil)", "", font_style="I", font_size=9, text_color=dunkelgrau)
+    zeile("- Krankenversicherung (KV)", f"{kv_an:.2f} EUR")
+    zeile("- Rentenversicherung (RV)", f"{rv_an:.2f} EUR")
+    zeile("- Arbeitslosenversicherung (AV)", f"{av_an:.2f} EUR")
+    zeile("- Pflegeversicherung (PV)", f"{pv_an:.2f} EUR")
+    pdf.ln(3)
+
+    # Zwischensumme: Netto
+    zeile("Nettogehalt", f"{netto:.2f} EUR", font_style="B", border="T", fill=True)
+    pdf.ln(3)
+
+    # 4. Abzüge vom Netto
+    zeile("- Vermögenswirksames Sparen (VS)", f"{vs:.2f} EUR")
+    pdf.ln(4)
+
+    # 5. AUSZAHLUNGSBETRAG
+    pdf.set_text_color(0, 0, 0)  # Schwarz erzwingen für den Rahmen
+    zeile("Überweisungsbetrag", f"{ueberweisung:.2f} EUR", font_style="B", font_size=14, border=1, fill=True)
+
+    # --- EXPORT ---
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         pdf.output(tmp.name)
         tmp.seek(0)
         pdf_bytes = tmp.read()
 
     return pdf_bytes
-
 
 # --- STREAMLIT APP ---
 
