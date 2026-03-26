@@ -1190,11 +1190,17 @@ with tab4:
                 # 4. Bilanz zeichnen
                 draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv_bilanz, sb_passiv_bilanz)
 
-            temp_pdf_path = "temp_loesung.pdf"
+
+            # Generiert einen einzigartigen Namen, z.B. "temp_loesung_8f3a1b...pdf"
+            temp_pdf_path = f"temp_loesung_{uuid.uuid4().hex}.pdf"
             pdf.output(temp_pdf_path)
 
             with open(temp_pdf_path, "rb") as pdf_file:
                 PDFbyte = pdf_file.read()
+
+            # Datei direkt wieder vom Server löschen, der Inhalt ist ja jetzt in "PDFbyte" gespeichert
+            if os.path.exists(temp_pdf_path):
+                os.remove(temp_pdf_path)
 
             st.success("PDF erfolgreich generiert! Dein aktueller Arbeitsstand wurde gedruckt.")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,
