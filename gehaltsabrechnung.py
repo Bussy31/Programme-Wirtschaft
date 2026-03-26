@@ -5,7 +5,13 @@ import tempfile
 
 
 # --- HILFSFUNKTION FÜR DEN PDF-EXPORT ---
-def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer, kist, kv_an, rv_an, av_an, pv_an, netto, vs, ueberweisung):
+def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
+                 kist, kist_satz,
+                 kv_an, kv_satz,
+                 rv_an, rv_satz,
+                 av_an, av_satz,
+                 pv_an, pv_satz,
+                 netto, vs, ueberweisung):
     pdf = FPDF()
     pdf.add_page()
 
@@ -47,15 +53,16 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer, kist, kv_an, rv_an, av
     # 2. Steuern
     zeile("Steuern", "", font_style="I", font_size=9, text_color=dunkelgrau)
     zeile("- Lohnsteuer", f"{lohnsteuer:.2f} EUR")
-    zeile("- Kirchensteuer", f"{kist:.2f} EUR")
+    # %g sorgt dafür, dass 9.0 als 9 und 7.8 als 7.8 angezeigt wird
+    zeile(f"- Kirchensteuer ({kist_satz:g} %)", f"{kist:.2f} EUR")
     pdf.ln(2)
 
     # 3. Sozialversicherungen
     zeile("Sozialversicherungsbeiträge (AN-Anteil)", "", font_style="I", font_size=9, text_color=dunkelgrau)
-    zeile("- Krankenversicherung (KV)", f"{kv_an:.2f} EUR")
-    zeile("- Rentenversicherung (RV)", f"{rv_an:.2f} EUR")
-    zeile("- Arbeitslosenversicherung (AV)", f"{av_an:.2f} EUR")
-    zeile("- Pflegeversicherung (PV)", f"{pv_an:.2f} EUR")
+    zeile(f"- Krankenversicherung ({kv_satz:g} %)", f"{kv_an:.2f} EUR")
+    zeile(f"- Rentenversicherung ({rv_satz:g} %)", f"{rv_an:.2f} EUR")
+    zeile(f"- Arbeitslosenversicherung ({av_satz:g} %)", f"{av_an:.2f} EUR")
+    zeile(f"- Pflegeversicherung ({pv_satz:g} %)", f"{pv_an:.2f} EUR")
     pdf.ln(3)
 
     # Zwischensumme: Netto
@@ -78,9 +85,9 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer, kist, kv_an, rv_an, av
 
     return pdf_bytes
 
+
 # --- STREAMLIT APP ---
 
-# Das Layout wird minimal breiter und bekommt ein Icon
 st.set_page_config(page_title="Gehaltsabrechnung interaktiv", page_icon="💶", layout="centered")
 
 st.title("💶 Gehaltsabrechnung erstellen")
@@ -125,12 +132,10 @@ with st.container(border=True):
         av_an_input = st.number_input("Arbeitslosenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
         pv_an_input = st.number_input("Pflegeversicherung (%):", min_value=0.0, value=0.0, step=0.1)
 
-# Ein wenig Abstand vor dem Button
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Alles wird erst berechnet, wenn dieser Button gedrückt wird (Nimmt nun die volle Breite ein)
+# Alles wird erst berechnet, wenn dieser Button gedrückt wird
 if st.button("🚀 Gehalt berechnen & Auswerten", type="primary", use_container_width=True):
-    # Berechnungen
     st_sv_gehalt = brutto + vl_ag
 
     kist_satz = kist_satz_input / 100
@@ -150,27 +155,37 @@ if st.button("🚀 Gehalt berechnen & Auswerten", type="primary", use_container_
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- AUSGABE IN EINEM NEUEN RAHMEN ---
     with st.container(border=True):
         st.header("🎯 Ergebnis deiner Abrechnung")
 
+        # Prozentzahlen auch in der App-Vorschau anzeigen lassen
         daten = {
             "Position": [
                 "Bruttogehalt", "+ VL Arbeitgeber", "======================", "Steuer- / SV-Brutto",
-                "- Lohnsteuer", "- Kirchensteuer", "- Krankenversicherung (KV)", "- Rentenversicherung (RV)",
-                "- Arbeitslosenversicherung (AV)", "- Pflegeversicherung (PV)", "======================",
+                "- Lohnsteuer",
+                f"- Kirchensteuer ({kist_satz_input:g} %)",
+                f"- Krankenversicherung ({kv_an_input:g} %)",
+                f"- Rentenversicherung ({rv_an_input:g} %)",
+                f"- Arbeitslosenversicherung ({av_an_input:g} %)",
+                f"- Pflegeversicherung ({pv_an_input:g} %)",
+                "======================",
                 "Nettogehalt", "- Vermögenswirksames Sparen", "======================", "Überweisungsbetrag"
             ],
             "Betrag (€)": [
                 f"{brutto:.2f}", f"{vl_ag:.2f}", "---", f"{st_sv_gehalt:.2f}",
-                f"-{lohnsteuer:.2f}", f"-{kist:.2f}", f"-{kv_an:.2f}", f"-{rv_an:.2f}",
-                f"-{av_an:.2f}", f"-{pv_an:.2f}", "---", f"{netto:.2f}", f"-{vs:.2f}", "---", f"{ueberweisung:.2f}"
+                f"-{lohnsteuer:.2f}",
+                f"-{kist:.2f}",
+                f"-{kv_an:.2f}",
+                f"-{rv_an:.2f}",
+                f"-{av_an:.2f}",
+                f"-{pv_an:.2f}",
+                "---", f"{netto:.2f}", f"-{vs:.2f}", "---", f"{ueberweisung:.2f}"
             ]
         }
 
         st.dataframe(pd.DataFrame(daten), use_container_width=True, hide_index=True)
 
-        # Highlight-Box (grün hinterlegt) für das Endergebnis
+        st.success("### 💰 Deine Auszahlung")
         col_end1, col_end2 = st.columns(2)
         col_end1.metric("Dein Nettogehalt", f"{netto:.2f} €")
         col_end2.metric("Tatsächliche Überweisung", f"{ueberweisung:.2f} €")
@@ -178,8 +193,14 @@ if st.button("🚀 Gehalt berechnen & Auswerten", type="primary", use_container_
         st.divider()
         st.subheader("📄 Ergebnisse sichern")
 
-        pdf_bytes = erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer, kist, kv_an, rv_an, av_an, pv_an, netto, vs,
-                                 ueberweisung)
+        # Übergabe der eingegebenen Prozentwerte an die PDF-Funktion
+        pdf_bytes = erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
+                                 kist, kist_satz_input,
+                                 kv_an, kv_an_input,
+                                 rv_an, rv_an_input,
+                                 av_an, av_an_input,
+                                 pv_an, pv_an_input,
+                                 netto, vs, ueberweisung)
 
         st.download_button(
             label="📥 Gehaltsabrechnung als PDF herunterladen",
