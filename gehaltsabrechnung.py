@@ -123,7 +123,7 @@ with st.container(border=True):
 
 # --- Abschnitt 4 ---
 with st.container(border=True):
-    st.header("🏥 4. Sozialversicherungen (Arbeitnehmeranteil)")
+    st.header("🏥 4. Sozialversicherungen")
     col_satz1, col_satz2 = st.columns(2)
     with col_satz1:
         kv_an_input = st.number_input("Krankenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
