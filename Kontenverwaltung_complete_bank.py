@@ -199,7 +199,7 @@ tab1, tab2, tab3, tab4 = st.tabs(
     ["1. Konten & Eröffnung", "2. Buchen (Grundbuch)", "3. T-Konten & Abschluss", "4. PDF Export"])
 
 # ==========================================
-# TAB 1: KONTEN & ERÖFFNUNG
+# TAB 1: KONTEN & ERÖFFNUNG -
 # ==========================================
 with tab1:
     st.subheader("🆕 Konto eröffnen")
