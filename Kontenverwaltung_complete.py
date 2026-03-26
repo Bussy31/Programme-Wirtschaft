@@ -202,7 +202,7 @@ tab1, tab2, tab3, tab4 = st.tabs(
 # TAB 1: KONTEN & ERÖFFNUNG
 # ==========================================
 with tab1:
-    st.subheader("Konto eröffnen")
+    st.subheader("🆕 Konto eröffnen")
 
     col_n, col_w = st.columns([2, 1])
     with col_n:
