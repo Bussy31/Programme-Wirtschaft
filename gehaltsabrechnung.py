@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
+import tempfile
 
 
 # --- HILFSFUNKTION FÜR DEN PDF-EXPORT ---
@@ -9,7 +10,7 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer, kist, kv_an, rv_an, av
     pdf.add_page()
 
     pdf.set_font("helvetica", "B", 16)
-    pdf.cell(0, 15, "Gehaltsabrechnung erstellen", ln=True, align="C")
+    pdf.cell(0, 15, "Gehaltsabrechnung", ln=True, align="C")
     pdf.ln(5)
 
     pdf.set_font("helvetica", size=12)
@@ -42,10 +43,15 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer, kist, kv_an, rv_an, av
     pdf.cell(120, 10, "Ueberweisungsbetrag")
     pdf.cell(50, 10, f"{ueberweisung:.2f} EUR", ln=True, align="R")
 
-    ausgabe = pdf.output()
-    if isinstance(ausgabe, str):
-        return ausgabe.encode('latin-1')
-    return bytes(ausgabe)
+    # --- DER NEUE, SICHERE EXPORT-WEG ---
+    # Erstellt eine unsichtbare temporäre Datei, speichert das PDF dort,
+    # liest es als fehlerfreie Bytes ein und gibt sie an Streamlit weiter.
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        pdf.output(tmp.name)
+        tmp.seek(0)
+        pdf_bytes = tmp.read()
+
+    return pdf_bytes
 
 
 # --- STREAMLIT APP ---
