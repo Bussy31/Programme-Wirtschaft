@@ -24,6 +24,16 @@ st.markdown(footer_html, unsafe_allow_html=True)
 # CSS für softe Optik & Buttons
 st.markdown("""
     <style>
+    /* Styling für die zentrierten Überschriften mit grauem Hintergrund */
+    .col-header {
+        font-weight: 700;
+        color: #334155;
+        background-color: #f0f2f6; /* Schönes, sanftes Grau */
+        padding: 8px 5px;
+        border-radius: 6px;
+        text-align: center; /* Alles perfekt zentriert */
+    }
+
     /* Buttons (+, -, Pfeile) in den Blautönen des Diagramms */
     button[kind="secondary"] {
         background-color: #e0f2fe !important; 
@@ -45,12 +55,6 @@ st.markdown("""
         margin-top: 6px; 
         text-align: center;
         color: #334155;
-    }
-    /* Gleiche Ausrichtung für die Header-Texte */
-    .header-text {
-        font-weight: 700;
-        color: #0f172a;
-        margin-top: 6px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -77,6 +81,7 @@ if 'schueler_liste' not in st.session_state:
         {'id': 4, 'Artikel': 'Kugelschreiber', 'Menge': 500, 'Preis': 1.0},
     ]
 
+
 def move_item(index, direction):
     liste = st.session_state.schueler_liste
     if direction == 'up' and index > 0:
@@ -84,6 +89,7 @@ def move_item(index, direction):
     elif direction == 'down' and index < len(liste) - 1:
         liste[index], liste[index + 1] = liste[index + 1], liste[index]
     st.session_state.schueler_liste = liste
+
 
 def add_item():
     neue_id = max([item['id'] for item in st.session_state.schueler_liste], default=0) + 1
@@ -94,24 +100,17 @@ def add_item():
         'Preis': 0.0
     })
 
+
 # --- ZENTRALES SPALTEN-VERHÄLTNIS ---
-# Das garantiert, dass Überschrift und Felder zu 100% synchron sind!
 COL_RATIOS = [0.6, 1.8, 0.9, 0.9, 1.1, 0.9, 0.9, 0.9, 1.0]
 
-# --- 3. KUGELSICHERE HEADER-ZEILE ---
-# Wir nutzen exakt denselben Container mit Rahmen wie für die Zeilen,
-# damit das Padding identisch ist!
+# --- 3. KUGELSICHERE HEADER-ZEILE (Zentriert & Grau) ---
 with st.container(border=True):
     h_cols = st.columns(COL_RATIOS)
-    h_cols[0].markdown("<div class='header-text' style='text-align: center;'>Rang</div>", unsafe_allow_html=True)
-    h_cols[1].markdown("<div class='header-text'>Artikel</div>", unsafe_allow_html=True)
-    h_cols[2].markdown("<div class='header-text'>Menge</div>", unsafe_allow_html=True)
-    h_cols[3].markdown("<div class='header-text'>Preis</div>", unsafe_allow_html=True)
-    h_cols[4].markdown("<div class='header-text'>Umsatz (€)</div>", unsafe_allow_html=True)
-    h_cols[5].markdown("<div class='header-text'>Anteil %</div>", unsafe_allow_html=True)
-    h_cols[6].markdown("<div class='header-text'>Kum. %</div>", unsafe_allow_html=True)
-    h_cols[7].markdown("<div class='header-text'>Klasse</div>", unsafe_allow_html=True)
-    h_cols[8].markdown("<div class='header-text' style='text-align: center;'>Aktion</div>", unsafe_allow_html=True)
+    headers = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (€)", "Anteil %", "Kum. %", "Klasse", "Aktion"]
+
+    for col, title in zip(h_cols, headers):
+        col.markdown(f"<div class='col-header'>{title}</div>", unsafe_allow_html=True)
 
 # --- 4. ZEILEN DER TABELLE ---
 current_list = st.session_state.schueler_liste
