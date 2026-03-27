@@ -128,7 +128,7 @@ with st.container(border=True):
 st.markdown("<br>", unsafe_allow_html=True)
 
 # Alles wird erst berechnet, wenn dieser Button gedrückt wird
-if st.button("🚀 Gehalt berechnen & Auswerten", type="primary", use_container_width=True):
+if st.button("🚀 Entgelt berechnen & Auswerten", type="primary", use_container_width=True):
     st_sv_gehalt = brutto + vl_ag
 
     kist_satz = kist_satz_input / 100
