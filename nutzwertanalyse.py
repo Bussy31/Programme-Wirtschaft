@@ -6,7 +6,7 @@ from fpdf import FPDF
 st.set_page_config(page_title="Nutzwertanalyse", layout="wide")
 
 
-# --- PDF GENERATOR FUNKTION (Neu strukturiert nach Optionen/Blöcken) ---
+# --- PDF GENERATOR FUNKTION ---
 def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten, max_punkte):
     pdf = FPDF()
     pdf.add_page()
@@ -51,13 +51,13 @@ def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten, max_punk
     pdf.cell(0, 5, txt="Formel pro Kriterium: Rohpunkte * (Gewichtung / 100) = Teilnutzwert", ln=True)
     pdf.ln(5)
 
-    # NEU: Wir iterieren jetzt durch die Optionen (Blöcke pro Produkt)
+    # Iterieren durch die Optionen (Blöcke pro Produkt)
     for opt_idx, opt_name in enumerate(option_namen):
         sicherer_name = opt_name.encode('latin-1', 'replace').decode('latin-1')
 
         # Header für die jeweilige Option
         pdf.set_font("Arial", 'B', 12)
-        pdf.set_fill_color(230, 230, 230)  # Hellgrauer Hintergrund für den Block
+        pdf.set_fill_color(230, 230, 230)
         pdf.cell(0, 8, txt=f"Berechnung für: {sicherer_name}", ln=True, fill=True)
         pdf.set_font("Arial", size=10)
         pdf.ln(2)
@@ -67,7 +67,7 @@ def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten, max_punk
         for daten in export_daten:
             krit_text = daten['kriterium'].encode('latin-1', 'replace').decode('latin-1')
             gewicht_dezimal = daten['gewicht'] / 100.0
-            roh_punkte = daten['punkte'][opt_idx]  # Punkte dieser speziellen Option
+            roh_punkte = daten['punkte'][opt_idx]
 
             # Die Rechnung
             teilnutzwert = roh_punkte * gewicht_dezimal
@@ -81,7 +81,7 @@ def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten, max_punk
         pdf.ln(1)
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(0, 6, txt=f"   => Summe (Finaler Nutzwert): {kontroll_summe:.2f} Punkte", ln=True)
-        pdf.ln(6)  # Abstand zum nächsten Produkt-Block
+        pdf.ln(6)
 
     return bytes(pdf.output(dest="S").encode("latin-1"))
 
@@ -136,7 +136,6 @@ st.markdown(f"Lege deine Kriterien fest (Gewichtung in %) und vergib die Rohpunk
 gesamt_gewichtung = 0
 echte_nutzwerte = [0.0] * anzahl_optionen
 
-# Diese Liste sammelt alle Daten für den späteren PDF-Export
 export_daten = []
 
 for i in range(st.session_state.anzahl_kriterien):
@@ -151,12 +150,14 @@ for i in range(st.session_state.anzahl_kriterien):
         st.markdown(f"**Rohpunkte vergeben:**")
 
         cols_slider = st.columns(anzahl_optionen)
-        punkte_aktuell = []  # Sammelt die Punkte dieses Kriteriums für den Export
+        punkte_aktuell = []
 
         for opt_idx in range(anzahl_optionen):
             with cols_slider[opt_idx]:
-                punkte = st.slider(f"{option_namen[opt_idx]}", min_value=1, max_value=max_punkte, value=max_punkte // 2,
-                                   key=f"p_{i}_{opt_idx}")
+                # NEU: Die Schieberegler sind jetzt zur besseren Abgrenzung in eigenen Boxen
+                with st.container(border=True):
+                    punkte = st.slider(f"{option_namen[opt_idx]}", min_value=1, max_value=max_punkte,
+                                       value=max_punkte // 2, key=f"p_{i}_{opt_idx}")
                 punkte_aktuell.append(punkte)
 
                 # Hintergrundberechnung
@@ -211,7 +212,6 @@ else:
         if any(eingabe > 0 for eingabe in schueler_eingaben):
             alle_korrekt = True
             for opt_idx in range(anzahl_optionen):
-                # Wir erlauben 0.05 Abweichung wegen Rundungsfehlern
                 if abs(schueler_eingaben[opt_idx] - echte_nutzwerte[opt_idx]) >= 0.05:
                     alle_korrekt = False
                     break
@@ -219,12 +219,12 @@ else:
             if alle_korrekt:
                 st.success("🎉 Hervorragend gerechnet! Alle Nutzwerte stimmen. Hier ist das Ergebnis:")
 
-                # Zurück zum sicheren Standard-Diagramm (bunt durch color="Optionen")
+                # Buntes Diagramm, jetzt mit doppelter Höhe (height=700 statt Standard)
                 diagramm_daten = pd.DataFrame({
                     "Optionen": option_namen,
                     "Finaler Nutzwert": echte_nutzwerte
                 })
-                st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="Optionen")
+                st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="Optionen", height=700)
 
                 st.divider()
 
