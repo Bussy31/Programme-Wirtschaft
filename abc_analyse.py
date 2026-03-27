@@ -27,6 +27,14 @@ st.markdown("""
         color: #0284c7 !important;
         border-radius: 5px;
     }
+    /* Zentriert den Rang vertikal mit den Eingabefeldern */
+    .rang-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        margin-top: 10px; /* Kleiner Offset für visuelle Mitte */
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -97,10 +105,12 @@ live_kumuliert = 0.0
 
 for i, item in enumerate(current_list):
     with st.container():
+        # Rang-Spalte bekommt CSS-Klasse für vertikale Zentrierung
         cols = st.columns([0.5, 1.5, 0.8, 0.8, 1.2, 1, 1, 1, 1])
 
         with cols[0]:
-            st.markdown(f"**{i + 1}.**")
+            # NEU: Formatiert (größer, fett) und per CSS zentriert
+            st.markdown(f"<div class='rang-container'><h4><b>{i + 1}.</b></h4></div>", unsafe_allow_html=True)
 
         with cols[1]:
             item['Artikel'] = st.text_input("Artikel", value=item['Artikel'], key=f"art_{item['id']}",
@@ -133,13 +143,11 @@ for i, item in enumerate(current_list):
                                                   label_visibility="collapsed", step=1.0)
 
         with cols[5]:
-            # NEU: max_value=100.0 hinzugefügt
             item['eingabe_ant'] = st.number_input("Anteil", value=b_anteil, key=f"ant_{item['id']}",
                                                   label_visibility="collapsed", step=0.01, format="%.2f",
                                                   max_value=100.0)
 
         with cols[6]:
-            # NEU: max_value=100.5 hinzugefügt
             item['eingabe_kum'] = st.number_input("Kumul.", value=live_kumuliert, key=f"kum_{item['id']}",
                                                   label_visibility="collapsed", step=0.01, format="%.2f",
                                                   max_value=100.5)
@@ -158,17 +166,18 @@ for i, item in enumerate(current_list):
                 st.rerun()
     st.divider()
 
-# --- 5. ZENTRIERTE & GERAHMTE BUTTONS (+ / -) ---
-# Überschrift "Tabelle anpassen" wurde entfernt für einen sauberen Look
-with st.container(border=True):
-    # 4 Spalten, wobei die äußeren beiden als Platzhalter dienen, um die mittleren zu zentrieren
-    col_space1, col_add, col_remove, col_space2 = st.columns([1, 2, 2, 1])
+# --- 5. NEU: GETRENNTE & GERAHMTE BUTTONS (+ / -) ---
+# Platzhalter-Spalten außen, um die beiden gerahmten Spalten mittig zu zentrieren
+col_space1, col_add_frame, col_remove_frame, col_space2 = st.columns([1.5, 2, 2, 1.5])
 
-    with col_add:
+with col_add_frame:
+    with st.container(border=True):  # Eigener Rahmen für PLUS
         if st.button("➕ Weiteren Artikel hinzufügen", use_container_width=True):
             add_item()
             st.rerun()
-    with col_remove:
+
+with col_remove_frame:
+    with st.container(border=True):  # Eigener Rahmen für MINUS
         if st.button("➖ Letzten Artikel entfernen", use_container_width=True, disabled=(len(current_list) <= 1)):
             st.session_state.schueler_liste.pop()
             st.rerun()
@@ -254,3 +263,4 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
         if not fehler:
             st.success(
                 f"✅ Alles korrekt! Deine Klassifizierung ist perfekt berechnet und die Lorenz-Kurve ist stimmig.")
+            st.balloons()
