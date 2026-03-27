@@ -30,23 +30,9 @@ footer_html = """
 """
 st.markdown(footer_html, unsafe_allow_html=True)
 
-# CSS für softe Optik, perfekte Zentrierung & Buttons
+# CSS für softe Optik & Buttons
 st.markdown("""
     <style>
-    /* Styling für die Überschriften: Flexbox für absolute vertikale & horizontale Zentrierung */
-    .col-header {
-        display: flex;
-        align-items: center;       /* Vertikal zentriert */
-        justify-content: center;   /* Horizontal zentriert */
-        height: 45px;              /* Feste Höhe für saubere Ausrichtung */
-        font-weight: 700;
-        color: #334155;
-        background-color: #e2e8f0; /* Leichtes Grau als Hintergrund */
-        border-radius: 4px;
-        font-size: 1.05rem;
-        margin-bottom: 5px;
-    }
-
     /* Buttons (+, -, Pfeile) in den Blautönen des Diagramms */
     button[kind="secondary"] {
         background-color: #e0f2fe !important; 
@@ -115,13 +101,16 @@ def add_item():
 # --- ZENTRALES SPALTEN-VERHÄLTNIS ---
 COL_RATIOS = [0.6, 1.8, 0.9, 0.9, 1.1, 0.9, 0.9, 0.9, 1.0]
 
-# --- 3. HEADER-ZEILE (Mit kleinen Gaps für eine kompaktere Optik) ---
-with st.container(border=True):
-    h_cols = st.columns(COL_RATIOS, gap="small")
-    headers = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (€)", "Anteil %", "Kum. %", "Klasse", "Aktion"]
+# --- 3. DIE PERFEKTE KOPFZEILE (Durchgehender HTML-Block ohne Lücken) ---
+headers = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (€)", "Anteil %", "Kum. %", "Klasse", "Aktion"]
 
-    for col, title in zip(h_cols, headers):
-        col.markdown(f"<div class='col-header'>{title}</div>", unsafe_allow_html=True)
+# Wir bauen EINE Box, deren innere Aufteilung exakt Streamlit nachahmt!
+header_html = "<div style='display: flex; gap: 0.5rem; background-color: #e2e8f0; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; align-items: center; border: 1px solid #cbd5e1;'>"
+for ratio, title in zip(COL_RATIOS, headers):
+    header_html += f"<div style='flex: {ratio} 1 0%; text-align: center; font-weight: 700; color: #334155; font-size: 1.05rem;'>{title}</div>"
+header_html += "</div>"
+
+st.markdown(header_html, unsafe_allow_html=True)
 
 # --- 4. ZEILEN DER TABELLE ---
 current_list = st.session_state.schueler_liste
@@ -255,34 +244,71 @@ with col_pdf:
         def create_pdf(daten):
             pdf = FPDF()
             pdf.add_page()
+
+            # Titel
             pdf.set_font("Arial", 'B', 16)
             pdf.cell(0, 10, "Auswertung: ABC-Analyse", ln=True, align="C")
             pdf.ln(5)
 
             # Tabellenkopf
-            pdf.set_font("Arial", 'B', 10)
-            pdf.set_fill_color(230, 230, 230)
-            headers_pdf = ["Rang", "Artikel", "Menge", "Preis", "Umsatz", "Ant. %", "Kum. %", "Kl."]
-            w = [12, 55, 15, 25, 25, 20, 20, 15]  # Spaltenbreiten im PDF
+            pdf.set_font("Arial", 'B', 9)
+            pdf.set_fill_color(226, 232, 240)  # Passend zum Web-Grau
+            headers_pdf = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (Eing.)", "Ant. %", "Kum. %", "Kl."]
+            w = [10, 48, 15, 25, 30, 20, 20, 15]  # Breiten (Total = 183, ca. Seitenbreite)
 
             for i in range(len(headers_pdf)):
                 pdf.cell(w[i], 8, headers_pdf[i], border=1, align="C", fill=True)
             pdf.ln()
 
             # Tabellendaten
-            pdf.set_font("Arial", '', 10)
+            pdf.set_font("Arial", '', 9)
+            gesamt_umsatz_echt = sum(item['Menge'] * item['Preis'] for item in daten)
+
             for i, item in enumerate(daten):
                 pdf.cell(w[0], 8, f"{i + 1}.", border=1, align="C")
-                pdf.cell(w[1], 8, str(item.get('Artikel', '-')), border=1)
+                artikel_name = str(item.get('Artikel', '-')).encode('latin-1', 'replace').decode('latin-1')
+                pdf.cell(w[1], 8, artikel_name, border=1)
                 pdf.cell(w[2], 8, str(item.get('Menge', 0)), border=1, align="C")
                 pdf.cell(w[3], 8, f"{item.get('Preis', 0):.2f} EUR", border=1, align="R")
+
+                # Werte aus den Eingabefeldern der SuS
                 pdf.cell(w[4], 8, f"{item.get('eingabe_ums', 0):.2f} EUR", border=1, align="R")
                 pdf.cell(w[5], 8, f"{item.get('eingabe_ant', 0):.2f} %", border=1, align="R")
                 pdf.cell(w[6], 8, f"{item.get('eingabe_kum', 0):.2f} %", border=1, align="R")
                 pdf.cell(w[7], 8, str(item.get('eingabe_kl', '-')), border=1, align="C")
                 pdf.ln()
 
-            # Ausgabe je nach fpdf Version als String oder Bytes
+            # NEU: Der komplette Rechenweg für die SuS!
+            pdf.ln(10)
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(0, 8, "Detaillierte Rechenwege (Musterloesung):", ln=True)
+
+            pdf.set_font("Arial", '', 10)
+            pdf.cell(0, 6, f"Gesamtumsatz = Summe aller Umsaetze = {gesamt_umsatz_echt:,.2f} EUR", ln=True)
+            pdf.ln(4)
+
+            kum_ist = 0.0
+            for i, item in enumerate(daten):
+                u_ist = item['Menge'] * item['Preis']
+                a_ist = (u_ist / gesamt_umsatz_echt * 100) if gesamt_umsatz_echt > 0 else 0.0
+                kum_alt = kum_ist
+                kum_ist += a_ist
+
+                klasse = "A" if kum_ist <= grenze_a + 0.01 else ("B" if kum_ist <= grenze_b + 0.01 else "C")
+                artikel_name = str(item.get('Artikel', '-')).encode('latin-1', 'replace').decode('latin-1')
+
+                pdf.set_font("Arial", 'B', 10)
+                pdf.cell(0, 6, f"Rang {i + 1}: {artikel_name}", ln=True)
+                pdf.set_font("Arial", '', 10)
+                pdf.cell(0, 5, f"   - Umsatz: {item['Menge']} Stk. * {item['Preis']:.2f} EUR = {u_ist:,.2f} EUR",
+                         ln=True)
+                pdf.cell(0, 5, f"   - Anteil: ({u_ist:,.2f} EUR / {gesamt_umsatz_echt:,.2f} EUR) * 100 = {a_ist:.2f} %",
+                         ln=True)
+                pdf.cell(0, 5, f"   - Kumuliert: {kum_alt:.2f} % + {a_ist:.2f} % = {kum_ist:.2f} %", ln=True)
+                pdf.cell(0, 5, f"   - Klasse: {klasse} (da Anteil <= Grenze)", ln=True)
+                pdf.ln(3)
+
+            # Rückgabe als Download-Bytes
             try:
                 return pdf.output(dest='S').encode('latin-1')
             except AttributeError:
@@ -291,7 +317,7 @@ with col_pdf:
 
         pdf_bytes = create_pdf(current_list)
         st.download_button(
-            label="📄 Ergebnisse als PDF speichern",
+            label="📄 Ergebnisse & Rechenwege als PDF speichern",
             data=pdf_bytes,
             file_name="ABC_Analyse_Auswertung.pdf",
             mime="application/pdf",
