@@ -24,26 +24,28 @@ st.markdown(footer_html, unsafe_allow_html=True)
 # CSS für eine perfekte, softe Optik
 st.markdown("""
     <style>
-    /* Header-Reihe anpassen, damit sie gut zu den neuen gerahmten Zeilen passt */
-    .header-row {
+    /* Styling für die einzelnen, zentrierten Spalten-Überschriften */
+    .col-header {
         font-weight: bold;
+        color: #334155;
         background-color: #f0f2f6;
-        padding: 10px 15px;
-        border-radius: 8px;
-        margin-bottom: 10px;
+        padding: 8px 5px;
+        border-radius: 6px;
+        text-align: center;
+        margin-bottom: 5px;
     }
 
     /* Buttons (+, -, Pfeile) exakt in den Blautönen des Diagramms */
     button[kind="secondary"] {
-        background-color: #e0f2fe !important; /* Zartes Diagramm-Hintergrundblau */
-        color: #0284c7 !important; /* Dunkles Blau der Diagramm-Linie */
-        border: none !important; /* Kein Rahmen mehr! */
+        background-color: #e0f2fe !important; 
+        color: #0284c7 !important; 
+        border: none !important; 
         border-radius: 6px !important;
         font-weight: 500 !important;
         transition: all 0.2s ease-in-out;
     }
     button[kind="secondary"]:hover {
-        background-color: #93c5fd !important; /* Blau der Diagramm-Balken beim Hovern */
+        background-color: #93c5fd !important; 
         color: #ffffff !important;
     }
 
@@ -99,34 +101,28 @@ def add_item():
         'Preis': 0.0
     })
 
+# --- ZENTRALES SPALTEN-VERHÄLTNIS ---
+# Das garantiert, dass Überschrift und Felder immer 100% synchron sind!
+COL_RATIOS = [0.5, 1.5, 1, 1, 1.5, 0.7, 0.7, 0.7, 1]
 
-# --- 3. HEADER-ZEILE ---
-st.markdown("""
-    <div class="header-row">
-        <div style="display: flex; justify-content: space-between;">
-            <span style="width: 5%; text-align: center;">Rang</span>
-            <span style="width: 15%;">Artikel</span>
-            <span style="width: 8%;">Menge</span>
-            <span style="width: 8%;">Preis</span>
-            <span style="width: 12%;">Umsatz (€)</span>
-            <span style="width: 10%;">Anteil %</span>
-            <span style="width: 10%;">Kum. %</span>
-            <span style="width: 10%;">Klasse</span>
-            <span style="width: 10%; text-align: center;">Aktion</span>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+# --- 3. HEADER-ZEILE (Jetzt mit echten Streamlit-Spalten) ---
+header_cols = st.columns(COL_RATIOS)
+headers = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (€)", "Anteil %", "Kum. %", "Klasse", "Aktion"]
 
-# --- 4. ZEILEN DER TABELLE (Jetzt mit Rahmen pro Zeile!) ---
+for col, title in zip(header_cols, headers):
+    with col:
+        st.markdown(f"<div class='col-header'>{title}</div>", unsafe_allow_html=True)
+
+# --- 4. ZEILEN DER TABELLE ---
 current_list = st.session_state.schueler_liste
 
 gesamt_umsatz_live = sum(item['Menge'] * item['Preis'] for item in current_list)
 live_kumuliert = 0.0
 
 for i, item in enumerate(current_list):
-    # NEU: border=True sorgt für den Kasten um die gesamte Artikel-Zeile
     with st.container(border=True):
-        cols = st.columns([0.5, 1.5, 1, 1, 1.5, 0.7, 0.7, 0.7, 1])
+        # Wir übergeben hier exakt dasselbe Verhältnis wie oben!
+        cols = st.columns(COL_RATIOS)
 
         with cols[0]:
             st.markdown(f"<div class='rang-text'>{i + 1}.</div>", unsafe_allow_html=True)
@@ -184,7 +180,7 @@ for i, item in enumerate(current_list):
                 move_item(i, 'down')
                 st.rerun()
 
-# --- 5. BUTTONS (+ / -) (Jetzt ohne eigenen Rahmen, frei stehend) ---
+# --- 5. BUTTONS (+ / -) ---
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
 col_space1, col_add, col_remove, col_space2 = st.columns([1.5, 2, 2, 1.5])
