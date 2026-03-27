@@ -1,8 +1,53 @@
 import streamlit as st
 import pandas as pd
+from fpdf import FPDF
 
 # --- Seiten-Setup ---
 st.set_page_config(page_title="Nutzwertanalyse", layout="wide")
+
+
+# --- PDF GENERATOR FUNKTION (Jetzt sauber ganz oben ausgelagert) ---
+def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten):
+    pdf = FPDF()
+    pdf.add_page()
+
+    # Titel
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, txt="Auswertung: Nutzwertanalyse", ln=True, align="C")
+    pdf.ln(5)
+
+    # Optionen & finale Punkte
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, txt="Finale Ergebnisse:", ln=True)
+    pdf.set_font("Arial", size=11)
+    for idx, name in enumerate(option_namen):
+        # Text für PDF bereinigen, falls Sonderzeichen drin sind
+        sicherer_name = name.encode('latin-1', 'replace').decode('latin-1')
+        pdf.cell(0, 7, txt=f"- {sicherer_name}: {echte_nutzwerte[idx]:.1f} Punkte", ln=True)
+    pdf.ln(5)
+
+    # Detailübersicht der Kriterien
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, txt="Bewertungsdetails:", ln=True)
+    pdf.set_font("Arial", size=10)
+
+    for daten in export_daten:
+        krit_text = daten['kriterium'].encode('latin-1', 'replace').decode('latin-1')
+        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(0, 7, txt=f"Kriterium: {krit_text} ({daten['gewicht']}%)", ln=True)
+
+        pdf.set_font("Arial", size=10)
+        for idx, p in enumerate(daten['punkte']):
+            opt_text = option_namen[idx].encode('latin-1', 'replace').decode('latin-1')
+            pdf.cell(0, 6, txt=f"   -> {opt_text}: {p} Rohpunkte", ln=True)
+        pdf.ln(2)
+
+    return bytes(pdf.output(dest="S").encode("latin-1"))
+
+
+# ==========================================
+# --- START DER APP ---
+# ==========================================
 
 st.title("📊 Nutzwertanalyse")
 st.markdown("""
@@ -10,7 +55,7 @@ Nutze dieses Tool, um eine strukturierte Entscheidung zu treffen.
 Lege zuerst die Rahmenbedingungen fest, verteile dann die prozentuale Gewichtung und bewerte die Optionen mit den Schiebereglern.
 """)
 
-# --- 0. Rahmenbedingungen (NEU: Dynamisch) ---
+# --- 0. Rahmenbedingungen ---
 with st.container(border=True):
     st.subheader("1. Rahmenbedingungen & Optionen")
 
@@ -22,12 +67,10 @@ with st.container(border=True):
         max_punkte = st.number_input("Maximalpunktzahl der Skala (z. B. 5, 10 oder 100):", min_value=1, value=10)
 
     st.markdown("**Benenne deine Optionen:**")
-    # Dynamische Spalten für die Namen generieren
     option_namen = []
     cols_namen = st.columns(anzahl_optionen)
     for i in range(anzahl_optionen):
         with cols_namen[i]:
-            # Standardnamen wie "Option A", "Option B" etc. vergeben (chr(65) = 'A')
             name = st.text_input(f"Name Option {i + 1}:", value=f"Option {chr(65 + i)}", max_chars=20)
             option_namen.append(name)
 
@@ -45,15 +88,16 @@ def remove_kriterium():
         st.session_state.anzahl_kriterien -= 1
 
 
-# --- 1. Kriterien erfassen (Die Karten-Ansicht) ---
+# --- 1. Kriterien erfassen ---
 st.subheader("2. Kriterien & Bewertung")
 st.markdown("Lege deine Kriterien fest, bestimme ihre Wichtigkeit (in %) und vergib die Rohpunkte.")
 
 gesamt_gewichtung = 0
-# Liste für die berechneten Nutzwerte (startet bei 0 für jede Option)
 echte_nutzwerte = [0.0] * anzahl_optionen
 
-# Schleife baut für jedes Kriterium eine eigene visuelle Karte (Rahmen)
+# Diese Liste sammelt alle Daten für den späteren PDF-Export
+export_daten = []
+
 for i in range(st.session_state.anzahl_kriterien):
     with st.container(border=True):
         col_krit, col_gew = st.columns([3, 1])
@@ -65,17 +109,26 @@ for i in range(st.session_state.anzahl_kriterien):
 
         st.markdown(f"**Rohpunkte vergeben (1 bis {max_punkte}):**")
 
-        # Dynamische Slider je nach Anzahl der Optionen
         cols_slider = st.columns(anzahl_optionen)
+        punkte_aktuell = []  # Sammelt die Punkte dieses Kriteriums für den Export
+
         for opt_idx in range(anzahl_optionen):
             with cols_slider[opt_idx]:
                 punkte = st.slider(f"{option_namen[opt_idx]}", min_value=1, max_value=max_punkte, value=max_punkte // 2,
                                    key=f"p_{i}_{opt_idx}")
+                punkte_aktuell.append(punkte)
 
-                # Hintergrundberechnung für dieses Kriterium und diese Option
+                # Hintergrundberechnung
                 echte_nutzwerte[opt_idx] += (gewicht / 100) * punkte
 
-# Buttons zum Hinzufügen/Entfernen von Kriterien
+        # Daten für PDF speichern
+        export_daten.append({
+            "kriterium": krit_name,
+            "gewicht": gewicht,
+            "punkte": punkte_aktuell
+        })
+
+# Buttons
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
     st.button("➕ Kriterium hinzufügen", on_click=add_kriterium, use_container_width=True)
@@ -87,7 +140,6 @@ st.divider()
 # --- 2. Logik-Check: 100% Gewichtung ---
 st.subheader("3. Gewichtungs-Check")
 
-# Optischer Fortschrittsbalken
 progress_val = min(gesamt_gewichtung / 100.0, 1.0)
 st.progress(progress_val)
 
@@ -106,7 +158,6 @@ else:
         *(Rechnung pro Kriterium: Gewichtung als Dezimalzahl × Rohpunkte. Am Ende alles addieren.)*
         """)
 
-        # Dynamische Eingabefelder für die Schüler
         schueler_eingaben = []
         cols_erg = st.columns(anzahl_optionen)
         for opt_idx in range(anzahl_optionen):
@@ -115,41 +166,35 @@ else:
                                           format="%.1f")
                 schueler_eingaben.append(eingabe)
 
-        # --- 4. Auswertung ---
-        # Prüfen, ob überhaupt schon etwas eingegeben wurde (nicht nur 0.0 überall)
+        # --- 4. Auswertung & PDF Export ---
         if any(eingabe > 0 for eingabe in schueler_eingaben):
-
-            # Alle Eingaben auf Richtigkeit prüfen
             alle_korrekt = True
             for opt_idx in range(anzahl_optionen):
                 if abs(schueler_eingaben[opt_idx] - echte_nutzwerte[opt_idx]) >= 0.05:
                     alle_korrekt = False
-                    break  # Sobald ein Fehler drin ist, Schleife abbrechen
+                    break
 
             if alle_korrekt:
                 st.balloons()
-                st.success("🎉 Hervorragend gerechnet! Alle Nutzwerte stimmen. Hier ist deine visuelle Auswertung:")
+                st.success("🎉 Hervorragend gerechnet! Alle Nutzwerte stimmen. Hier ist das Ergebnis:")
 
-                # Sieger ermitteln
-                max_nutzwert = max(echte_nutzwerte)
-                # Prüfen, ob es mehrere Sieger gibt (Unentschieden)
-                sieger_indices = [i for i, x in enumerate(echte_nutzwerte) if x == max_nutzwert]
-
-                if len(sieger_indices) == 1:
-                    sieger_name = option_namen[sieger_indices[0]]
-                    st.info(
-                        f"🏆 **Entscheidungsempfehlung:** {sieger_name} gewinnt die Nutzwertanalyse mit {max_nutzwert:.1f} Punkten!")
-                else:
-                    sieger_namen = [option_namen[i] for i in sieger_indices]
-                    st.info(
-                        f"⚖️ **Unentschieden:** {', '.join(sieger_namen)} liegen mit exakt {max_nutzwert:.1f} Punkten gleichauf!")
-
-                # Diagramm zeichnen
+                # Buntes Diagramm
                 diagramm_daten = pd.DataFrame({
                     "Optionen": option_namen,
                     "Finaler Nutzwert": echte_nutzwerte
                 })
-                st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="#2563eb")
+                st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="Optionen")
+
+                st.divider()
+
+                # Download Button erscheint hier!
+                st.write("Möchtest du deine Ergebnisse für den Unterricht sichern?")
+                st.download_button(
+                    label="📄 Ergebnisse als PDF herunterladen",
+                    data=generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten),
+                    file_name="Nutzwertanalyse_Ergebnisse.pdf",
+                    mime="application/pdf"
+                )
 
             else:
                 st.error("🧐 Das stimmt noch nicht ganz. Überprüfe deine Rechnung bei allen Optionen!")
