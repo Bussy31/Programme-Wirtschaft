@@ -8,6 +8,22 @@ import json
 
 st.set_page_config(page_title="Musterland Simulation", layout="wide", initial_sidebar_state="expanded")
 
+# --- COPYRIGHT FOOTER (Unten rechts) ---
+footer_html = """
+<style>
+.footer {
+    position: fixed;
+    bottom: 10px;
+    right: 15px;
+    font-size: 12px;
+    color: #888888;
+    z-index: 100;
+}
+</style>
+<div class="footer">© Philipp Bußmann</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
+
 # --- 1. DATENBANK DER SZENARIEN LADEN ---
 with open("Bruttoinlandsprodukt_szenarien.json", "r", encoding="utf-8") as file:
     alle_szenarien = json.load(file)
