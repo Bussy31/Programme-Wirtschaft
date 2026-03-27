@@ -208,7 +208,7 @@ with tab1:
     with col_n:
         st.text_input("Kontoname:", key="kto_name_input")
     with col_w:
-        st.number_input("AB-Wert (€):", min_value=0.0, step=100.0, key="kto_wert_input")
+        st.number_input("AB-Wert (€):", min_value=None, step=100.0, key="kto_wert_input")
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -290,7 +290,7 @@ with tab1:
                 with c_edit1:
                     new_k_name = st.text_input("Name", value=selected_kto)
                 with c_edit2:
-                    new_k_ab = st.number_input("AB-Wert (€)", value=float(cur_ab), min_value=0.0, step=100.0)
+                    new_k_ab = st.number_input("AB-Wert (€)", value=float(cur_ab), min_value=None, step=100.0)
                 with c_edit3:
                     kat_options = ["Aktiv", "Passiv", "Aufwand", "Ertrag", "GuV", "Abschluss"]
                     current_kat = k_daten.get("Kategorie", "Aktiv")
@@ -367,7 +367,7 @@ with tab2:
                 with c1:
                     kto = st.selectbox(f"Soll-Konto {i + 1}", kto_namen, key=f"s_kto_{i}", label_visibility="collapsed")
                 with c2:
-                    betrag = st.number_input(f"Betrag {i + 1}", min_value=0.0, step=100.0, key=f"s_val_{i}",
+                    betrag = st.number_input(f"Betrag {i + 1}", min_value=None, step=100.0, key=f"s_val_{i}",
                                              label_visibility="collapsed")
                 if betrag > 0:
                     soll_items.append({"konto": kto, "betrag": betrag})
@@ -387,7 +387,7 @@ with tab2:
                     kto = st.selectbox(f"Haben-Konto {i + 1}", kto_namen, key=f"h_kto_{i}",
                                        label_visibility="collapsed")
                 with c2:
-                    betrag = st.number_input(f"Betrag {i + 1}", min_value=0.0, step=100.0, key=f"h_val_{i}",
+                    betrag = st.number_input(f"Betrag {i + 1}", min_value=None, step=100.0, key=f"h_val_{i}",
                                              label_visibility="collapsed")
                 if betrag > 0:
                     haben_items.append({"konto": kto, "betrag": betrag})
@@ -572,7 +572,7 @@ with tab3:
                     abs_seite = st.selectbox("Abschlussbuchung auf Seite:", ["Soll", "Haben"])
 
                 with c_abs2:
-                    abs_betrag = st.number_input("Abschlussbetrag (€):", min_value=0.0, step=100.0, format="%.2f")
+                    abs_betrag = st.number_input("Abschlussbetrag (€):", min_value=None, step=100.0, format="%.2f")
 
                 with c_abs3:
                     kat = k_daten.get("Kategorie", "")
