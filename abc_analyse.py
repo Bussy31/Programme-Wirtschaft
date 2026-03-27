@@ -24,15 +24,13 @@ st.markdown(footer_html, unsafe_allow_html=True)
 # CSS für eine perfekte, softe Optik
 st.markdown("""
     <style>
-    /* Styling für die einzelnen, zentrierten Spalten-Überschriften */
-    .col-header {
+    /* Header-Reihe anpassen, damit sie gut zu den neuen gerahmten Zeilen passt */
+    .header-row {
         font-weight: bold;
-        color: #334155;
         background-color: #f0f2f6;
-        padding: 8px 5px;
-        border-radius: 6px;
-        text-align: center;
-        margin-bottom: 5px;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
     }
 
     /* Buttons (+, -, Pfeile) exakt in den Blautönen des Diagramms */
@@ -101,17 +99,23 @@ def add_item():
         'Preis': 0.0
     })
 
-# --- ZENTRALES SPALTEN-VERHÄLTNIS ---
-# Das garantiert, dass Überschrift und Felder immer 100% synchron sind!
-COL_RATIOS = [0.5, 1.5, 1, 1, 1.5, 0.7, 0.7, 0.7, 1]
 
-# --- 3. HEADER-ZEILE (Jetzt mit echten Streamlit-Spalten) ---
-header_cols = st.columns(COL_RATIOS)
-headers = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (€)", "Anteil %", "Kum. %", "Klasse", "Aktion"]
-
-for col, title in zip(header_cols, headers):
-    with col:
-        st.markdown(f"<div class='col-header'>{title}</div>", unsafe_allow_html=True)
+# --- 3. HEADER-ZEILE (Wurde exakt an deine cols-Ratios angepasst!) ---
+st.markdown("""
+    <div class="header-row">
+        <div style="display: flex; justify-content: space-between; padding: 0 4px;">
+            <span style="width: 5.8%; text-align: center;">Rang</span>
+            <span style="width: 17.4%;">Artikel</span>
+            <span style="width: 11.6%;">Menge</span>
+            <span style="width: 11.6%;">Preis</span>
+            <span style="width: 17.4%;">Umsatz (€)</span>
+            <span style="width: 8.1%;">Anteil %</span>
+            <span style="width: 8.1%;">Kum. %</span>
+            <span style="width: 8.1%;">Klasse</span>
+            <span style="width: 11.6%; text-align: center;">Aktion</span>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
 # --- 4. ZEILEN DER TABELLE ---
 current_list = st.session_state.schueler_liste
@@ -121,8 +125,7 @@ live_kumuliert = 0.0
 
 for i, item in enumerate(current_list):
     with st.container(border=True):
-        # Wir übergeben hier exakt dasselbe Verhältnis wie oben!
-        cols = st.columns(COL_RATIOS)
+        cols = st.columns([0.5, 1.5, 1, 1, 1.5, 0.7, 0.7, 0.7, 1])
 
         with cols[0]:
             st.markdown(f"<div class='rang-text'>{i + 1}.</div>", unsafe_allow_html=True)
