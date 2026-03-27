@@ -24,14 +24,13 @@ st.markdown(footer_html, unsafe_allow_html=True)
 # CSS für softe Optik & Buttons
 st.markdown("""
     <style>
-    /* Styling für die zentrierten Überschriften mit grauem Hintergrund */
+    /* Styling für die Überschriften: perfekt zentriert, kein eigener Hintergrund mehr */
     .col-header {
         font-weight: 700;
         color: #334155;
-        background-color: #f0f2f6; /* Schönes, sanftes Grau */
-        padding: 8px 5px;
-        border-radius: 6px;
-        text-align: center; /* Alles perfekt zentriert */
+        text-align: center; /* Horizontal zentriert im Rahmen */
+        padding: 5px 0px;
+        font-size: 1.05rem;
     }
 
     /* Buttons (+, -, Pfeile) in den Blautönen des Diagramms */
@@ -104,7 +103,7 @@ def add_item():
 # --- ZENTRALES SPALTEN-VERHÄLTNIS ---
 COL_RATIOS = [0.6, 1.8, 0.9, 0.9, 1.1, 0.9, 0.9, 0.9, 1.0]
 
-# --- 3. KUGELSICHERE HEADER-ZEILE (Zentriert & Grau) ---
+# --- 3. HEADER-ZEILE (Ein großer Rahmen, zentrierte Texte) ---
 with st.container(border=True):
     h_cols = st.columns(COL_RATIOS)
     headers = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (€)", "Anteil %", "Kum. %", "Klasse", "Aktion"]
