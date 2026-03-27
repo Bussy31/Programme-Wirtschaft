@@ -4,7 +4,7 @@ import pandas as pd
 # --- Setup ---
 st.set_page_config(page_title="Profi-Übung: ABC-Analyse", layout="wide")
 
-# CSS für eine bessere Optik der "Header-Zeile" und rahmenlose Buttons
+# CSS für eine bessere Optik der "Header-Zeile" und rahmenlose Pfeile
 st.markdown("""
     <style>
     .header-row {
@@ -14,17 +14,18 @@ st.markdown("""
         border-radius: 5px;
         margin-bottom: 10px;
     }
-    /* Entfernt die Rahmen von den Hoch/Runter-Pfeilen */
-    .stButton button {
-        border: none;
-        background: transparent;
-        box-shadow: none;
-        padding: 0;
-        font-size: 1.2rem;
+    /* Entfernt die Rahmen NUR von den kleinen Hoch/Runter-Pfeilen (Secondary Buttons) */
+    button[kind="secondary"] {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        font-size: 1.5rem !important;
     }
-    .stButton button:hover {
-        background-color: #e0f2fe;
-        color: #0284c7;
+    button[kind="secondary"]:hover {
+        background-color: #e0f2fe !important;
+        color: #0284c7 !important;
+        border-radius: 5px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -38,17 +39,17 @@ with st.sidebar:
     st.info("Lege fest, bis zu wie viel Prozent der kumulierte Umsatz für die jeweilige Klasse geht.")
     grenze_a = st.slider("A-Güter bis (%)", 0, 100, 80)
     grenze_b = st.slider("B-Güter bis (%)", grenze_a, 100, 95)
-    grenze_c = st.slider("C-Güter bis (%)", grenze_b, 100, 100)  # NEU: C-Grenze einstellbar
+    grenze_c = st.slider("C-Güter bis (%)", grenze_b, 100, 100)
     st.write(f"Klassen: A (0-{grenze_a}%), B ({grenze_a}-{grenze_b}%), C ({grenze_b}-{grenze_c}%)")
 
-# --- 2. DATEN & SESSION STATE ---
+# --- 2. DATEN & SESSION STATE (Bereits korrekt sortiert!) ---
 if 'schueler_liste' not in st.session_state:
     st.session_state.schueler_liste = [
-        {'id': 1, 'Artikel': 'Druckerpapier', 'Menge': 100, 'Preis': 5.0},
-        {'id': 2, 'Artikel': 'Toner Schwarz', 'Menge': 10, 'Preis': 80.0},
         {'id': 3, 'Artikel': 'Schreibtisch Premium', 'Menge': 5, 'Preis': 1200.0},
-        {'id': 4, 'Artikel': 'Kugelschreiber', 'Menge': 500, 'Preis': 1.0},
         {'id': 5, 'Artikel': 'Bürostuhl', 'Menge': 15, 'Preis': 300.0},
+        {'id': 2, 'Artikel': 'Toner Schwarz', 'Menge': 10, 'Preis': 80.0},
+        {'id': 1, 'Artikel': 'Druckerpapier', 'Menge': 100, 'Preis': 5.0},
+        {'id': 4, 'Artikel': 'Kugelschreiber', 'Menge': 500, 'Preis': 1.0},
     ]
 
 
@@ -77,7 +78,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 4. ZEILEN (Horizontal nebeneinander, ohne dicke Rahmen) ---
+# --- 4. ZEILEN (Horizontal nebeneinander) ---
 current_list = st.session_state.schueler_liste
 
 # Gesamtwert vorab berechnen, damit wir die Beispielrechnung in den Feldern live vorbefüllen können
@@ -91,15 +92,15 @@ for i, item in enumerate(current_list):
         with cols[0]:  # Rang
             st.markdown(f"**{i + 1}.**")
 
-        with cols[1]:  # Artikel (jetzt editierbar)
+        with cols[1]:  # Artikel
             item['Artikel'] = st.text_input("Artikel", value=item['Artikel'], key=f"art_{item['id']}",
                                             label_visibility="collapsed")
 
-        with cols[2]:  # Menge (jetzt editierbar)
+        with cols[2]:  # Menge
             item['Menge'] = st.number_input("Menge", value=int(item['Menge']), key=f"men_{item['id']}",
                                             label_visibility="collapsed", step=1)
 
-        with cols[3]:  # Preis (jetzt editierbar)
+        with cols[3]:  # Preis
             item['Preis'] = st.number_input("Preis", value=float(item['Preis']), key=f"pre_{item['id']}",
                                             label_visibility="collapsed", step=0.5)
 
@@ -119,17 +120,18 @@ for i, item in enumerate(current_list):
             st.number_input("Kumul.", value=live_kumuliert, key=f"kum_{item['id']}", label_visibility="collapsed",
                             step=0.01, format="%.2f")
 
-        with cols[7]:  # Aktion (Rahmenlose Pfeile)
+        with cols[7]:  # Aktion (Rahmenlose Pfeile wie in der Pro-Version)
             c_up, c_down = st.columns(2)
-            if c_up.button("⬆️", key=f"up_{item['id']}", disabled=(i == 0)):
+            if c_up.button("↑", key=f"up_{item['id']}", disabled=(i == 0)):
                 move_item(i, 'up')
                 st.rerun()
-            if c_down.button("⬇️", key=f"down_{item['id']}", disabled=(i == len(current_list) - 1)):
+            if c_down.button("↓", key=f"down_{item['id']}", disabled=(i == len(current_list) - 1)):
                 move_item(i, 'down')
                 st.rerun()
     st.divider()
 
 # --- 5. AUSWERTUNG ---
+# Durch type="primary" heben wir den Button hervor und er wird vom CSS oben ignoriert
 if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
     # Lösung berechnen
     sol_df = pd.DataFrame(current_list)
