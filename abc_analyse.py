@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 
 # --- Setup ---
 st.set_page_config(page_title="Profi-Übung: ABC-Analyse", layout="wide")
 
-# CSS für eine bessere Optik der "Header-Zeile" und rahmenlose Pfeile
+# CSS für eine bessere Optik
 st.markdown("""
     <style>
     .header-row {
@@ -14,7 +15,6 @@ st.markdown("""
         border-radius: 5px;
         margin-bottom: 10px;
     }
-    /* Entfernt die Rahmen NUR von den kleinen Hoch/Runter-Pfeilen */
     button[kind="secondary"] {
         border: none !important;
         background: transparent !important;
@@ -34,7 +34,7 @@ st.title("📦 Interaktive ABC-Analyse")
 st.markdown(
     "Passe Menge und Preis an, sortiere die Artikel per Pfeil, berechne die Werte und lege die Klassengrenzen fest.")
 
-# --- 1. EINSTELLUNGEN (Grenzwerte selbst festlegen) ---
+# --- 1. EINSTELLUNGEN ---
 with st.sidebar:
     st.header("⚙️ Klassengrenzen")
     st.info("Lege fest, bis zu wie viel Prozent der kumulierte Umsatz für die jeweilige Klasse geht.")
@@ -43,7 +43,7 @@ with st.sidebar:
     grenze_c = st.slider("C-Güter bis (%)", grenze_b, 100, 100)
     st.write(f"Klassen: A (0-{grenze_a}%), B ({grenze_a}-{grenze_b}%), C ({grenze_b}-{grenze_c}%)")
 
-# --- 2. DATEN & SESSION STATE (Bereits korrekt sortiert!) ---
+# --- 2. DATEN & SESSION STATE ---
 if 'schueler_liste' not in st.session_state:
     st.session_state.schueler_liste = [
         {'id': 3, 'Artikel': 'Schreibtisch Premium', 'Menge': 5, 'Preis': 1200.0},
@@ -63,7 +63,7 @@ def move_item(index, direction):
     st.session_state.schueler_liste = liste
 
 
-# --- 3. HEADER-ZEILE (Horizontal) ---
+# --- 3. HEADER-ZEILE ---
 st.markdown("""
     <div class="header-row">
         <div style="display: flex; justify-content: space-between;">
@@ -80,7 +80,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 4. ZEILEN (Horizontal nebeneinander) ---
+# --- 4. ZEILEN ---
 current_list = st.session_state.schueler_liste
 
 gesamt_umsatz_live = sum(item['Menge'] * item['Preis'] for item in current_list)
@@ -158,18 +158,21 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
     else:
         fehler = False
         kum_check = 0.0
-        kumulierte_werte_fuer_chart = [0.0]
-        # --- TRICK: Nummerierung für die X-Achse erzwingen ---
-        artikel_namen_fuer_chart = ["0. Start"]
+
+        # Listen für das Diagramm
+        artikel_namen_fuer_chart = []
+        einzel_anteil_fuer_chart = []
+        kumulierte_werte_fuer_chart = []
 
         for i, item in enumerate(current_list):
             u_ist = item['Menge'] * item['Preis']
             a_ist = (u_ist / gesamt_umsatz_live) * 100
             kum_check += a_ist
 
-            # --- TRICK: Die Nummer davor setzen (1. Schreibtisch, 2. Bürostuhl...) ---
-            kumulierte_werte_fuer_chart.append(kum_check)
+            # Daten für das Diagramm sammeln
             artikel_namen_fuer_chart.append(f"{i + 1}. {item['Artikel']}")
+            einzel_anteil_fuer_chart.append(a_ist)
+            kumulierte_werte_fuer_chart.append(kum_check)
 
             if kum_check <= grenze_a + 0.01:
                 korrekt_klasse = "A"
@@ -183,7 +186,6 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
             k_schueler = st.session_state.get(f"kum_{item['id']}", 0.0)
             klasse_schueler = st.session_state.get(f"kl_{item['id']}", "-")
 
-            # Strenge Toleranzen: 0.50 Euro und 0.05%
             if abs(u_schueler - u_ist) > 0.5 or abs(a_schueler - a_ist) > 0.05 or abs(k_schueler - kum_check) > 0.05:
                 st.error(f"❌ Rechenfehler bei Rang {i + 1} ({item['Artikel']}). (Toleranz: ±0,05 % bzw. ±0,50 €)")
                 fehler = True
@@ -196,13 +198,32 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
 
         if not fehler:
             st.success(
-                f"✅ Alles korrekt! Die Klassifizierung lautet: A bis {grenze_a}%, B bis {grenze_b}%, C bis {grenze_c}%. Hier ist deine Lorenz-Kurve:")
+                f"✅ Alles korrekt! Die Klassifizierung lautet: A bis {grenze_a}%, B bis {grenze_b}%, C bis {grenze_c}%. Hier ist dein Pareto-Diagramm:")
             st.balloons()
 
-            # --- DIAGRAMM ZEICHNEN ---
+            # --- STARRES PARETO-DIAGRAMM MIT ALTAIR ---
             chart_data = pd.DataFrame({
                 "Artikel": artikel_namen_fuer_chart,
+                "Anteil einzeln (%)": einzel_anteil_fuer_chart,
                 "Kumulierter Umsatz (%)": kumulierte_werte_fuer_chart
-            }).set_index("Artikel")
+            })
 
-            st.line_chart(chart_data, y="Kumulierter Umsatz (%)", height=400)
+            # Basis für die X-Achse (sort=None behält unsere exakte Rang-Reihenfolge)
+            base = alt.Chart(chart_data).encode(
+                x=alt.X("Artikel:N", sort=None, title="Artikel (nach Rang)")
+            )
+
+            # Die dicken Balken im Hintergrund (Einzelner Anteil)
+            bars = base.mark_bar(color="#93c5fd", size=40, opacity=0.8).encode(
+                y=alt.Y("Anteil einzeln (%):Q", scale=alt.Scale(domain=[0, 100]), title="Prozent (%)")
+            )
+
+            # Die klassische Lorenz-Linie darüber (Kumulierter Umsatz)
+            line = base.mark_line(color="#0284c7", point=True, strokeWidth=3).encode(
+                y=alt.Y("Kumulierter Umsatz (%):Q")
+            )
+
+            # Beides übereinanderlegen (ohne .interactive() -> Diagramm bleibt starr!)
+            combo_chart = alt.layer(bars, line).properties(height=400)
+
+            st.altair_chart(combo_chart, use_container_width=True)
