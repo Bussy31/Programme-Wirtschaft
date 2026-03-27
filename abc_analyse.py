@@ -31,8 +31,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("📦 Interaktive ABC-Analyse")
-st.markdown(
-    "Passe Menge und Preis an, füge neue Artikel hinzu, sortiere sie per Pfeil und lege die Klassengrenzen fest.")
+st.markdown("Passe Menge und Preis an, berechne die Anteile und beobachte, wie sich dein Live-Diagramm aufbaut!")
 
 # --- 1. EINSTELLUNGEN ---
 with st.sidebar:
@@ -90,7 +89,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 4. ZEILEN ---
+# --- 4. ZEILEN DER TABELLE ---
 current_list = st.session_state.schueler_liste
 
 gesamt_umsatz_live = sum(item['Menge'] * item['Preis'] for item in current_list)
@@ -129,20 +128,22 @@ for i, item in enumerate(current_list):
         auswahl_optionen = ["-", "A", "B", "C"]
         vorauswahl_index = auswahl_optionen.index(vorauswahl_klasse)
 
+        # WICHTIG: Wir speichern die aktuellen Eingaben der SuS in der Liste ab, um sie direkt ans Live-Diagramm zu schicken
         with cols[4]:
-            st.number_input("Umsatz", value=b_umsatz, key=f"ums_{item['id']}", label_visibility="collapsed", step=1.0)
+            item['eingabe_ums'] = st.number_input("Umsatz", value=b_umsatz, key=f"ums_{item['id']}",
+                                                  label_visibility="collapsed", step=1.0)
 
         with cols[5]:
-            st.number_input("Anteil", value=b_anteil, key=f"ant_{item['id']}", label_visibility="collapsed", step=0.01,
-                            format="%.2f")
+            item['eingabe_ant'] = st.number_input("Anteil", value=b_anteil, key=f"ant_{item['id']}",
+                                                  label_visibility="collapsed", step=0.01, format="%.2f")
 
         with cols[6]:
-            st.number_input("Kumul.", value=live_kumuliert, key=f"kum_{item['id']}", label_visibility="collapsed",
-                            step=0.01, format="%.2f")
+            item['eingabe_kum'] = st.number_input("Kumul.", value=live_kumuliert, key=f"kum_{item['id']}",
+                                                  label_visibility="collapsed", step=0.01, format="%.2f")
 
         with cols[7]:
-            st.selectbox("Klasse", options=auswahl_optionen, index=vorauswahl_index, key=f"kl_{item['id']}",
-                         label_visibility="collapsed")
+            item['eingabe_kl'] = st.selectbox("Klasse", options=auswahl_optionen, index=vorauswahl_index,
+                                              key=f"kl_{item['id']}", label_visibility="collapsed")
 
         with cols[8]:
             c_up, c_down = st.columns(2)
@@ -154,21 +155,61 @@ for i, item in enumerate(current_list):
                 st.rerun()
     st.divider()
 
-# NEU: Buttons nebeneinander für Plus und Minus
-col_add, col_remove, _ = st.columns([2, 2, 6])
-with col_add:
-    if st.button("➕ Artikel hinzufügen", use_container_width=True):
-        add_item()
-        st.rerun()
-with col_remove:
-    # Button ist deaktiviert, wenn nur noch 1 Artikel da ist
-    if st.button("➖ Letzte Zeile löschen", use_container_width=True, disabled=(len(current_list) <= 1)):
-        st.session_state.schueler_liste.pop()
-        st.rerun()
+# --- 5. NEU: ZENTRIERTE & GERAHMTE BUTTONS (+ / -) ---
+# Durch border=True entsteht ein schöner Rahmen, die Spalten zentrieren die Buttons
+with st.container(border=True):
+    st.markdown("<h4 style='text-align: center; margin-top: 0;'>Tabelle anpassen</h4>", unsafe_allow_html=True)
 
-st.write("")  # Kleiner Abstand zum Prüfen-Button
+    # 4 Spalten, wobei die äußeren beiden als Platzhalter dienen, um die mittleren zu zentrieren
+    col_space1, col_add, col_remove, col_space2 = st.columns([1, 2, 2, 1])
 
-# --- 5. AUSWERTUNG & DIAGRAMM ---
+    with col_add:
+        if st.button("➕ Weiteren Artikel hinzufügen", use_container_width=True):
+            add_item()
+            st.rerun()
+    with col_remove:
+        if st.button("➖ Letzten Artikel entfernen", use_container_width=True, disabled=(len(current_list) <= 1)):
+            st.session_state.schueler_liste.pop()
+            st.rerun()
+
+st.write("")  # Kleiner Abstand zum Diagramm
+
+# --- 6. LIVE-DIAGRAMM (Immer sichtbar) ---
+st.subheader("📊 Live-Pareto-Diagramm deiner Eingaben")
+st.info(
+    "Dieses Diagramm baut sich aus deinen eingegebenen Werten oben auf. Achte darauf, dass die Linie stetig steigt!")
+
+# Diagramm-Daten direkt aus den Schüler-Eingaben ziehen
+artikel_namen_live = [f"{i + 1}. {item['Artikel']}" for i, item in enumerate(current_list)]
+anteil_einzeln_live = [round(item['eingabe_ant'], 2) for item in current_list]
+kumuliert_live = [round(item['eingabe_kum'], 2) for item in current_list]
+
+chart_data = pd.DataFrame({
+    "Artikel": artikel_namen_live,
+    "Anteil einzeln (%)": anteil_einzeln_live,
+    "Kumulierter Umsatz (%)": kumuliert_live
+})
+
+base = alt.Chart(chart_data).encode(
+    x=alt.X("Artikel:N", sort=None, title="Artikel (nach Rang)")
+)
+
+bars = base.mark_bar(color="#93c5fd", size=40, opacity=0.8).encode(
+    y=alt.Y("Anteil einzeln (%):Q", scale=alt.Scale(domain=[0, 100]), title="Prozent (%)"),
+    tooltip=[alt.Tooltip("Artikel:N"), alt.Tooltip("Anteil einzeln (%):Q", format=".2f")]
+)
+
+line = base.mark_line(color="#0284c7", point=True, strokeWidth=3).encode(
+    y=alt.Y("Kumulierter Umsatz (%):Q"),
+    tooltip=[alt.Tooltip("Artikel:N"), alt.Tooltip("Kumulierter Umsatz (%):Q", format=".2f")]
+)
+
+combo_chart = alt.layer(bars, line).properties(height=400)
+st.altair_chart(combo_chart, use_container_width=True)
+
+# --- 7. AUSWERTUNG GANZ UNTEN ---
+st.divider()
+
 if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
     sol_df = pd.DataFrame(current_list)
     sol_df['Echter_Umsatz'] = sol_df['Menge'] * sol_df['Preis']
@@ -183,20 +224,10 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
         fehler = False
         kum_check = 0.0
 
-        artikel_namen_fuer_chart = []
-        einzel_anteil_fuer_chart = []
-        kumulierte_werte_fuer_chart = []
-
         for i, item in enumerate(current_list):
             u_ist = item['Menge'] * item['Preis']
             a_ist = (u_ist / gesamt_umsatz_live * 100) if gesamt_umsatz_live > 0 else 0.0
             kum_check += a_ist
-
-            artikel_namen_fuer_chart.append(f"{i + 1}. {item['Artikel']}")
-
-            # NEU: Direkt auf 2 Nachkommastellen runden für das Diagramm
-            einzel_anteil_fuer_chart.append(round(a_ist, 2))
-            kumulierte_werte_fuer_chart.append(round(kum_check, 2))
 
             if kum_check <= grenze_a + 0.01:
                 korrekt_klasse = "A"
@@ -205,10 +236,11 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
             else:
                 korrekt_klasse = "C"
 
-            u_schueler = st.session_state.get(f"ums_{item['id']}", 0.0)
-            a_schueler = st.session_state.get(f"ant_{item['id']}", 0.0)
-            k_schueler = st.session_state.get(f"kum_{item['id']}", 0.0)
-            klasse_schueler = st.session_state.get(f"kl_{item['id']}", "-")
+            # Wir holen die Schüler-Eingaben direkt aus unserer Variablen-Speicherung oben
+            u_schueler = item['eingabe_ums']
+            a_schueler = item['eingabe_ant']
+            k_schueler = item['eingabe_kum']
+            klasse_schueler = item['eingabe_kl']
 
             if abs(u_schueler - u_ist) > 0.5 or abs(a_schueler - a_ist) > 0.05 or abs(k_schueler - kum_check) > 0.05:
                 st.error(f"❌ Rechenfehler bei Rang {i + 1} ({item['Artikel']}). (Toleranz: ±0,05 % bzw. ±0,50 €)")
@@ -222,30 +254,4 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
 
         if not fehler:
             st.success(
-                f"✅ Alles korrekt! Die Klassifizierung lautet: A bis {grenze_a}%, B bis {grenze_b}%, C bis {grenze_c}%. Hier ist dein Pareto-Diagramm:")
-            st.balloons()
-
-            chart_data = pd.DataFrame({
-                "Artikel": artikel_namen_fuer_chart,
-                "Anteil einzeln (%)": einzel_anteil_fuer_chart,
-                "Kumulierter Umsatz (%)": kumulierte_werte_fuer_chart
-            })
-
-            base = alt.Chart(chart_data).encode(
-                x=alt.X("Artikel:N", sort=None, title="Artikel (nach Rang)")
-            )
-
-            # NEU: Tooltips hinzugefügt
-            bars = base.mark_bar(color="#93c5fd", size=40, opacity=0.8).encode(
-                y=alt.Y("Anteil einzeln (%):Q", scale=alt.Scale(domain=[0, 100]), title="Prozent (%)"),
-                tooltip=[alt.Tooltip("Artikel:N"), alt.Tooltip("Anteil einzeln (%):Q", format=".2f")]
-            )
-
-            # NEU: Tooltips hinzugefügt
-            line = base.mark_line(color="#0284c7", point=True, strokeWidth=3).encode(
-                y=alt.Y("Kumulierter Umsatz (%):Q"),
-                tooltip=[alt.Tooltip("Artikel:N"), alt.Tooltip("Kumulierter Umsatz (%):Q", format=".2f")]
-            )
-
-            combo_chart = alt.layer(bars, line).properties(height=400)
-            st.altair_chart(combo_chart, use_container_width=True)
+                f"✅ Alles korrekt! Deine Klassifizierung ist perfekt berechnet und die Lorenz-Kurve ist stimmig.")
