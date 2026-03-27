@@ -5,6 +5,22 @@ import altair as alt
 # --- Setup ---
 st.set_page_config(page_title="Profi-Übung: ABC-Analyse", layout="wide")
 
+# --- COPYRIGHT FOOTER (Unten rechts) ---
+footer_html = """
+<style>
+.footer {
+    position: fixed;
+    bottom: 10px;
+    right: 15px;
+    font-size: 12px;
+    color: #888888;
+    z-index: 100;
+}
+</style>
+<div class="footer">© Philipp Bußmann</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
+
 # CSS für eine perfekte, softe Optik
 st.markdown("""
     <style>
@@ -110,7 +126,7 @@ live_kumuliert = 0.0
 for i, item in enumerate(current_list):
     # NEU: border=True sorgt für den Kasten um die gesamte Artikel-Zeile
     with st.container(border=True):
-        cols = st.columns([0.5, 1.5, 0.8, 0.8, 1.2, 1, 1, 1, 1])
+        cols = st.columns([0.5, 1.5, 1, 1, 1.5, 0.7, 0.7, 0.7, 1])
 
         with cols[0]:
             st.markdown(f"<div class='rang-text'>{i + 1}.</div>", unsafe_allow_html=True)
