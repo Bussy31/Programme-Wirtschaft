@@ -76,7 +76,7 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
 
 st.set_page_config(page_title="Entgeltabrechnung", page_icon="💶", layout="centered")
 
-st.title("💶 Gehaltsabrechnung erstellen")
+st.title("💶 Entgeltabrechnung erstellen")
 st.info("""
 **Willkommen!** Fülle das folgende Formular vollständig aus. Nutze die Tastenfeld-Eingabe oder die +/- Buttons.
 Du musst alle Werte, Beitragsbemessungsgrenzen und Beitragssätze komplett eigenständig eintragen. 
@@ -184,9 +184,9 @@ if st.button("🚀 Gehalt berechnen & Auswerten", type="primary", use_container_
                                  netto, vs, ueberweisung)
 
         st.download_button(
-            label="📥 Gehaltsabrechnung als PDF herunterladen",
+            label="📥 Entgeltabrechnung als PDF herunterladen",
             data=pdf_bytes,
-            file_name="Gehaltsabrechnung_Ergebnis.pdf",
+            file_name="Entgeltabrechnung_Ergebnis.pdf",
             mime="application/pdf",
             type="primary"
         )
