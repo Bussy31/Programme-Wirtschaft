@@ -38,7 +38,7 @@ with col1:
     )
 
     if staat_correct:
-        st.success("🎉 Kategorie 'Mit dem Staat' korrekt gelöst!")
+        st.success("🎉 Kategorie korrekt gelöst!")
 
 with col2:
     st.subheader("2. Kernkreislauf (H & U)")
@@ -54,7 +54,7 @@ with col2:
     )
 
     if kern_correct:
-        st.success("🎉 Kategorie 'Kern (H & U)' korrekt gelöst!")
+        st.success("🎉 Kategorie korrekt gelöst!")
 
 with col3:
     st.subheader("3. Banken")
@@ -69,7 +69,7 @@ with col3:
     )
 
     if banken_correct:
-        st.success("🎉 Kategorie 'Über die Banken' korrekt gelöst!")
+        st.success("🎉 Kategorie korrekt gelöst!")
 
 with col4:
     st.subheader("4. Ausland")
@@ -84,7 +84,7 @@ with col4:
     )
 
     if ausland_correct:
-        st.success("🎉 Kategorie 'Mit dem Ausland' korrekt gelöst!")
+        st.success("🎉 Kategorie korrekt gelöst!")
 
 # --- Logik-Check (Fast alle 16 Ströme) ---
 alles_richtig = staat_correct and kern_correct and banken_correct and ausland_correct
