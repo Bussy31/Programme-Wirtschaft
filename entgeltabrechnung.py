@@ -94,36 +94,36 @@ with st.container(border=True):
     st.header("🏢 1. Grunddaten")
     col1, col2 = st.columns(2)
     with col1:
-        brutto = st.number_input("Bruttogehalt (€):", min_value=0.0, value=0, step=100.0)
-        vl_ag = st.number_input("VL Arbeitgeber (€):", min_value=0.0, value=0, step=10.0)
+        brutto = st.number_input("Bruttogehalt (€):", min_value=0.0, value=0.0, step=100.0)
+        vl_ag = st.number_input("VL Arbeitgeber (€):", min_value=0.0, value=0.0, step=10.0)
     with col2:
-        lohnsteuer = st.number_input("Lohnsteuer (€):", min_value=0.0, value=0, step=10.0)
-        vs = st.number_input("Vermögensw. Sparen (€):", min_value=0.0, value=0, step=10.0)
+        lohnsteuer = st.number_input("Lohnsteuer (€):", min_value=0.0, value=0.0, step=10.0)
+        vs = st.number_input("Vermögensw. Sparen (€):", min_value=0.0, value=0.0, step=10.0)
 
 # --- Abschnitt 2 ---
 with st.container(border=True):
     st.header("⛪ 2. Kirchensteuer")
-    kist_satz_input = st.number_input("Kirchensteuersatz (in %):", min_value=0.0, max_value=10.0, value=0, step=1.0)
+    kist_satz_input = st.number_input("Kirchensteuersatz (in %):", min_value=0.0, max_value=10.0, value=0.0, step=1.0)
 
 # --- Abschnitt 3 ---
 with st.container(border=True):
     st.header("📊 3. Beitragsbemessungsgrenzen (BBG)")
     col_bbg1, col_bbg2 = st.columns(2)
     with col_bbg1:
-        bbg_kv_pv = st.number_input("BBG für KV & PV (€):", min_value=0.0, value=0, step=100.0)
+        bbg_kv_pv = st.number_input("BBG für KV & PV (€):", min_value=0.0, value=0.0, step=100.0)
     with col_bbg2:
-        bbg_rv_av = st.number_input("BBG für RV & AV (€):", min_value=0.0, value=0, step=100.0)
+        bbg_rv_av = st.number_input("BBG für RV & AV (€):", min_value=0.0, value=0.0, step=100.0)
 
 # --- Abschnitt 4 ---
 with st.container(border=True):
     st.header("🏥 4. Sozialversicherungen (Arbeitnehmeranteil)")
     col_satz1, col_satz2 = st.columns(2)
     with col_satz1:
-        kv_an_input = st.number_input("Krankenversicherung (%):", min_value=0.0, value=0, step=0.1)
-        rv_an_input = st.number_input("Rentenversicherung (%):", min_value=0.0, value=0, step=0.1)
+        kv_an_input = st.number_input("Krankenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
+        rv_an_input = st.number_input("Rentenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
     with col_satz2:
-        av_an_input = st.number_input("Arbeitslosenversicherung (%):", min_value=0.0, value=0, step=0.1)
-        pv_an_input = st.number_input("Pflegeversicherung (%):", min_value=0.0, value=0, step=0.1)
+        av_an_input = st.number_input("Arbeitslosenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
+        pv_an_input = st.number_input("Pflegeversicherung (%):", min_value=0.0, value=0.0, step=0.1)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
