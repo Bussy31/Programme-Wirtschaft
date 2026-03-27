@@ -1,13 +1,12 @@
 import streamlit as st
 import pandas as pd
-import altair as alt  # NEU für bessere Diagramme
 from fpdf import FPDF
 
 # --- Seiten-Setup ---
 st.set_page_config(page_title="Nutzwertanalyse", layout="wide")
 
 
-# --- PDF GENERATOR FUNKTION (Komplett überarbeitet für detaillierte Rechenwege) ---
+# --- PDF GENERATOR FUNKTION (Neu strukturiert nach Optionen/Blöcken) ---
 def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten, max_punkte):
     pdf = FPDF()
     pdf.add_page()
@@ -22,7 +21,7 @@ def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten, max_punk
 
     # 1. Abschnitt: Finale Ergebnisse
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, txt="1. Gesamtergebnis (Eure Berechnung)", ln=True)
+    pdf.cell(0, 10, txt="1. Gesamtergebnis", ln=True)
     pdf.set_font("Arial", size=12)
     pdf.ln(2)
 
@@ -40,44 +39,49 @@ def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten, max_punk
         pdf.cell(60, 8, txt=f" {echte_nutzwerte[idx]:.2f} Punkte", border=1, align="C")
         pdf.ln()
 
-    pdf.ln(15)
+    pdf.ln(10)
 
-    # 2. Abschnitt: Detaillierter Rechenweg
+    # 2. Abschnitt: Detaillierter Rechenweg pro Option
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, txt="2. Detaillierter Rechenweg (Nachvollziehbarkeit)", ln=True)
-    pdf.ln(3)
+    pdf.ln(2)
 
     # Formel-Erklärung
     pdf.set_font("Arial", 'I', 10)
     pdf.cell(0, 5, txt="Formel pro Kriterium: Rohpunkte * (Gewichtung / 100) = Teilnutzwert", ln=True)
     pdf.ln(5)
 
-    # Durch alle Kriterien iterieren
-    for daten in export_daten:
-        krit_text = daten['kriterium'].encode('latin-1', 'replace').decode('latin-1')
-        gewicht_dezimal = daten['gewicht'] / 100.0
+    # NEU: Wir iterieren jetzt durch die Optionen (Blöcke pro Produkt)
+    for opt_idx, opt_name in enumerate(option_namen):
+        sicherer_name = opt_name.encode('latin-1', 'replace').decode('latin-1')
 
-        # Kriterium Header
-        pdf.set_font("Arial", 'B', 11)
-        pdf.set_fill_color(240, 240, 240)  # Hellgrauer Hintergrund
-        pdf.cell(0, 8, txt=f"Kriterium: {krit_text} (Gewichtung: {daten['gewicht']}%)", ln=True, fill=True)
+        # Header für die jeweilige Option
+        pdf.set_font("Arial", 'B', 12)
+        pdf.set_fill_color(230, 230, 230)  # Hellgrauer Hintergrund für den Block
+        pdf.cell(0, 8, txt=f"Berechnung für: {sicherer_name}", ln=True, fill=True)
         pdf.set_font("Arial", size=10)
         pdf.ln(2)
 
-        # Rechnungen für jede Option innerhalb des Kriteriums
-        total_kriterium_nutzwert = 0
-        for idx, p in enumerate(daten['punkte']):
-            opt_text = option_namen[idx].encode('latin-1', 'replace').decode('latin-1')
+        # Alle Kriterien für diese Option auflisten
+        kontroll_summe = 0.0
+        for daten in export_daten:
+            krit_text = daten['kriterium'].encode('latin-1', 'replace').decode('latin-1')
+            gewicht_dezimal = daten['gewicht'] / 100.0
+            roh_punkte = daten['punkte'][opt_idx]  # Punkte dieser speziellen Option
 
-            # Die eigentliche Rechnung
-            teilnutzwert = p * gewicht_dezimal
-            total_kriterium_nutzwert += teilnutzwert
+            # Die Rechnung
+            teilnutzwert = roh_punkte * gewicht_dezimal
+            kontroll_summe += teilnutzwert
 
-            # Formatierte Zeile: Rohpunkte * Gewichtung = Teilnutzwert
-            rechenweg_txt = f"   -> {opt_text}: {p} * {gewicht_dezimal:.2f} = {teilnutzwert:.2f} Punkte"
+            # Zeile drucken
+            rechenweg_txt = f"   -> {krit_text} ({daten['gewicht']}%): {roh_punkte} Rohpunkte * {gewicht_dezimal:.2f} = {teilnutzwert:.2f} Punkte"
             pdf.cell(0, 6, txt=rechenweg_txt, ln=True)
 
-        pdf.ln(4)  # Abstand zum nächsten Kriterium
+        # Abschließende Summe für den Block
+        pdf.ln(1)
+        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(0, 6, txt=f"   => Summe (Finaler Nutzwert): {kontroll_summe:.2f} Punkte", ln=True)
+        pdf.ln(6)  # Abstand zum nächsten Produkt-Block
 
     return bytes(pdf.output(dest="S").encode("latin-1"))
 
@@ -213,27 +217,14 @@ else:
                     break
 
             if alle_korrekt:
-                # KEINE BALLONS MEHR HIER
                 st.success("🎉 Hervorragend gerechnet! Alle Nutzwerte stimmen. Hier ist das Ergebnis:")
 
-                # Buntes Diagramm mit ALTAIR für bessere Skalierung (startet nicht bei 0)
+                # Zurück zum sicheren Standard-Diagramm (bunt durch color="Optionen")
                 diagramm_daten = pd.DataFrame({
                     "Optionen": option_namen,
                     "Finaler Nutzwert": echte_nutzwerte
                 })
-
-                # Altair Chart Konfiguration:
-                # Wir berechnen den Startpunkt der Y-Achse dynamisch (Min-Wert - ein kleiner Puffer)
-                min_y = max(0, min(echte_nutzwerte) - 0.5)
-                max_y = max(echte_nutzwerte) + 0.5
-
-                chart = alt.Chart(diagramm_daten).mark_bar().encode(
-                    x=alt.X('Optionen', title='Produkte / Optionen'),
-                    y=alt.Y('Finaler Nutzwert', title='Nutzwert (Punkte)', scale=alt.Scale(domain=[min_y, max_y])),
-                    color=alt.Color('Optionen', legend=None)  # Bunt, aber keine extra Legende
-                ).properties(height=400)
-
-                st.altair_chart(chart, use_container_width=True)
+                st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="Optionen")
 
                 st.divider()
 
