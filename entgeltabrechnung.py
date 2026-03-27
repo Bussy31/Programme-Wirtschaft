@@ -1,199 +1,195 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
-import uuid
-import os
 
+# --- Seiten-Setup ---
+st.set_page_config(page_title="Nutzwertanalyse", layout="wide")
 
-# --- HILFSFUNKTION FÜR DEN PDF-EXPORT ---
-def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
-                 kist, kist_satz,
-                 kv_an, kv_satz,
-                 rv_an, rv_satz,
-                 av_an, av_satz,
-                 pv_an, pv_satz,
-                 netto, vs, ueberweisung):
-    pdf = FPDF()
-    pdf.add_page()
-
-    schwarz = (0, 0, 0)
-    dunkelgrau = (100, 100, 100)
-    grau_bg = (240, 240, 240)
-
-    pdf.set_font("helvetica", "B", 18)
-    pdf.set_fill_color(*grau_bg)
-    pdf.cell(0, 15, "Entgeltabrechnung", border=0, ln=True, align="L", fill=True)
-    pdf.ln(5)
-
-    pdf.set_font("helvetica", "B", 11)
-    pdf.cell(130, 8, "Position", border="B")
-    pdf.cell(60, 8, "Betrag", border="B", ln=True, align="R")
-    pdf.ln(2)
-
-    def zeile(pos, betrag, font_style="", font_size=11, text_color=schwarz, border=0, fill=False):
-        pdf.set_font("helvetica", font_style, font_size)
-        pdf.set_text_color(*text_color)
-        if fill:
-            pdf.set_fill_color(*grau_bg)
-        pdf.cell(130, 8, pos, border=border, fill=fill)
-        pdf.cell(60, 8, betrag, border=border, ln=True, align="R", fill=fill)
-
-    zeile("Bruttogehalt", f"{brutto:.2f} EUR")
-    zeile("+ Vermögenswirksame Leistungen (AG)", f"{vl_ag:.2f} EUR")
-
-    zeile("Steuer- / SV-Brutto", f"{st_sv_gehalt:.2f} EUR", font_style="B", border="T", fill=True)
-    pdf.ln(3)
-
-    zeile("Steuern", "", font_style="I", font_size=9, text_color=dunkelgrau)
-    zeile("- Lohnsteuer", f"{lohnsteuer:.2f} EUR")
-    zeile(f"- Kirchensteuer ({kist_satz:g} %)", f"{kist:.2f} EUR")
-    pdf.ln(2)
-
-    zeile("Sozialversicherungsbeiträge (AN-Anteil)", "", font_style="I", font_size=9, text_color=dunkelgrau)
-    zeile(f"- Krankenversicherung ({kv_satz:g} %)", f"{kv_an:.2f} EUR")
-    zeile(f"- Rentenversicherung ({rv_satz:g} %)", f"{rv_an:.2f} EUR")
-    zeile(f"- Arbeitslosenversicherung ({av_satz:g} %)", f"{av_an:.2f} EUR")
-    zeile(f"- Pflegeversicherung ({pv_satz:g} %)", f"{pv_an:.2f} EUR")
-    pdf.ln(3)
-
-    zeile("Nettogehalt", f"{netto:.2f} EUR", font_style="B", border="T", fill=True)
-    pdf.ln(3)
-
-    zeile("- Vermögenswirksames Sparen (VS)", f"{vs:.2f} EUR")
-    pdf.ln(4)
-
-    pdf.set_text_color(0, 0, 0)
-    zeile("Überweisungsbetrag", f"{ueberweisung:.2f} EUR", font_style="B", border=1, fill=True)
-
-    temp_pdf_path = f"temp_loesung_{uuid.uuid4().hex}.pdf"
-    pdf.output(temp_pdf_path)
-
-    # Liest das PDF in den Arbeitsspeicher
-    with open(temp_pdf_path, "rb") as pdf_file:
-        PDFbyte = pdf_file.read()
-
-    # Datei direkt wieder von der Festplatte löschen, um Müll zu vermeiden
-    if os.path.exists(temp_pdf_path):
-        os.remove(temp_pdf_path)
-
-    return PDFbyte
-
-
-# --- STREAMLIT APP ---
-
-st.set_page_config(page_title="Entgeltabrechnung", page_icon="💶", layout="centered")
-
-st.title("💶 Entgeltabrechnung erstellen")
-st.info("""
-**Willkommen!** Fülle das folgende Formular vollständig aus. Nutze die Tastenfeld-Eingabe oder die +/- Buttons.
-Du musst alle Werte, Beitragsbemessungsgrenzen und Beitragssätze komplett eigenständig eintragen. 
+st.title("📊 Nutzwertanalyse")
+st.markdown("""
+Nutze dieses Tool, um eine strukturierte Entscheidung zu treffen. 
+Lege zuerst die Rahmenbedingungen fest, verteile dann die prozentuale Gewichtung und bewerte die Optionen mit den Schiebereglern.
 """)
 
-# --- Abschnitt 1 ---
+# --- 0. Rahmenbedingungen ---
 with st.container(border=True):
-    st.header("🏢 1. Grunddaten")
-    col1, col2 = st.columns(2)
-    with col1:
-        brutto = st.number_input("Bruttogehalt (€):", min_value=0.0, value=0.0, step=100.0)
-        vl_ag = st.number_input("VL Arbeitgeber (€):", min_value=0.0, value=0.0, step=10.0)
-    with col2:
-        lohnsteuer = st.number_input("Lohnsteuer (€):", min_value=0.0, value=0.0, step=10.0)
-        vs = st.number_input("Vermögensw. Sparen (€):", min_value=0.0, value=0.0, step=10.0)
+    st.subheader("1. Rahmenbedingungen & Optionen")
 
-# --- Abschnitt 2 ---
-with st.container(border=True):
-    st.header("⛪ 2. Kirchensteuer")
-    kist_satz_input = st.number_input("Kirchensteuersatz (in %):", min_value=0.0, max_value=10.0, value=0.0, step=1.0)
+    col_setup1, col_setup2 = st.columns(2)
+    with col_setup1:
+        anzahl_optionen = st.number_input("Wie viele Optionen möchtest du vergleichen? (2 bis 5)", min_value=2,
+                                          max_value=5, value=2)
+    with col_setup2:
+        max_punkte = st.number_input("Maximalpunktzahl der Skala (z. B. 5, 10 oder 100):", min_value=1, value=10)
 
-# --- Abschnitt 3 ---
-with st.container(border=True):
-    st.header("📊 3. Beitragsbemessungsgrenzen (BBG)")
-    col_bbg1, col_bbg2 = st.columns(2)
-    with col_bbg1:
-        bbg_kv_pv = st.number_input("BBG für KV & PV (€):", min_value=0.0, value=0.0, step=100.0)
-    with col_bbg2:
-        bbg_rv_av = st.number_input("BBG für RV & AV (€):", min_value=0.0, value=0.0, step=100.0)
+    st.markdown("**Benenne deine Optionen:**")
+    option_namen = []
+    cols_namen = st.columns(anzahl_optionen)
+    for i in range(anzahl_optionen):
+        with cols_namen[i]:
+            name = st.text_input(f"Name Option {i + 1}:", value=f"Option {chr(65 + i)}", max_chars=20)
+            option_namen.append(name)
 
-# --- Abschnitt 4 ---
-with st.container(border=True):
-    st.header("🏥 4. Sozialversicherungen (Arbeitnehmeranteil)")
-    col_satz1, col_satz2 = st.columns(2)
-    with col_satz1:
-        kv_an_input = st.number_input("Krankenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
-        rv_an_input = st.number_input("Rentenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
-    with col_satz2:
-        av_an_input = st.number_input("Arbeitslosenversicherung (%):", min_value=0.0, value=0.0, step=0.1)
-        pv_an_input = st.number_input("Pflegeversicherung (%):", min_value=0.0, value=0.0, step=0.1)
+# --- Session State für dynamische Kriterienanzahl ---
+if 'anzahl_kriterien' not in st.session_state:
+    st.session_state.anzahl_kriterien = 3
 
-st.markdown("<br>", unsafe_allow_html=True)
 
-# Alles wird erst berechnet, wenn dieser Button gedrückt wird
-if st.button("🚀 Entgelt berechnen & Auswerten", type="primary", use_container_width=True):
-    st_sv_gehalt = brutto + vl_ag
+def add_kriterium():
+    st.session_state.anzahl_kriterien += 1
 
-    kist_satz = kist_satz_input / 100
-    kist = lohnsteuer * kist_satz
 
-    basis_kv_pv = min(st_sv_gehalt, bbg_kv_pv) if bbg_kv_pv > 0 else st_sv_gehalt
-    basis_rv_av = min(st_sv_gehalt, bbg_rv_av) if bbg_rv_av > 0 else st_sv_gehalt
+def remove_kriterium():
+    if st.session_state.anzahl_kriterien > 1:
+        st.session_state.anzahl_kriterien -= 1
 
-    kv_an = basis_kv_pv * (kv_an_input / 100)
-    rv_an = basis_rv_av * (rv_an_input / 100)
-    av_an = basis_rv_av * (av_an_input / 100)
-    pv_an = basis_kv_pv * (pv_an_input / 100)
 
-    abzuege_gesamt = lohnsteuer + kist + kv_an + rv_an + av_an + pv_an
-    netto = st_sv_gehalt - abzuege_gesamt
-    ueberweisung = netto - vs
+# --- 1. Kriterien erfassen ---
+st.subheader("2. Kriterien & Bewertung")
+st.markdown("Lege deine Kriterien fest, bestimme ihre Wichtigkeit (in %) und vergib die Rohpunkte.")
 
-    st.markdown("<br>", unsafe_allow_html=True)
+gesamt_gewichtung = 0
+echte_nutzwerte = [0.0] * anzahl_optionen
 
+# Diese Liste sammelt alle Daten für den späteren PDF-Export
+export_daten = []
+
+for i in range(st.session_state.anzahl_kriterien):
     with st.container(border=True):
-        st.header("🎯 Ergebnis deiner Abrechnung")
+        col_krit, col_gew = st.columns([3, 1])
+        with col_krit:
+            krit_name = st.text_input(f"Kriterium {i + 1}:", value=f"Kriterium {i + 1}", key=f"name_{i}")
+        with col_gew:
+            gewicht = st.number_input("Gewichtung (%)", min_value=0, max_value=100, value=0, step=5, key=f"gew_{i}")
+            gesamt_gewichtung += gewicht
 
-        # Einklappbare Tabelle (Expander)
-        with st.expander("📋 Detaillierte Abrechnungstabelle anzeigen", expanded=False):
-            # Wir nutzen hier eine Markdown-Tabelle. Das erlaubt uns, Zwischensummen fett zu machen
-            # und das Design passt sich perfekt an den Hell/Dunkel-Modus von Streamlit an.
-            st.markdown("""
-                            <style>
-                            table {
-                                width: 100%;
-                            }
-                            </style>
-                        """, unsafe_allow_html=True)
-            tabelle_markdown = f"""
-| Position | Betrag (€) |
-| :--- | ---: |
-| Bruttogehalt | {brutto:.2f} |
-| + VL Arbeitgeber | {vl_ag:.2f} |
-| **Steuer- / SV-Brutto** | **{st_sv_gehalt:.2f}** |
-| - Lohnsteuer | -{lohnsteuer:.2f} |
-| - Kirchensteuer ({kist_satz_input:g} %) | -{kist:.2f} |
-| - Krankenversicherung ({kv_an_input:g} %) | -{kv_an:.2f} |
-| - Rentenversicherung ({rv_an_input:g} %) | -{rv_an:.2f} |
-| - Arbeitslosenversicherung ({av_an_input:g} %) | -{av_an:.2f} |
-| - Pflegeversicherung ({pv_an_input:g} %) | -{pv_an:.2f} |
-| **Nettogehalt** | **{netto:.2f}** |
-| - Vermögenswirksames Sparen | -{vs:.2f} |
-| **Überweisungsbetrag** | **{ueberweisung:.2f}** |
-"""
-            st.markdown(tabelle_markdown)
+        st.markdown(f"**Rohpunkte vergeben (1 bis {max_punkte}):**")
 
-        st.divider()
+        cols_slider = st.columns(anzahl_optionen)
+        punkte_aktuell = []  # Sammelt die Punkte dieses Kriteriums für den Export
 
-        pdf_bytes = erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
-                                 kist, kist_satz_input,
-                                 kv_an, kv_an_input,
-                                 rv_an, rv_an_input,
-                                 av_an, av_an_input,
-                                 pv_an, pv_an_input,
-                                 netto, vs, ueberweisung)
+        for opt_idx in range(anzahl_optionen):
+            with cols_slider[opt_idx]:
+                punkte = st.slider(f"{option_namen[opt_idx]}", min_value=1, max_value=max_punkte, value=max_punkte // 2,
+                                   key=f"p_{i}_{opt_idx}")
+                punkte_aktuell.append(punkte)
 
-        st.download_button(
-            label="📥 Entgeltabrechnung als PDF herunterladen",
-            data=pdf_bytes,
-            file_name="Entgeltabrechnung_Ergebnis.pdf",
-            mime="application/pdf",
-            type="primary"
-        )
+                # Hintergrundberechnung
+                echte_nutzwerte[opt_idx] += (gewicht / 100) * punkte
+
+        # Daten für PDF speichern
+        export_daten.append({
+            "kriterium": krit_name,
+            "gewicht": gewicht,
+            "punkte": punkte_aktuell
+        })
+
+# Buttons
+col_btn1, col_btn2 = st.columns(2)
+with col_btn1:
+    st.button("➕ Kriterium hinzufügen", on_click=add_kriterium, use_container_width=True)
+with col_btn2:
+    st.button("➖ Kriterium entfernen", on_click=remove_kriterium, use_container_width=True)
+
+st.divider()
+
+# --- 2. Logik-Check: 100% Gewichtung ---
+st.subheader("3. Gewichtungs-Check")
+
+progress_val = min(gesamt_gewichtung / 100.0, 1.0)
+st.progress(progress_val)
+
+if gesamt_gewichtung < 100:
+    st.warning(f"⏳ Du hast erst **{gesamt_gewichtung} %** verteilt. Es fehlen noch {100 - gesamt_gewichtung} %.")
+elif gesamt_gewichtung > 100:
+    st.error(f"🛑 Achtung! Du hast **{gesamt_gewichtung} %** verteilt. Das sind {gesamt_gewichtung - 100} % zu viel!")
+else:
+    st.success("✅ Perfekt! Du hast exakt 100 % verteilt.")
+
+    # --- 3. Der Schüler-Arbeitsauftrag ---
+    with st.container(border=True):
+        st.subheader("4. Deine Berechnung")
+        st.markdown(f"""
+        Rechne nun die finalen Nutzwerte selbst aus! 
+        *(Rechnung pro Kriterium: Gewichtung als Dezimalzahl × Rohpunkte. Am Ende alles addieren.)*
+        """)
+
+        schueler_eingaben = []
+        cols_erg = st.columns(anzahl_optionen)
+        for opt_idx in range(anzahl_optionen):
+            with cols_erg[opt_idx]:
+                eingabe = st.number_input(f"Ergebnis für {option_namen[opt_idx]}:", min_value=0.0, step=0.1,
+                                          format="%.1f")
+                schueler_eingaben.append(eingabe)
+
+        # --- 4. Auswertung & PDF Export ---
+        if any(eingabe > 0 for eingabe in schueler_eingaben):
+            alle_korrekt = True
+            for opt_idx in range(anzahl_optionen):
+                if abs(schueler_eingaben[opt_idx] - echte_nutzwerte[opt_idx]) >= 0.05:
+                    alle_korrekt = False
+                    break
+
+            if alle_korrekt:
+                st.balloons()
+                st.success("🎉 Hervorragend gerechnet! Alle Nutzwerte stimmen. Hier ist das Ergebnis:")
+
+                # Buntes Diagramm (color="Optionen" sorgt für unterschiedliche Farben)
+                diagramm_daten = pd.DataFrame({
+                    "Optionen": option_namen,
+                    "Finaler Nutzwert": echte_nutzwerte
+                })
+                st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="Optionen")
+
+                st.divider()
+
+
+                # --- PDF GENERATOR ---
+                def generiere_nutzwert_pdf():
+                    pdf = FPDF()
+                    pdf.add_page()
+
+                    # Titel
+                    pdf.set_font("Arial", 'B', 16)
+                    pdf.cell(0, 10, txt="Auswertung: Nutzwertanalyse", ln=True, align="C")
+                    pdf.ln(5)
+
+                    # Optionen & finale Punkte
+                    pdf.set_font("Arial", 'B', 12)
+                    pdf.cell(0, 10, txt="Finale Ergebnisse:", ln=True)
+                    pdf.set_font("Arial", size=11)
+                    for idx, name in enumerate(option_namen):
+                        pdf.cell(0, 7, txt=f"- {name}: {echte_nutzwerte[idx]:.1f} Punkte", ln=True)
+                    pdf.ln(5)
+
+                    # Detailübersicht der Kriterien
+                    pdf.set_font("Arial", 'B', 12)
+                    pdf.cell(0, 10, txt="Bewertungsdetails:", ln=True)
+                    pdf.set_font("Arial", size=10)
+
+                    for daten in export_daten:
+                        # Umlaute sicherheitshalber bereinigen (fpdf mag manchmal keine Sonderzeichen)
+                        krit_text = daten['kriterium'].encode('latin-1', 'replace').decode('latin-1')
+                        pdf.set_font("Arial", 'B', 10)
+                        pdf.cell(0, 7, txt=f"Kriterium: {krit_text} ({daten['gewicht']}%)", ln=True)
+
+                        pdf.set_font("Arial", size=10)
+                        for idx, p in enumerate(daten['punkte']):
+                            opt_text = option_namen[idx].encode('latin-1', 'replace').decode('latin-1')
+                            pdf.cell(0, 6, txt=f"   -> {opt_text}: {p} Rohpunkte", ln=True)
+                        pdf.ln(2)
+
+                    return bytes(pdf.output(dest="S").encode("latin-1"))
+
+
+                # Download Button
+                st.write("Möchtest du deine Ergebnisse für den Unterricht sichern?")
+                st.download_button(
+                    label="📄 Ergebnisse als PDF herunterladen",
+                    data=generiere_nutzwert_pdf(),
+                    file_name="Nutzwertanalyse_Ergebnisse.pdf",
+                    mime="application/pdf"
+                )
+
+            else:
+                st.error("🧐 Das stimmt noch nicht ganz. Überprüfe deine Rechnung bei allen Optionen!")
