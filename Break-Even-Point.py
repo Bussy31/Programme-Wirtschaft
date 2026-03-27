@@ -5,7 +5,7 @@ import altair as alt
 # --- Setup ---
 st.set_page_config(page_title="Profi-Übung: ABC-Analyse", layout="wide")
 
-# --- COPYRIGHT FOOTER (Unten rechts) ---
+# --- COPYRIGHT FOOTER ---
 footer_html = """
 <style>
 .footer {
@@ -21,21 +21,10 @@ footer_html = """
 """
 st.markdown(footer_html, unsafe_allow_html=True)
 
-# CSS für eine perfekte, softe Optik
+# CSS für softe Optik & Buttons
 st.markdown("""
     <style>
-    /* Styling für die einzelnen, zentrierten Spalten-Überschriften */
-    .col-header {
-        font-weight: bold;
-        color: #334155;
-        background-color: #f0f2f6;
-        padding: 8px 5px;
-        border-radius: 6px;
-        text-align: center;
-        margin-bottom: 5px;
-    }
-
-    /* Buttons (+, -, Pfeile) exakt in den Blautönen des Diagramms */
+    /* Buttons (+, -, Pfeile) in den Blautönen des Diagramms */
     button[kind="secondary"] {
         background-color: #e0f2fe !important; 
         color: #0284c7 !important; 
@@ -49,13 +38,19 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Millimetergenaue vertikale Ausrichtung der Rang-Zahlen */
+    /* Millimetergenaue Ausrichtung der Rang-Zahlen an die Textfelder */
     .rang-text {
         font-size: 1.1rem;
         font-weight: 600;
         margin-top: 6px; 
         text-align: center;
         color: #334155;
+    }
+    /* Gleiche Ausrichtung für die Header-Texte */
+    .header-text {
+        font-weight: 700;
+        color: #0f172a;
+        margin-top: 6px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -82,7 +77,6 @@ if 'schueler_liste' not in st.session_state:
         {'id': 4, 'Artikel': 'Kugelschreiber', 'Menge': 500, 'Preis': 1.0},
     ]
 
-
 def move_item(index, direction):
     liste = st.session_state.schueler_liste
     if direction == 'up' and index > 0:
@@ -90,7 +84,6 @@ def move_item(index, direction):
     elif direction == 'down' and index < len(liste) - 1:
         liste[index], liste[index + 1] = liste[index + 1], liste[index]
     st.session_state.schueler_liste = liste
-
 
 def add_item():
     neue_id = max([item['id'] for item in st.session_state.schueler_liste], default=0) + 1
@@ -102,16 +95,23 @@ def add_item():
     })
 
 # --- ZENTRALES SPALTEN-VERHÄLTNIS ---
-# Das garantiert, dass Überschrift und Felder immer 100% synchron sind!
-COL_RATIOS = [0.5, 1.5, 1, 1, 1.5, 0.7, 0.7, 0.7, 1]
+# Das garantiert, dass Überschrift und Felder zu 100% synchron sind!
+COL_RATIOS = [0.6, 1.8, 0.9, 0.9, 1.1, 0.9, 0.9, 0.9, 1.0]
 
-# --- 3. HEADER-ZEILE (Jetzt mit echten Streamlit-Spalten) ---
-header_cols = st.columns(COL_RATIOS)
-headers = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (€)", "Anteil %", "Kum. %", "Klasse", "Aktion"]
-
-for col, title in zip(header_cols, headers):
-    with col:
-        st.markdown(f"<div class='col-header'>{title}</div>", unsafe_allow_html=True)
+# --- 3. KUGELSICHERE HEADER-ZEILE ---
+# Wir nutzen exakt denselben Container mit Rahmen wie für die Zeilen,
+# damit das Padding identisch ist!
+with st.container(border=True):
+    h_cols = st.columns(COL_RATIOS)
+    h_cols[0].markdown("<div class='header-text' style='text-align: center;'>Rang</div>", unsafe_allow_html=True)
+    h_cols[1].markdown("<div class='header-text'>Artikel</div>", unsafe_allow_html=True)
+    h_cols[2].markdown("<div class='header-text'>Menge</div>", unsafe_allow_html=True)
+    h_cols[3].markdown("<div class='header-text'>Preis</div>", unsafe_allow_html=True)
+    h_cols[4].markdown("<div class='header-text'>Umsatz (€)</div>", unsafe_allow_html=True)
+    h_cols[5].markdown("<div class='header-text'>Anteil %</div>", unsafe_allow_html=True)
+    h_cols[6].markdown("<div class='header-text'>Kum. %</div>", unsafe_allow_html=True)
+    h_cols[7].markdown("<div class='header-text'>Klasse</div>", unsafe_allow_html=True)
+    h_cols[8].markdown("<div class='header-text' style='text-align: center;'>Aktion</div>", unsafe_allow_html=True)
 
 # --- 4. ZEILEN DER TABELLE ---
 current_list = st.session_state.schueler_liste
@@ -121,7 +121,6 @@ live_kumuliert = 0.0
 
 for i, item in enumerate(current_list):
     with st.container(border=True):
-        # Wir übergeben hier exakt dasselbe Verhältnis wie oben!
         cols = st.columns(COL_RATIOS)
 
         with cols[0]:
@@ -212,9 +211,8 @@ chart_data = pd.DataFrame({
     "Kumulierter Umsatz (%)": kumuliert_live
 })
 
-# Farben für das Diagramm
-bar_color = "#93c5fd"  # Hellblau
-line_color = "#0284c7"  # Dunkelblau
+bar_color = "#93c5fd"
+line_color = "#0284c7"
 
 base = alt.Chart(chart_data).encode(
     x=alt.X("Artikel:N", sort=None, title="Artikel (nach Rang)")
