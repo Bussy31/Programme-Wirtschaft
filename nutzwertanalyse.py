@@ -112,7 +112,9 @@ with st.container(border=True):
     cols_namen = st.columns(anzahl_optionen)
     for i in range(anzahl_optionen):
         with cols_namen[i]:
-            name = st.text_input(f"Name Option {i + 1}:", value=f"Option {chr(65 + i)}", max_chars=20)
+            # FIX: Fester Key für die Namensfelder
+            name = st.text_input(f"Name Option {i + 1}:", value=f"Option {chr(65 + i)}", max_chars=20,
+                                 key=f"opt_name_{i}")
             option_namen.append(name)
 
 # --- Session State für dynamische Kriterienanzahl ---
@@ -154,7 +156,6 @@ for i in range(st.session_state.anzahl_kriterien):
 
         for opt_idx in range(anzahl_optionen):
             with cols_slider[opt_idx]:
-                # Wieder schön schlicht ohne Extra-Box
                 punkte = st.slider(f"{option_namen[opt_idx]}", min_value=1, max_value=max_punkte, value=max_punkte // 2,
                                    key=f"p_{i}_{opt_idx}")
                 punkte_aktuell.append(punkte)
@@ -203,8 +204,9 @@ else:
         cols_erg = st.columns(anzahl_optionen)
         for opt_idx in range(anzahl_optionen):
             with cols_erg[opt_idx]:
+                # FIX: Fester Key "erg_eingabe_{opt_idx}", damit der Wert beim Ändern des Namens erhalten bleibt!
                 eingabe = st.number_input(f"Ergebnis für {option_namen[opt_idx]}:", min_value=0.0, step=0.01,
-                                          format="%.2f")
+                                          format="%.2f", key=f"erg_eingabe_{opt_idx}")
                 schueler_eingaben.append(eingabe)
 
         # --- 4. Auswertung & PDF Export ---
@@ -218,7 +220,7 @@ else:
             if alle_korrekt:
                 st.success("🎉 Hervorragend gerechnet! Alle Nutzwerte stimmen. Hier ist das Ergebnis:")
 
-                # Buntes Diagramm mit doppelter Höhe
+                # Buntes Diagramm
                 diagramm_daten = pd.DataFrame({
                     "Optionen": option_namen,
                     "Finaler Nutzwert": echte_nutzwerte
