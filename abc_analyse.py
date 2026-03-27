@@ -14,7 +14,7 @@ st.markdown("""
         border-radius: 5px;
         margin-bottom: 10px;
     }
-    /* Entfernt die Rahmen NUR von den kleinen Hoch/Runter-Pfeilen (Secondary Buttons) */
+    /* Entfernt die Rahmen NUR von den kleinen Hoch/Runter-Pfeilen */
     button[kind="secondary"] {
         border: none !important;
         background: transparent !important;
@@ -31,7 +31,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("📦 Interaktive ABC-Analyse")
-st.markdown("Passe Menge und Preis an, sortiere die Artikel per Pfeil und lege die Klassengrenzen fest.")
+st.markdown(
+    "Passe Menge und Preis an, sortiere die Artikel per Pfeil, berechne die Werte und lege die Klassengrenzen fest.")
 
 # --- 1. EINSTELLUNGEN (Grenzwerte selbst festlegen) ---
 with st.sidebar:
@@ -68,11 +69,12 @@ st.markdown("""
         <div style="display: flex; justify-content: space-between;">
             <span style="width: 5%;">Rang</span>
             <span style="width: 15%;">Artikel</span>
-            <span style="width: 10%;">Menge</span>
-            <span style="width: 10%;">Preis/Stk.</span>
+            <span style="width: 8%;">Menge</span>
+            <span style="width: 8%;">Preis</span>
             <span style="width: 12%;">Umsatz (€)</span>
-            <span style="width: 12%;">Anteil %</span>
-            <span style="width: 12%;">Kum. %</span>
+            <span style="width: 10%;">Anteil %</span>
+            <span style="width: 10%;">Kum. %</span>
+            <span style="width: 10%;">Klasse</span>
             <span style="width: 10%;">Aktion</span>
         </div>
     </div>
@@ -81,13 +83,14 @@ st.markdown("""
 # --- 4. ZEILEN (Horizontal nebeneinander) ---
 current_list = st.session_state.schueler_liste
 
-# Gesamtwert vorab berechnen, damit wir die Beispielrechnung in den Feldern live vorbefüllen können
+# Gesamtwert vorab berechnen, damit wir die Beispielrechnung vorbefüllen können
 gesamt_umsatz_live = sum(item['Menge'] * item['Preis'] for item in current_list)
 live_kumuliert = 0.0
 
 for i, item in enumerate(current_list):
     with st.container():
-        cols = st.columns([0.5, 1.5, 1, 1, 1.2, 1.2, 1.2, 1])
+        # 9 Spalten für die neue "Klasse" Ansicht
+        cols = st.columns([0.5, 1.5, 0.8, 0.8, 1.2, 1, 1, 1, 1])
 
         with cols[0]:  # Rang
             st.markdown(f"**{i + 1}.**")
@@ -109,6 +112,17 @@ for i, item in enumerate(current_list):
         b_anteil = (b_umsatz / gesamt_umsatz_live * 100) if gesamt_umsatz_live > 0 else 0.0
         live_kumuliert += b_anteil
 
+        # Automatische Klassen-Vorwahl für das Beispiel
+        if live_kumuliert <= grenze_a + 0.01:
+            vorauswahl_klasse = "A"
+        elif live_kumuliert <= grenze_b + 0.01:
+            vorauswahl_klasse = "B"
+        else:
+            vorauswahl_klasse = "C"
+
+        auswahl_optionen = ["-", "A", "B", "C"]
+        vorauswahl_index = auswahl_optionen.index(vorauswahl_klasse)
+
         with cols[4]:  # Umsatz (Vorbefüllt)
             st.number_input("Umsatz", value=b_umsatz, key=f"ums_{item['id']}", label_visibility="collapsed", step=1.0)
 
@@ -120,7 +134,11 @@ for i, item in enumerate(current_list):
             st.number_input("Kumul.", value=live_kumuliert, key=f"kum_{item['id']}", label_visibility="collapsed",
                             step=0.01, format="%.2f")
 
-        with cols[7]:  # Aktion (Rahmenlose Pfeile wie in der Pro-Version)
+        with cols[7]:  # NEU: Klasse (Dropdown, Vorbefüllt)
+            st.selectbox("Klasse", options=auswahl_optionen, index=vorauswahl_index, key=f"kl_{item['id']}",
+                         label_visibility="collapsed")
+
+        with cols[8]:  # Aktion (Rahmenlose Pfeile)
             c_up, c_down = st.columns(2)
             if c_up.button("↑", key=f"up_{item['id']}", disabled=(i == 0)):
                 move_item(i, 'up')
@@ -130,10 +148,8 @@ for i, item in enumerate(current_list):
                 st.rerun()
     st.divider()
 
-# --- 5. AUSWERTUNG ---
-# Durch type="primary" heben wir den Button hervor und er wird vom CSS oben ignoriert
+# --- 5. AUSWERTUNG & DIAGRAMM ---
 if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
-    # Lösung berechnen
     sol_df = pd.DataFrame(current_list)
     sol_df['Echter_Umsatz'] = sol_df['Menge'] * sol_df['Preis']
 
@@ -145,24 +161,52 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
         st.error(
             "❌ Die Reihenfolge stimmt noch nicht. Der Artikel mit dem höchsten Umsatz muss auf Rang 1! (Benutze die Pfeile zum Sortieren)")
     else:
-        # Check 2: Rechenwerte
         fehler = False
-        kum_check = 0
+        kum_check = 0.0
+        kumulierte_werte_fuer_chart = [0.0]  # Für das Diagramm
+
+        # Check 2: Rechenwerte & Klasse
         for i, item in enumerate(current_list):
             u_ist = item['Menge'] * item['Preis']
             a_ist = (u_ist / gesamt_umsatz_live) * 100
             kum_check += a_ist
+            kumulierte_werte_fuer_chart.append(kum_check)
+
+            # Richtige Klasse ermitteln
+            if kum_check <= grenze_a + 0.01:
+                korrekt_klasse = "A"
+            elif kum_check <= grenze_b + 0.01:
+                korrekt_klasse = "B"
+            else:
+                korrekt_klasse = "C"
 
             u_schueler = st.session_state.get(f"ums_{item['id']}", 0.0)
             a_schueler = st.session_state.get(f"ant_{item['id']}", 0.0)
             k_schueler = st.session_state.get(f"kum_{item['id']}", 0.0)
+            klasse_schueler = st.session_state.get(f"kl_{item['id']}", "-")
 
-            if abs(u_schueler - u_ist) > 1 or abs(a_schueler - a_ist) > 0.5 or abs(k_schueler - kum_check) > 0.5:
+            if abs(u_schueler - u_ist) > 1.0 or abs(a_schueler - a_ist) > 0.51 or abs(k_schueler - kum_check) > 0.51:
                 st.error(f"❌ Rechenfehler bei Rang {i + 1} ({item['Artikel']}).")
                 fehler = True
                 break
 
+            if klasse_schueler != korrekt_klasse:
+                st.error(f"❌ Falsche Klasse (A, B oder C) bei Rang {i + 1} ({item['Artikel']}).")
+                fehler = True
+                break
+
         if not fehler:
-            st.success(f"✅ Alles korrekt! Die Klassifizierung lautet: "
-                       f"A bis {grenze_a}%, B bis {grenze_b}%, C bis {grenze_c}%.")
+            st.success(
+                f"✅ Alles korrekt! Die Klassifizierung lautet: A bis {grenze_a}%, B bis {grenze_b}%, C bis {grenze_c}%. Hier ist deine Lorenz-Kurve:")
             st.balloons()
+
+            # --- LORENZ-KURVE ZEICHNEN ---
+            anzahl_artikel = len(current_list)
+            artikel_prozent_schritte = [0.0] + [((j + 1) / anzahl_artikel) * 100 for j in range(anzahl_artikel)]
+
+            chart_data = pd.DataFrame({
+                "Anteil der Artikel (%)": artikel_prozent_schritte,
+                "Kumulierter Umsatz (%)": kumulierte_werte_fuer_chart
+            }).set_index("Anteil der Artikel (%)")
+
+            st.line_chart(chart_data, y="Kumulierter Umsatz (%)", height=400)
