@@ -89,7 +89,7 @@ live_kumuliert = 0.0
 
 for i, item in enumerate(current_list):
     with st.container():
-        # 9 Spalten für die neue "Klasse" Ansicht
+        # 9 Spalten für die "Klasse" Ansicht
         cols = st.columns([0.5, 1.5, 0.8, 0.8, 1.2, 1, 1, 1, 1])
 
         with cols[0]:  # Rang
@@ -134,7 +134,7 @@ for i, item in enumerate(current_list):
             st.number_input("Kumul.", value=live_kumuliert, key=f"kum_{item['id']}", label_visibility="collapsed",
                             step=0.01, format="%.2f")
 
-        with cols[7]:  # NEU: Klasse (Dropdown, Vorbefüllt)
+        with cols[7]:  # Klasse (Dropdown, Vorbefüllt)
             st.selectbox("Klasse", options=auswahl_optionen, index=vorauswahl_index, key=f"kl_{item['id']}",
                          label_visibility="collapsed")
 
@@ -163,14 +163,18 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
     else:
         fehler = False
         kum_check = 0.0
-        kumulierte_werte_fuer_chart = [0.0]  # Für das Diagramm
+        kumulierte_werte_fuer_chart = [0.0]  # Startwert bei 0%
+        artikel_namen_fuer_chart = ["Start"]  # Startpunkt auf der x-Achse
 
         # Check 2: Rechenwerte & Klasse
         for i, item in enumerate(current_list):
             u_ist = item['Menge'] * item['Preis']
             a_ist = (u_ist / gesamt_umsatz_live) * 100
             kum_check += a_ist
+
+            # Werte für das Diagramm sammeln
             kumulierte_werte_fuer_chart.append(kum_check)
+            artikel_namen_fuer_chart.append(item['Artikel'])
 
             # Richtige Klasse ermitteln
             if kum_check <= grenze_a + 0.01:
@@ -185,8 +189,9 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
             k_schueler = st.session_state.get(f"kum_{item['id']}", 0.0)
             klasse_schueler = st.session_state.get(f"kl_{item['id']}", "-")
 
-            if abs(u_schueler - u_ist) > 1.0 or abs(a_schueler - a_ist) > 0.51 or abs(k_schueler - kum_check) > 0.51:
-                st.error(f"❌ Rechenfehler bei Rang {i + 1} ({item['Artikel']}).")
+            # NEUE TOLERANZEN: 0.5 Euro bei Umsatz, 0.05% bei Anteilen
+            if abs(u_schueler - u_ist) > 0.5 or abs(a_schueler - a_ist) > 0.05 or abs(k_schueler - kum_check) > 0.05:
+                st.error(f"❌ Rechenfehler bei Rang {i + 1} ({item['Artikel']}). (Toleranz: ±0,05 % bzw. ±0,50 €)")
                 fehler = True
                 break
 
@@ -200,13 +205,10 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
                 f"✅ Alles korrekt! Die Klassifizierung lautet: A bis {grenze_a}%, B bis {grenze_b}%, C bis {grenze_c}%. Hier ist deine Lorenz-Kurve:")
             st.balloons()
 
-            # --- LORENZ-KURVE ZEICHNEN ---
-            anzahl_artikel = len(current_list)
-            artikel_prozent_schritte = [0.0] + [((j + 1) / anzahl_artikel) * 100 for j in range(anzahl_artikel)]
-
+            # --- LORENZ-KURVE ZEICHNEN (Neue x-Achse) ---
             chart_data = pd.DataFrame({
-                "Anteil der Artikel (%)": artikel_prozent_schritte,
+                "Artikel": artikel_namen_fuer_chart,
                 "Kumulierter Umsatz (%)": kumulierte_werte_fuer_chart
-            }).set_index("Anteil der Artikel (%)")
+            }).set_index("Artikel")
 
             st.line_chart(chart_data, y="Kumulierter Umsatz (%)", height=400)
