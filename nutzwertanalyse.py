@@ -154,10 +154,9 @@ for i in range(st.session_state.anzahl_kriterien):
 
         for opt_idx in range(anzahl_optionen):
             with cols_slider[opt_idx]:
-                # NEU: Die Schieberegler sind jetzt zur besseren Abgrenzung in eigenen Boxen
-                with st.container(border=True):
-                    punkte = st.slider(f"{option_namen[opt_idx]}", min_value=1, max_value=max_punkte,
-                                       value=max_punkte // 2, key=f"p_{i}_{opt_idx}")
+                # Wieder schön schlicht ohne Extra-Box
+                punkte = st.slider(f"{option_namen[opt_idx]}", min_value=1, max_value=max_punkte, value=max_punkte // 2,
+                                   key=f"p_{i}_{opt_idx}")
                 punkte_aktuell.append(punkte)
 
                 # Hintergrundberechnung
@@ -219,7 +218,7 @@ else:
             if alle_korrekt:
                 st.success("🎉 Hervorragend gerechnet! Alle Nutzwerte stimmen. Hier ist das Ergebnis:")
 
-                # Buntes Diagramm, jetzt mit doppelter Höhe (height=700 statt Standard)
+                # Buntes Diagramm mit doppelter Höhe
                 diagramm_daten = pd.DataFrame({
                     "Optionen": option_namen,
                     "Finaler Nutzwert": echte_nutzwerte
