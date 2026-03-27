@@ -182,7 +182,7 @@ else:
                     return bytes(pdf.output(dest="S").encode("latin-1"))
 
 
-                # Download Button
+                # Download Button -
                 st.write("Möchtest du deine Ergebnisse für den Unterricht sichern?")
                 st.download_button(
                     label="📄 Ergebnisse als PDF herunterladen",
