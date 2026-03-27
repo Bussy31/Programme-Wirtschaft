@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
-import tempfile
+import uuid
+import os
 
 
 # --- HILFSFUNKTION FÜR DEN PDF-EXPORT ---
@@ -64,12 +65,18 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
     pdf.set_text_color(0, 0, 0)
     zeile("Überweisungsbetrag", f"{ueberweisung:.2f} EUR", font_style="B", border=1, fill=True)
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        pdf.output(tmp.name)
-        tmp.seek(0)
-        pdf_bytes = tmp.read()
+    temp_pdf_path = f"temp_loesung_{uuid.uuid4().hex}.pdf"
+    pdf.output(temp_pdf_path)
 
-    return pdf_bytes
+    # Liest das PDF in den Arbeitsspeicher
+    with open(temp_pdf_path, "rb") as pdf_file:
+        PDFbyte = pdf_file.read()
+
+    # Datei direkt wieder von der Festplatte löschen, um Müll zu vermeiden
+    if os.path.exists(temp_pdf_path):
+        os.remove(temp_pdf_path)
+
+    return PDFbyte
 
 
 # --- STREAMLIT APP ---
