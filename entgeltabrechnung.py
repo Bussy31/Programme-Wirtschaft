@@ -74,7 +74,7 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
 
 # --- STREAMLIT APP ---
 
-st.set_page_config(page_title="Gehaltsabrechnung interaktiv", page_icon="💶", layout="centered")
+st.set_page_config(page_title="Entgeltabrechnung", page_icon="💶", layout="centered")
 
 st.title("💶 Gehaltsabrechnung erstellen")
 st.info("""
