@@ -128,18 +128,21 @@ for i, item in enumerate(current_list):
         auswahl_optionen = ["-", "A", "B", "C"]
         vorauswahl_index = auswahl_optionen.index(vorauswahl_klasse)
 
-        # WICHTIG: Wir speichern die aktuellen Eingaben der SuS in der Liste ab, um sie direkt ans Live-Diagramm zu schicken
         with cols[4]:
             item['eingabe_ums'] = st.number_input("Umsatz", value=b_umsatz, key=f"ums_{item['id']}",
                                                   label_visibility="collapsed", step=1.0)
 
         with cols[5]:
+            # NEU: max_value=100.0 hinzugefügt
             item['eingabe_ant'] = st.number_input("Anteil", value=b_anteil, key=f"ant_{item['id']}",
-                                                  label_visibility="collapsed", step=0.01, format="%.2f")
+                                                  label_visibility="collapsed", step=0.01, format="%.2f",
+                                                  max_value=100.0)
 
         with cols[6]:
+            # NEU: max_value=100.5 hinzugefügt
             item['eingabe_kum'] = st.number_input("Kumul.", value=live_kumuliert, key=f"kum_{item['id']}",
-                                                  label_visibility="collapsed", step=0.01, format="%.2f")
+                                                  label_visibility="collapsed", step=0.01, format="%.2f",
+                                                  max_value=100.5)
 
         with cols[7]:
             item['eingabe_kl'] = st.selectbox("Klasse", options=auswahl_optionen, index=vorauswahl_index,
@@ -155,11 +158,9 @@ for i, item in enumerate(current_list):
                 st.rerun()
     st.divider()
 
-# --- 5. NEU: ZENTRIERTE & GERAHMTE BUTTONS (+ / -) ---
-# Durch border=True entsteht ein schöner Rahmen, die Spalten zentrieren die Buttons
+# --- 5. ZENTRIERTE & GERAHMTE BUTTONS (+ / -) ---
+# Überschrift "Tabelle anpassen" wurde entfernt für einen sauberen Look
 with st.container(border=True):
-    st.markdown("<h4 style='text-align: center; margin-top: 0;'>Tabelle anpassen</h4>", unsafe_allow_html=True)
-
     # 4 Spalten, wobei die äußeren beiden als Platzhalter dienen, um die mittleren zu zentrieren
     col_space1, col_add, col_remove, col_space2 = st.columns([1, 2, 2, 1])
 
@@ -172,14 +173,13 @@ with st.container(border=True):
             st.session_state.schueler_liste.pop()
             st.rerun()
 
-st.write("")  # Kleiner Abstand zum Diagramm
+st.write("")
 
 # --- 6. LIVE-DIAGRAMM (Immer sichtbar) ---
 st.subheader("📊 Live-Pareto-Diagramm deiner Eingaben")
 st.info(
     "Dieses Diagramm baut sich aus deinen eingegebenen Werten oben auf. Achte darauf, dass die Linie stetig steigt!")
 
-# Diagramm-Daten direkt aus den Schüler-Eingaben ziehen
 artikel_namen_live = [f"{i + 1}. {item['Artikel']}" for i, item in enumerate(current_list)]
 anteil_einzeln_live = [round(item['eingabe_ant'], 2) for item in current_list]
 kumuliert_live = [round(item['eingabe_kum'], 2) for item in current_list]
@@ -236,7 +236,6 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
             else:
                 korrekt_klasse = "C"
 
-            # Wir holen die Schüler-Eingaben direkt aus unserer Variablen-Speicherung oben
             u_schueler = item['eingabe_ums']
             a_schueler = item['eingabe_ant']
             k_schueler = item['eingabe_kum']
