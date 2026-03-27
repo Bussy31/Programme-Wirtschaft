@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
+import plotly.graph_objects as go
 
-# --- Setup ---
-st.set_page_config(page_title="Profi-Übung: ABC-Analyse", layout="wide")
+# --- Seitenkonfiguration ---
+st.set_page_config(page_title="Break-Even-Point Simulator", layout="wide")
 
-# --- COPYRIGHT FOOTER ---
+# --- COPYRIGHT FOOTER (Unten rechts) ---
 footer_html = """
 <style>
 .footer {
@@ -21,261 +21,115 @@ footer_html = """
 """
 st.markdown(footer_html, unsafe_allow_html=True)
 
-# CSS für softe Optik & Buttons
+# --- Titel und Einleitung ---
+st.title("📈 Break-Even-Point Simulator")
 st.markdown("""
-    <style>
-    /* Buttons (+, -, Pfeile) in den Blautönen des Diagramms */
-    button[kind="secondary"] {
-        background-color: #e0f2fe !important; 
-        color: #0284c7 !important; 
-        border: none !important; 
-        border-radius: 6px !important;
-        font-weight: 500 !important;
-        transition: all 0.2s ease-in-out;
-    }
-    button[kind="secondary"]:hover {
-        background-color: #93c5fd !important; 
-        color: #ffffff !important;
-    }
+Willkommen im Simulator! Hier kannst du ausprobieren, ab welcher Verkaufsmenge ein Unternehmen Gewinn macht. 
+Verändere die Parameter in der Seitenleiste und beobachte, wie sich die Gewinnschwelle verschiebt.
+""")
 
-    /* Millimetergenaue Ausrichtung der Rang-Zahlen an die Textfelder */
-    .rang-text {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-top: 6px; 
-        text-align: center;
-        color: #334155;
-    }
-    /* Gleiche Ausrichtung für die Header-Texte */
-    .header-text {
-        font-weight: 700;
-        color: #0f172a;
-        margin-top: 6px;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# --- Seitenleiste (Eingabefelder) ---
+st.sidebar.header("⚙️ Basis-Stellschrauben")
 
-st.title("📦 Interaktive ABC-Analyse")
-st.markdown("Passe Menge und Preis an, berechne die Anteile und beobachte, wie sich dein Live-Diagramm aufbaut!")
+fixkosten = st.sidebar.number_input("Fixkosten (in €)", min_value=0.0, value=5000.0, step=1000.0)
+var_kosten = st.sidebar.number_input("Variable Kosten je Stück (in €)", min_value=0.0, value=15.0, step=1.0)
+preis = st.sidebar.number_input("Regulärer Verkaufspreis je Stück (in €)", min_value=0.0, value=25.0, step=1.0)
 
-# --- 1. EINSTELLUNGEN ---
-with st.sidebar:
-    st.header("⚙️ Klassengrenzen")
-    st.info("Lege fest, bis zu wie viel Prozent der kumulierte Umsatz für die jeweilige Klasse geht.")
-    grenze_a = st.slider("A-Güter bis (%)", 0, 100, 80)
-    grenze_b = st.slider("B-Güter bis (%)", grenze_a, 100, 95)
-    grenze_c = st.slider("C-Güter bis (%)", grenze_b, 100, 100)
-    st.write(f"Klassen: A (0-{grenze_a}%), B ({grenze_a}-{grenze_b}%), C ({grenze_b}-{grenze_c}%)")
+st.sidebar.markdown("---")
 
-# --- 2. DATEN & SESSION STATE ---
-if 'schueler_liste' not in st.session_state:
-    st.session_state.schueler_liste = [
-        {'id': 3, 'Artikel': 'Schreibtisch Premium', 'Menge': 5, 'Preis': 1200.0},
-        {'id': 5, 'Artikel': 'Bürostuhl', 'Menge': 15, 'Preis': 300.0},
-        {'id': 2, 'Artikel': 'Toner Schwarz', 'Menge': 10, 'Preis': 80.0},
-        {'id': 1, 'Artikel': 'Druckerpapier', 'Menge': 100, 'Preis': 5.0},
-        {'id': 4, 'Artikel': 'Kugelschreiber', 'Menge': 500, 'Preis': 1.0},
-    ]
+# --- Erweiterte Optionen ---
+st.sidebar.header("🚀 Erweiterte Optionen")
+rabatt = st.sidebar.slider("Kundenrabatt (in %)", min_value=0, max_value=100, value=0, step=1)
+zielgewinn = st.sidebar.number_input("Wunsch-Zielgewinn (in €)", min_value=0.0, value=0.0, step=1000.0)
 
-def move_item(index, direction):
-    liste = st.session_state.schueler_liste
-    if direction == 'up' and index > 0:
-        liste[index], liste[index - 1] = liste[index - 1], liste[index]
-    elif direction == 'down' and index < len(liste) - 1:
-        liste[index], liste[index + 1] = liste[index + 1], liste[index]
-    st.session_state.schueler_liste = liste
+st.sidebar.markdown("---")
 
-def add_item():
-    neue_id = max([item['id'] for item in st.session_state.schueler_liste], default=0) + 1
-    st.session_state.schueler_liste.append({
-        'id': neue_id,
-        'Artikel': 'Neuer Artikel',
-        'Menge': 0,
-        'Preis': 0.0
+# NEU: number_input statt slider, damit keine Grenze mehr existiert!
+max_menge = st.sidebar.number_input("Betrachtete Maximalmenge (Kapazitätsgrenze)", min_value=100, value=1000, step=100)
+
+# --- Berechnungen (BWL Logik) ---
+# Rabatt abziehen
+effektiver_preis = preis * (1 - (rabatt / 100))
+deckungsbeitrag = effektiver_preis - var_kosten
+
+# Wir prüfen, ob überhaupt ein Gewinn möglich ist
+if deckungsbeitrag > 0:
+    # Break-Even-Berechnung (Gewinn = 0)
+    bep_menge = fixkosten / deckungsbeitrag
+    bep_umsatz = bep_menge * effektiver_preis
+
+    # Zielgewinn-Berechnung
+    ziel_menge = (fixkosten + zielgewinn) / deckungsbeitrag
+    ziel_umsatz = ziel_menge * effektiver_preis
+
+    # --- Kennzahlen (KPIs) anzeigen ---
+    st.markdown("### 📊 Deine Ergebnisse")
+
+    # Optischer Hinweis, wenn Rabatt gewährt wird
+    if rabatt > 0:
+        st.info(
+            f"💡 **Rabatt aktiv!** Der tatsächliche Verkaufspreis sinkt auf **{effektiver_preis:.2f} €**. Dadurch schrumpft der Deckungsbeitrag!")
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Effektiver DB je Stück", f"{deckungsbeitrag:.2f} €")
+    col2.metric("Break-Even-Menge", f"{bep_menge:.0f} Stück")
+
+    if zielgewinn > 0:
+        col3.metric("Menge für Zielgewinn", f"{ziel_menge:.0f} Stück")
+    else:
+        col3.metric("Break-Even-Umsatz", f"{bep_umsatz:.2f} €")
+
+    # --- Daten für das Diagramm generieren ---
+    # Wir passen die Schrittweite dynamisch an, damit das Programm bei riesigen Zahlen (z.B. 1 Million) nicht abstürzt
+    schrittweite = max(1, int(max_menge // 50))
+    mengen = list(range(0, int(max_menge) + 1, schrittweite))
+
+    df = pd.DataFrame({
+        "Menge": mengen,
+        "Umsatz": [m * effektiver_preis for m in mengen],
+        "Gesamtkosten": [fixkosten + (m * var_kosten) for m in mengen],
+        "Fixkosten": [fixkosten for m in mengen]
     })
 
-# --- ZENTRALES SPALTEN-VERHÄLTNIS ---
-# Das garantiert, dass Überschrift und Felder zu 100% synchron sind!
-COL_RATIOS = [0.6, 1.8, 0.9, 0.9, 1.1, 0.9, 0.9, 0.9, 1.0]
+    # --- Interaktives Diagramm mit Plotly ---
+    fig = go.Figure()
 
-# --- 3. KUGELSICHERE HEADER-ZEILE ---
-# Wir nutzen exakt denselben Container mit Rahmen wie für die Zeilen,
-# damit das Padding identisch ist!
-with st.container(border=True):
-    h_cols = st.columns(COL_RATIOS)
-    h_cols[0].markdown("<div class='header-text' style='text-align: center;'>Rang</div>", unsafe_allow_html=True)
-    h_cols[1].markdown("<div class='header-text'>Artikel</div>", unsafe_allow_html=True)
-    h_cols[2].markdown("<div class='header-text'>Menge</div>", unsafe_allow_html=True)
-    h_cols[3].markdown("<div class='header-text'>Preis</div>", unsafe_allow_html=True)
-    h_cols[4].markdown("<div class='header-text'>Umsatz (€)</div>", unsafe_allow_html=True)
-    h_cols[5].markdown("<div class='header-text'>Anteil %</div>", unsafe_allow_html=True)
-    h_cols[6].markdown("<div class='header-text'>Kum. %</div>", unsafe_allow_html=True)
-    h_cols[7].markdown("<div class='header-text'>Klasse</div>", unsafe_allow_html=True)
-    h_cols[8].markdown("<div class='header-text' style='text-align: center;'>Aktion</div>", unsafe_allow_html=True)
+    # Umsatzlinie (Grün)
+    fig.add_trace(go.Scatter(x=df["Menge"], y=df["Umsatz"], mode='lines', name='Umsatz (inkl. Rabatt)',
+                             line=dict(color='green', width=3)))
 
-# --- 4. ZEILEN DER TABELLE ---
-current_list = st.session_state.schueler_liste
+    # Gesamtkostenlinie (Rot)
+    fig.add_trace(go.Scatter(x=df["Menge"], y=df["Gesamtkosten"], mode='lines', name='Gesamtkosten',
+                             line=dict(color='red', width=3)))
 
-gesamt_umsatz_live = sum(item['Menge'] * item['Preis'] for item in current_list)
-live_kumuliert = 0.0
+    # Fixkostenlinie (Grau, gestrichelt)
+    fig.add_trace(go.Scatter(x=df["Menge"], y=df["Fixkosten"], mode='lines', name='Fixkosten',
+                             line=dict(color='gray', dash='dash')))
 
-for i, item in enumerate(current_list):
-    with st.container(border=True):
-        cols = st.columns(COL_RATIOS)
+    # Break-Even-Point als Punkt markieren
+    if bep_menge <= max_menge:
+        fig.add_trace(go.Scatter(x=[bep_menge], y=[bep_umsatz], mode='markers', name='Break-Even-Point (Gewinn=0)',
+                                 marker=dict(color='black', size=14, symbol='x')))
 
-        with cols[0]:
-            st.markdown(f"<div class='rang-text'>{i + 1}.</div>", unsafe_allow_html=True)
+    # Zielgewinn als Punkt markieren (falls angegeben)
+    if zielgewinn > 0 and ziel_menge <= max_menge:
+        fig.add_trace(
+            go.Scatter(x=[ziel_menge], y=[ziel_umsatz], mode='markers', name=f'Zielgewinn erreicht (+{zielgewinn} €)',
+                       marker=dict(color='gold', size=16, symbol='star', line=dict(color='black', width=1))))
 
-        with cols[1]:
-            item['Artikel'] = st.text_input("Artikel", value=item['Artikel'], key=f"art_{item['id']}",
-                                            label_visibility="collapsed")
+    # Layout des Diagramms anpassen
+    fig.update_layout(
+        title="Umsatz- und Kostenverlauf",
+        xaxis_title="Menge (Stück)",
+        yaxis_title="Betrag (in €)",
+        hovermode="x unified",
+        template="plotly_white",
+        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)  # Legende nach links oben verschieben
+    )
 
-        with cols[2]:
-            item['Menge'] = st.number_input("Menge", value=int(item['Menge']), key=f"men_{item['id']}",
-                                            label_visibility="collapsed", step=1)
+    st.plotly_chart(fig, use_container_width=True)
 
-        with cols[3]:
-            item['Preis'] = st.number_input("Preis", value=float(item['Preis']), key=f"pre_{item['id']}",
-                                            label_visibility="collapsed", step=0.5)
-
-        b_umsatz = float(item['Menge'] * item['Preis'])
-        b_anteil = (b_umsatz / gesamt_umsatz_live * 100) if gesamt_umsatz_live > 0 else 0.0
-        live_kumuliert += b_anteil
-
-        if live_kumuliert <= grenze_a + 0.01:
-            vorauswahl_klasse = "A"
-        elif live_kumuliert <= grenze_b + 0.01:
-            vorauswahl_klasse = "B"
-        else:
-            vorauswahl_klasse = "C"
-
-        auswahl_optionen = ["-", "A", "B", "C"]
-        vorauswahl_index = auswahl_optionen.index(vorauswahl_klasse)
-
-        with cols[4]:
-            item['eingabe_ums'] = st.number_input("Umsatz", value=b_umsatz, key=f"ums_{item['id']}",
-                                                  label_visibility="collapsed", step=1.0)
-
-        with cols[5]:
-            item['eingabe_ant'] = st.number_input("Anteil", value=b_anteil, key=f"ant_{item['id']}",
-                                                  label_visibility="collapsed", step=0.01, format="%.2f",
-                                                  max_value=100.0)
-
-        with cols[6]:
-            item['eingabe_kum'] = st.number_input("Kumul.", value=live_kumuliert, key=f"kum_{item['id']}",
-                                                  label_visibility="collapsed", step=0.01, format="%.2f",
-                                                  max_value=100.5)
-
-        with cols[7]:
-            item['eingabe_kl'] = st.selectbox("Klasse", options=auswahl_optionen, index=vorauswahl_index,
-                                              key=f"kl_{item['id']}", label_visibility="collapsed")
-
-        with cols[8]:
-            c_up, c_down = st.columns(2)
-            if c_up.button("↑", key=f"up_{item['id']}", disabled=(i == 0)):
-                move_item(i, 'up')
-                st.rerun()
-            if c_down.button("↓", key=f"down_{item['id']}", disabled=(i == len(current_list) - 1)):
-                move_item(i, 'down')
-                st.rerun()
-
-# --- 5. BUTTONS (+ / -) ---
-st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-
-col_space1, col_add, col_remove, col_space2 = st.columns([1.5, 2, 2, 1.5])
-
-with col_add:
-    if st.button("➕ Weiteren Artikel hinzufügen", use_container_width=True):
-        add_item()
-        st.rerun()
-
-with col_remove:
-    if st.button("➖ Letzten Artikel entfernen", use_container_width=True, disabled=(len(current_list) <= 1)):
-        st.session_state.schueler_liste.pop()
-        st.rerun()
-
-st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
-
-# --- 6. LIVE-DIAGRAMM ---
-st.subheader("📊 Live-Pareto-Diagramm deiner Eingaben")
-st.info(
-    "Dieses Diagramm baut sich aus deinen eingegebenen Werten oben auf. Achte darauf, dass die Linie stetig steigt!")
-
-artikel_namen_live = [f"{i + 1}. {item['Artikel']}" for i, item in enumerate(current_list)]
-anteil_einzeln_live = [round(item['eingabe_ant'], 2) for item in current_list]
-kumuliert_live = [round(item['eingabe_kum'], 2) for item in current_list]
-
-chart_data = pd.DataFrame({
-    "Artikel": artikel_namen_live,
-    "Anteil einzeln (%)": anteil_einzeln_live,
-    "Kumulierter Umsatz (%)": kumuliert_live
-})
-
-bar_color = "#93c5fd"
-line_color = "#0284c7"
-
-base = alt.Chart(chart_data).encode(
-    x=alt.X("Artikel:N", sort=None, title="Artikel (nach Rang)")
-)
-
-bars = base.mark_bar(color=bar_color, size=40, opacity=0.8).encode(
-    y=alt.Y("Anteil einzeln (%):Q", scale=alt.Scale(domain=[0, 100]), title="Prozent (%)"),
-    tooltip=[alt.Tooltip("Artikel:N"), alt.Tooltip("Anteil einzeln (%):Q", format=".2f")]
-)
-
-line = base.mark_line(color=line_color, point=True, strokeWidth=3).encode(
-    y=alt.Y("Kumulierter Umsatz (%):Q"),
-    tooltip=[alt.Tooltip("Artikel:N"), alt.Tooltip("Kumulierter Umsatz (%):Q", format=".2f")]
-)
-
-combo_chart = alt.layer(bars, line).properties(height=400)
-st.altair_chart(combo_chart, use_container_width=True)
-
-# --- 7. AUSWERTUNG GANZ UNTEN ---
-st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-
-if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
-    sol_df = pd.DataFrame(current_list)
-    sol_df['Echter_Umsatz'] = sol_df['Menge'] * sol_df['Preis']
-
-    is_sorted = all(
-        sol_df['Echter_Umsatz'].iloc[j] >= sol_df['Echter_Umsatz'].iloc[j + 1] for j in range(len(sol_df) - 1))
-
-    if not is_sorted:
-        st.error(
-            "❌ Die Reihenfolge stimmt noch nicht. Der Artikel mit dem höchsten Umsatz muss auf Rang 1! (Benutze die Pfeile zum Sortieren)")
-    else:
-        fehler = False
-        kum_check = 0.0
-
-        for i, item in enumerate(current_list):
-            u_ist = item['Menge'] * item['Preis']
-            a_ist = (u_ist / gesamt_umsatz_live * 100) if gesamt_umsatz_live > 0 else 0.0
-            kum_check += a_ist
-
-            if kum_check <= grenze_a + 0.01:
-                korrekt_klasse = "A"
-            elif kum_check <= grenze_b + 0.01:
-                korrekt_klasse = "B"
-            else:
-                korrekt_klasse = "C"
-
-            u_schueler = item['eingabe_ums']
-            a_schueler = item['eingabe_ant']
-            k_schueler = item['eingabe_kum']
-            klasse_schueler = item['eingabe_kl']
-
-            if abs(u_schueler - u_ist) > 0.5 or abs(a_schueler - a_ist) > 0.05 or abs(k_schueler - kum_check) > 0.05:
-                st.error(f"❌ Rechenfehler bei Rang {i + 1} ({item['Artikel']}). (Toleranz: ±0,05 % bzw. ±0,50 €)")
-                fehler = True
-                break
-
-            if klasse_schueler != korrekt_klasse:
-                st.error(f"❌ Falsche Klasse (A, B oder C) bei Rang {i + 1} ({item['Artikel']}).")
-                fehler = True
-                break
-
-        if not fehler:
-            st.success(
-                f"✅ Alles korrekt! Deine Klassifizierung ist perfekt berechnet und die Lorenz-Kurve ist stimmig.")
-            st.balloons()
+else:
+    # Warnung, falls Preis (nach Rabatt) < Variable Kosten
+    st.error(
+        f"⚠️ **Achtung:** Durch den Rabatt sinkt der Preis auf {effektiver_preis:.2f} €. Dieser liegt unterhalb oder genau auf den variablen Kosten ({var_kosten:.2f} €). Ein Gewinn ist mathematisch unmöglich!")
