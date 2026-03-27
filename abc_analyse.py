@@ -1,34 +1,44 @@
 import streamlit as st
 import pandas as pd
 
-# --- Seiten-Setup ---
-st.set_page_config(page_title="Übung: ABC-Sortierung", layout="wide")
+# --- Setup ---
+st.set_page_config(page_title="Profi-Übung: ABC-Analyse", layout="wide")
 
-st.title("📦 Übung: Die ABC-Analyse - Sortierung")
+# CSS für eine bessere Optik der "Header-Zeile"
 st.markdown("""
-**Deine Aufgabe:** Sortiere die untenstehenden Artikel-Kacheln. 
-Bringe sie in die korrekte Reihenfolge für die ABC-Analyse (der Artikel mit dem **höchsten Gesamtwert** muss ganz nach oben).
-Nutze die Pfeil-Tasten `⬆️` und `⬇️` an den Kacheln, um sie zu verschieben.
-""")
+    <style>
+    .header-row {
+        font-weight: bold;
+        background-color: #f0f2f6;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-st.divider()
+st.title("📦 Interaktive ABC-Analyse")
+st.markdown("Berechne die Werte, sortiere die Artikel per Pfeil und lege die Klassengrenzen fest.")
 
-# --- 1. DATENBASIS & LOGIK (Im Session State, damit Sortierung bleibt) ---
+# --- 1. EINSTELLUNGEN (Grenzwerte selbst festlegen) ---
+with st.sidebar:
+    st.header("⚙️ Klassengrenzen")
+    st.info("Lege fest, bis zu wie viel Prozent der kumulierte Umsatz für die jeweilige Klasse geht.")
+    grenze_a = st.slider("A-Güter bis (%)", 0, 100, 80)
+    grenze_b = st.slider("B-Güter bis (%)", grenze_a, 100, 95)
+    st.write(f"C-Güter: ab {grenze_b}% bis 100%")
 
-# Ausgangsdaten (Unsortiert)
+# --- 2. DATEN & SESSION STATE ---
 if 'schueler_liste' not in st.session_state:
-    raw_data = [
+    st.session_state.schueler_liste = [
         {'id': 1, 'Artikel': 'Druckerpapier', 'Menge': 100, 'Preis': 5},
         {'id': 2, 'Artikel': 'Toner Schwarz', 'Menge': 10, 'Preis': 80},
         {'id': 3, 'Artikel': 'Schreibtisch Premium', 'Menge': 5, 'Preis': 1200},
         {'id': 4, 'Artikel': 'Kugelschreiber', 'Menge': 500, 'Preis': 1},
         {'id': 5, 'Artikel': 'Bürostuhl', 'Menge': 15, 'Preis': 300},
     ]
-    # WICHTIG: Wir berechnen den Wert NICHT vor, das sollen die SuS machen.
-    st.session_state.schueler_liste = raw_data
 
 
-# Funktion zum Tauschen von Elementen in der Liste
 def move_item(index, direction):
     liste = st.session_state.schueler_liste
     if direction == 'up' and index > 0:
@@ -38,92 +48,93 @@ def move_item(index, direction):
     st.session_state.schueler_liste = liste
 
 
-# --- 2. DARSTELLUNG ALS KACHELN (Tabellenfrei) ---
+# --- 3. HEADER-ZEILE (Horizontal) ---
+st.markdown("""
+    <div class="header-row">
+        <div style="display: flex; justify-content: space-between;">
+            <span style="width: 5%;">Rang</span>
+            <span style="width: 15%;">Artikel</span>
+            <span style="width: 8%;">Menge</span>
+            <span style="width: 10%;">Preis/Stk.</span>
+            <span style="width: 12%;">Umsatz (€)</span>
+            <span style="width: 12%;">Anteil %</span>
+            <span style="width: 12%;">Kum. Anteil %</span>
+            <span style="width: 10%;">Aktion</span>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
-st.subheader("Aktuelle Reihenfolge (deine Sortierung):")
-
+# --- 4. KACHELN (Horizontal nebeneinander) ---
 current_list = st.session_state.schueler_liste
+gesamt_umsatz_ueberpruefung = sum(item['Menge'] * item['Preis'] for item in current_list)
 
-# Wir iterieren durch die Liste und bauen für jeden Artikel eine Kachel
 for i, item in enumerate(current_list):
-    # Jede Kachel bekommt einen eigenen Container mit Rahmen
     with st.container(border=True):
-        # Spalten-Layout innerhalb der Kachel: [Pfeile, Info, Platzhalter für Schüler-Rechnung]
-        col_pfeile, col_info, col_rechnung = st.columns([1, 4, 3])
+        # Wir nutzen 8 Spalten für deine gewünschten Werte
+        cols = st.columns([0.5, 1.5, 1, 1, 1.5, 1.5, 1.5, 1])
 
-        # Spalte 1: Die Sortier-Pfeile
-        with col_pfeile:
-            st.write(" ")  # Ein bisschen Platz nach oben
-            # Oben-Pfeil (deaktiviert beim ersten Element)
-            if st.button("⬆️", key=f"up_{item['id']}", disabled=(i == 0), use_container_width=True):
+        with cols[0]:  # Rang
+            st.markdown(f"**{i + 1}.**")
+
+        with cols[1]:  # Artikel
+            st.markdown(f"**{item['Artikel']}**")
+
+        with cols[2]:  # Menge
+            st.markdown(f"{item['Menge']}")
+
+        with cols[3]:  # Preis
+            st.markdown(f"{item['Preis']} €")
+
+        with cols[4]:  # Umsatz (Eingabe)
+            st.number_input("Umsatz", key=f"ums_{item['id']}", label_visibility="collapsed", step=1.0)
+
+        with cols[5]:  # Anteil % (Eingabe)
+            st.number_input("Anteil", key=f"ant_{item['id']}", label_visibility="collapsed", step=0.01, format="%.2f")
+
+        with cols[6]:  # Kumulierter Anteil % (Eingabe)
+            st.number_input("Kumul.", key=f"kum_{item['id']}", label_visibility="collapsed", step=0.01, format="%.2f")
+
+        with cols[7]:  # Aktion (Pfeile)
+            c_up, c_down = st.columns(2)
+            if c_up.button("⬆️", key=f"up_{item['id']}", disabled=(i == 0)):
                 move_item(i, 'up')
-                st.rerun()  # Seite neu laden, um Sortierung zu zeigen
-
-            # Unten-Pfeil (deaktiviert beim letzten Element)
-            if st.button("⬇️", key=f"down_{item['id']}", disabled=(i == len(current_list) - 1),
-                         use_container_width=True):
+                st.rerun()
+            if c_down.button("⬇️", key=f"down_{item['id']}", disabled=(i == len(current_list) - 1)):
                 move_item(i, 'down')
                 st.rerun()
 
-        # Spalte 2: Artikel-Informationen (Fett und groß)
-        with col_info:
-            st.markdown(f"### Pos. {i + 1}: **{item['Artikel']}**")
-            st.markdown(f"Menge: **{item['Menge']}** Stück")
-            st.markdown(f"Preis: **{item['Preis']} €** / Stück")
-
-        # Spalte 3: Hier muss der Schüler rechnen
-        with col_rechnung:
-            st.write(" ")
-            # Ein Eingabefeld für den Gesamtwert, den der Schüler ausrechnen muss
-            st.number_input(f"Berechneter Gesamtwert (€)", min_value=0.0, step=1.0, key=f"wert_eingabe_{item['id']}")
-            st.caption("Rechne: Menge * Preis")
-
+# --- 5. AUSWERTUNG ---
 st.divider()
+if st.button("Analyse final prüfen", use_container_width=True):
+    # Lösung berechnen
+    sol_df = pd.DataFrame(current_list)
+    sol_df['Echter_Umsatz'] = sol_df['Menge'] * sol_df['Preis']
 
+    # Check 1: Sortierung (Umsatz absteigend)
+    is_sorted = all(
+        sol_df['Echter_Umsatz'].iloc[j] >= sol_df['Echter_Umsatz'].iloc[j + 1] for j in range(len(sol_df) - 1))
 
-# --- 3. DIE LÖSUNG (Hintergrund-Berechnung zum Vergleich) ---
-@st.cache_data  # Cache, damit wir nicht jedes Mal neu rechnen müssen
-def get_solution():
-    sol_df = pd.DataFrame([
-        {'Artikel': 'Druckerpapier', 'Menge': 100, 'Preis': 5},
-        {'Artikel': 'Toner Schwarz', 'Menge': 10, 'Preis': 80},
-        {'Artikel': 'Schreibtisch Premium', 'Menge': 5, 'Preis': 1200},
-        {'Artikel': 'Kugelschreiber', 'Menge': 500, 'Preis': 1},
-        {'Artikel': 'Bürostuhl', 'Menge': 15, 'Preis': 300},
-    ])
-    sol_df['Echter_Wert'] = sol_df['Menge'] * sol_df['Preis']
-    # Richtig sortieren
-    sol_df_sorted = sol_df.sort_values(by='Echter_Wert', ascending=False).reset_index(drop=True)
-    return sol_df_sorted
+    if not is_sorted:
+        st.error("❌ Die Reihenfolge stimmt noch nicht. Der Artikel mit dem höchsten Umsatz muss auf Rang 1!")
+    else:
+        # Check 2: Rechenwerte
+        fehler = False
+        kum_check = 0
+        for i, item in enumerate(current_list):
+            u_ist = item['Menge'] * item['Preis']
+            a_ist = (u_ist / gesamt_umsatz_ueberpruefung) * 100
+            kum_check += a_ist
 
+            u_schueler = st.session_state.get(f"ums_{item['id']}", 0.0)
+            a_schueler = st.session_state.get(f"ant_{item['id']}", 0.0)
+            k_schueler = st.session_state.get(f"kum_{item['id']}", 0.0)
 
-solution_df = get_solution()
+            if abs(u_schueler - u_ist) > 1 or abs(a_schueler - a_ist) > 0.5 or abs(k_schueler - kum_check) > 0.5:
+                st.error(f"❌ Rechenfehler bei Rang {i + 1} ({item['Artikel']}).")
+                fehler = True
+                break
 
-# --- 4. PRÜFUNG ---
-if st.button("Sortierung und Werte prüfen", use_container_width=True):
-    alles_richtig = True
-
-    # Gehe die aktuelle Schüler-Liste durch und vergleiche mit der Lösung
-    for i, item in enumerate(current_list):
-        # 1. Check: Artikel-Reihenfolge
-        richtiger_artikel_hier = solution_df.loc[i, 'Artikel']
-        if item['Artikel'] != richtiger_artikel_hier:
-            st.error(
-                f"Fehler an Position {i + 1}: Hier sollte nicht '{item['Artikel']}' stehen. Überprüfe den Gesamtwert!")
-            alles_richtig = False
-            break  # Sobald ein Sortierfehler da ist, brechen wir ab
-
-        # 2. Check: Berechneter Wert (aus dem Session State holen via Key)
-        schueler_wert = st.session_state.get(f"wert_eingabe_{item['id']}", 0.0)
-        echter_wert = solution_df.loc[i, 'Echter_Wert']
-
-        if abs(schueler_wert - echter_wert) > 0.1:
-            st.error(f"Fehler bei '{item['Artikel']}': Dein berechneter Gesamtwert ({schueler_wert} €) ist falsch.")
-            alles_richtig = False
-            break
-
-    if alles_richtig:
-        st.balloons()
-        st.success("🎉 Hervorragend! Du hast alle Artikel korrekt berechnet und in die richtige Reihenfolge gebracht.")
-        st.write(
-            "Jetzt bist du bereit für den nächsten Schritt: Die Berechnung der kumulierten Anteile und die Klassifizierung (A, B, C).")
+        if not fehler:
+            st.success(f"✅ Alles korrekt! Die Klassifizierung lautet: "
+                       f"A bis {grenze_a}%, B bis {grenze_b}%, Rest C.")
+            st.balloons()
