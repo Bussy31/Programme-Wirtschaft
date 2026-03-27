@@ -5,6 +5,50 @@ from fpdf import FPDF
 # --- Seiten-Setup ---
 st.set_page_config(page_title="Nutzwertanalyse", layout="wide")
 
+
+# --- PDF GENERATOR FUNKTION (Jetzt sauber ganz oben ausgelagert) ---
+def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten):
+    pdf = FPDF()
+    pdf.add_page()
+
+    # Titel
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, txt="Auswertung: Nutzwertanalyse", ln=True, align="C")
+    pdf.ln(5)
+
+    # Optionen & finale Punkte
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, txt="Finale Ergebnisse:", ln=True)
+    pdf.set_font("Arial", size=11)
+    for idx, name in enumerate(option_namen):
+        # Text für PDF bereinigen, falls Sonderzeichen drin sind
+        sicherer_name = name.encode('latin-1', 'replace').decode('latin-1')
+        pdf.cell(0, 7, txt=f"- {sicherer_name}: {echte_nutzwerte[idx]:.1f} Punkte", ln=True)
+    pdf.ln(5)
+
+    # Detailübersicht der Kriterien
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, txt="Bewertungsdetails:", ln=True)
+    pdf.set_font("Arial", size=10)
+
+    for daten in export_daten:
+        krit_text = daten['kriterium'].encode('latin-1', 'replace').decode('latin-1')
+        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(0, 7, txt=f"Kriterium: {krit_text} ({daten['gewicht']}%)", ln=True)
+
+        pdf.set_font("Arial", size=10)
+        for idx, p in enumerate(daten['punkte']):
+            opt_text = option_namen[idx].encode('latin-1', 'replace').decode('latin-1')
+            pdf.cell(0, 6, txt=f"   -> {opt_text}: {p} Rohpunkte", ln=True)
+        pdf.ln(2)
+
+    return bytes(pdf.output(dest="S").encode("latin-1"))
+
+
+# ==========================================
+# --- START DER APP ---
+# ==========================================
+
 st.title("📊 Nutzwertanalyse")
 st.markdown("""
 Nutze dieses Tool, um eine strukturierte Entscheidung zu treffen. 
@@ -134,7 +178,7 @@ else:
                 st.balloons()
                 st.success("🎉 Hervorragend gerechnet! Alle Nutzwerte stimmen. Hier ist das Ergebnis:")
 
-                # Buntes Diagramm (color="Optionen" sorgt für unterschiedliche Farben)
+                # Buntes Diagramm
                 diagramm_daten = pd.DataFrame({
                     "Optionen": option_namen,
                     "Finaler Nutzwert": echte_nutzwerte
@@ -143,50 +187,11 @@ else:
 
                 st.divider()
 
-
-                # --- PDF GENERATOR ---
-                def generiere_nutzwert_pdf():
-                    pdf = FPDF()
-                    pdf.add_page()
-
-                    # Titel
-                    pdf.set_font("Arial", 'B', 16)
-                    pdf.cell(0, 10, txt="Auswertung: Nutzwertanalyse", ln=True, align="C")
-                    pdf.ln(5)
-
-                    # Optionen & finale Punkte
-                    pdf.set_font("Arial", 'B', 12)
-                    pdf.cell(0, 10, txt="Finale Ergebnisse:", ln=True)
-                    pdf.set_font("Arial", size=11)
-                    for idx, name in enumerate(option_namen):
-                        pdf.cell(0, 7, txt=f"- {name}: {echte_nutzwerte[idx]:.1f} Punkte", ln=True)
-                    pdf.ln(5)
-
-                    # Detailübersicht der Kriterien
-                    pdf.set_font("Arial", 'B', 12)
-                    pdf.cell(0, 10, txt="Bewertungsdetails:", ln=True)
-                    pdf.set_font("Arial", size=10)
-
-                    for daten in export_daten:
-                        # Umlaute sicherheitshalber bereinigen (fpdf mag manchmal keine Sonderzeichen)
-                        krit_text = daten['kriterium'].encode('latin-1', 'replace').decode('latin-1')
-                        pdf.set_font("Arial", 'B', 10)
-                        pdf.cell(0, 7, txt=f"Kriterium: {krit_text} ({daten['gewicht']}%)", ln=True)
-
-                        pdf.set_font("Arial", size=10)
-                        for idx, p in enumerate(daten['punkte']):
-                            opt_text = option_namen[idx].encode('latin-1', 'replace').decode('latin-1')
-                            pdf.cell(0, 6, txt=f"   -> {opt_text}: {p} Rohpunkte", ln=True)
-                        pdf.ln(2)
-
-                    return bytes(pdf.output(dest="S").encode("latin-1"))
-
-
-                # Download Button -
+                # Download Button erscheint hier!
                 st.write("Möchtest du deine Ergebnisse für den Unterricht sichern?")
                 st.download_button(
                     label="📄 Ergebnisse als PDF herunterladen",
-                    data=generiere_nutzwert_pdf(),
+                    data=generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten),
                     file_name="Nutzwertanalyse_Ergebnisse.pdf",
                     mime="application/pdf"
                 )
