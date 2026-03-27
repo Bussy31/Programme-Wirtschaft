@@ -214,7 +214,6 @@ else:
         cols_erg = st.columns(anzahl_optionen)
         for opt_idx in range(anzahl_optionen):
             with cols_erg[opt_idx]:
-                # Fester Key "erg_eingabe_{opt_idx}"
                 eingabe = st.number_input(f"Ergebnis für {option_namen[opt_idx]}:", min_value=0.0, step=0.01,
                                           format="%.2f", key=f"erg_eingabe_{opt_idx}")
                 schueler_eingaben.append(eingabe)
@@ -230,12 +229,16 @@ else:
             if alle_korrekt:
                 st.success("🎉 Hervorragend gerechnet! Alle Nutzwerte stimmen. Hier ist das Ergebnis:")
 
+                # --- TRICK: Zwangssortierung für das Diagramm ---
+                # Wir hängen eine unsichtbare Nummerierung an, z.B. "1. Option A", "2. Option B"
+                diagramm_namen = [f"{i + 1}. {name}" for i, name in enumerate(option_namen)]
+
                 # Buntes Diagramm
                 diagramm_daten = pd.DataFrame({
-                    "Optionen": option_namen,
+                    "Optionen": diagramm_namen,
                     "Finaler Nutzwert": echte_nutzwerte
                 })
-                # Das Diagramm wird durch das CSS oben komplett eingefroren
+
                 st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="Optionen", height=700)
 
                 st.divider()
