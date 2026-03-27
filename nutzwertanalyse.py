@@ -5,6 +5,16 @@ from fpdf import FPDF
 # --- Seiten-Setup ---
 st.set_page_config(page_title="Nutzwertanalyse", layout="wide")
 
+# --- CSS HACK: Diagramm starr machen ---
+st.markdown("""
+    <style>
+    /* Blockiert alle Maus-Interaktionen (Zoomen, Klicken, Verschieben) für das Diagramm */
+    [data-testid="stVegaLiteChart"] {
+        pointer-events: none;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 
 # --- PDF GENERATOR FUNKTION ---
 def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten, max_punkte):
@@ -112,7 +122,7 @@ with st.container(border=True):
     cols_namen = st.columns(anzahl_optionen)
     for i in range(anzahl_optionen):
         with cols_namen[i]:
-            # FIX: Fester Key für die Namensfelder
+            # Fester Key für die Namensfelder
             name = st.text_input(f"Name Option {i + 1}:", value=f"Option {chr(65 + i)}", max_chars=20,
                                  key=f"opt_name_{i}")
             option_namen.append(name)
@@ -204,7 +214,7 @@ else:
         cols_erg = st.columns(anzahl_optionen)
         for opt_idx in range(anzahl_optionen):
             with cols_erg[opt_idx]:
-                # FIX: Fester Key "erg_eingabe_{opt_idx}", damit der Wert beim Ändern des Namens erhalten bleibt!
+                # Fester Key "erg_eingabe_{opt_idx}"
                 eingabe = st.number_input(f"Ergebnis für {option_namen[opt_idx]}:", min_value=0.0, step=0.01,
                                           format="%.2f", key=f"erg_eingabe_{opt_idx}")
                 schueler_eingaben.append(eingabe)
@@ -225,6 +235,7 @@ else:
                     "Optionen": option_namen,
                     "Finaler Nutzwert": echte_nutzwerte
                 })
+                # Das Diagramm wird durch das CSS oben komplett eingefroren
                 st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="Optionen", height=700)
 
                 st.divider()
