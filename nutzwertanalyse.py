@@ -214,7 +214,7 @@ else:
         cols_erg = st.columns(anzahl_optionen)
         for opt_idx in range(anzahl_optionen):
             with cols_erg[opt_idx]:
-                eingabe = st.number_input(f"Ergebnis für {option_namen[opt_idx]}:", min_value=0.0, step=0.01,
+                eingabe = st.number_input(f"Ergebnis für {option_namen[opt_idx]}:", min_value=0.0, step=0.05,
                                           format="%.2f", key=f"erg_eingabe_{opt_idx}")
                 schueler_eingaben.append(eingabe)
 
