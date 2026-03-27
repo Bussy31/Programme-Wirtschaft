@@ -7,7 +7,7 @@ import os
 import uuid
 
 # ---  SEITEN-KONFIGURATION  ---
-st.set_page_config(page_title="Buchhaltungstrainer 2026", layout="wide")
+st.set_page_config(page_title="Buchhaltungstrainer", layout="wide")
 
 # --- COPYRIGHT FOOTER (Unten rechts) ---
 footer_html = """
