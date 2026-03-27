@@ -32,7 +32,7 @@ st.markdown("""
 
 st.title("📦 Interaktive ABC-Analyse")
 st.markdown(
-    "Passe Menge und Preis an, sortiere die Artikel per Pfeil, berechne die Werte und lege die Klassengrenzen fest.")
+    "Passe Menge und Preis an, füge neue Artikel hinzu, sortiere sie per Pfeil und lege die Klassengrenzen fest.")
 
 # --- 1. EINSTELLUNGEN ---
 with st.sidebar:
@@ -61,6 +61,16 @@ def move_item(index, direction):
     elif direction == 'down' and index < len(liste) - 1:
         liste[index], liste[index + 1] = liste[index + 1], liste[index]
     st.session_state.schueler_liste = liste
+
+
+def add_item():
+    neue_id = max([item['id'] for item in st.session_state.schueler_liste], default=0) + 1
+    st.session_state.schueler_liste.append({
+        'id': neue_id,
+        'Artikel': 'Neuer Artikel',
+        'Menge': 0,
+        'Preis': 0.0
+    })
 
 
 # --- 3. HEADER-ZEILE ---
@@ -144,6 +154,20 @@ for i, item in enumerate(current_list):
                 st.rerun()
     st.divider()
 
+# NEU: Buttons nebeneinander für Plus und Minus
+col_add, col_remove, _ = st.columns([2, 2, 6])
+with col_add:
+    if st.button("➕ Artikel hinzufügen", use_container_width=True):
+        add_item()
+        st.rerun()
+with col_remove:
+    # Button ist deaktiviert, wenn nur noch 1 Artikel da ist
+    if st.button("➖ Letzte Zeile löschen", use_container_width=True, disabled=(len(current_list) <= 1)):
+        st.session_state.schueler_liste.pop()
+        st.rerun()
+
+st.write("")  # Kleiner Abstand zum Prüfen-Button
+
 # --- 5. AUSWERTUNG & DIAGRAMM ---
 if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
     sol_df = pd.DataFrame(current_list)
@@ -159,20 +183,20 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
         fehler = False
         kum_check = 0.0
 
-        # Listen für das Diagramm
         artikel_namen_fuer_chart = []
         einzel_anteil_fuer_chart = []
         kumulierte_werte_fuer_chart = []
 
         for i, item in enumerate(current_list):
             u_ist = item['Menge'] * item['Preis']
-            a_ist = (u_ist / gesamt_umsatz_live) * 100
+            a_ist = (u_ist / gesamt_umsatz_live * 100) if gesamt_umsatz_live > 0 else 0.0
             kum_check += a_ist
 
-            # Daten für das Diagramm sammeln
             artikel_namen_fuer_chart.append(f"{i + 1}. {item['Artikel']}")
-            einzel_anteil_fuer_chart.append(a_ist)
-            kumulierte_werte_fuer_chart.append(kum_check)
+
+            # NEU: Direkt auf 2 Nachkommastellen runden für das Diagramm
+            einzel_anteil_fuer_chart.append(round(a_ist, 2))
+            kumulierte_werte_fuer_chart.append(round(kum_check, 2))
 
             if kum_check <= grenze_a + 0.01:
                 korrekt_klasse = "A"
@@ -201,29 +225,27 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
                 f"✅ Alles korrekt! Die Klassifizierung lautet: A bis {grenze_a}%, B bis {grenze_b}%, C bis {grenze_c}%. Hier ist dein Pareto-Diagramm:")
             st.balloons()
 
-            # --- STARRES PARETO-DIAGRAMM MIT ALTAIR ---
             chart_data = pd.DataFrame({
                 "Artikel": artikel_namen_fuer_chart,
                 "Anteil einzeln (%)": einzel_anteil_fuer_chart,
                 "Kumulierter Umsatz (%)": kumulierte_werte_fuer_chart
             })
 
-            # Basis für die X-Achse (sort=None behält unsere exakte Rang-Reihenfolge)
             base = alt.Chart(chart_data).encode(
                 x=alt.X("Artikel:N", sort=None, title="Artikel (nach Rang)")
             )
 
-            # Die dicken Balken im Hintergrund (Einzelner Anteil)
+            # NEU: Tooltips hinzugefügt
             bars = base.mark_bar(color="#93c5fd", size=40, opacity=0.8).encode(
-                y=alt.Y("Anteil einzeln (%):Q", scale=alt.Scale(domain=[0, 100]), title="Prozent (%)")
+                y=alt.Y("Anteil einzeln (%):Q", scale=alt.Scale(domain=[0, 100]), title="Prozent (%)"),
+                tooltip=[alt.Tooltip("Artikel:N"), alt.Tooltip("Anteil einzeln (%):Q", format=".2f")]
             )
 
-            # Die klassische Lorenz-Linie darüber (Kumulierter Umsatz)
+            # NEU: Tooltips hinzugefügt
             line = base.mark_line(color="#0284c7", point=True, strokeWidth=3).encode(
-                y=alt.Y("Kumulierter Umsatz (%):Q")
+                y=alt.Y("Kumulierter Umsatz (%):Q"),
+                tooltip=[alt.Tooltip("Artikel:N"), alt.Tooltip("Kumulierter Umsatz (%):Q", format=".2f")]
             )
 
-            # Beides übereinanderlegen (ohne .interactive() -> Diagramm bleibt starr!)
             combo_chart = alt.layer(bars, line).properties(height=400)
-
             st.altair_chart(combo_chart, use_container_width=True)
