@@ -6,94 +6,114 @@ st.set_page_config(page_title="Nutzwertanalyse", layout="centered")
 
 st.title("📊 Nutzwertanalyse")
 st.markdown("""
-Welche Alternative ist die beste? Nutze diese Tabelle, um deine Entscheidung zu strukturieren.
-1. Lege deine **Kriterien** fest.
-2. Bestimme die prozentuale **Gewichtung** (Wie wichtig ist dir das Kriterium?).
-3. Vergib die **Rohpunkte / das Ranking** für jede Option (z. B. auf einer Skala von 1 bis 10, wobei 10 das Beste ist).
-
-**Wichtig:** Die Gewichtung aller Kriterien muss zusammen exakt 100 % ergeben!
+Nutze dieses Tool, um eine strukturierte Entscheidung zu treffen. 
+Verteile die prozentuale Gewichtung und bewerte die Optionen mit den Schiebereglern.
 """)
-st.divider()
 
-# --- 1. Interaktive Tabelle (Data Editor) ---
-st.subheader("1. Daten erfassen")
-
-# Standard-Werte für den Start (können von den Schülern überschrieben/erweitert werden)
-start_daten = pd.DataFrame({
-    "Kriterium": ["Anschaffungspreis", "Qualität", "Lieferzeit", ""],
-    "Gewichtung (%)": [50, 30, 20, 0],
-    "Rohpunkte / Ranking (Option A)": [8, 6, 4, 0],
-    "Rohpunkte / Ranking (Option B)": [5, 9, 8, 0]
-})
-
-# Tabelle anzeigen und bearbeitbar machen (Nutzer können auch Zeilen hinzufügen)
-df_eingabe = st.data_editor(
-    start_daten,
-    num_rows="dynamic",
-    hide_index=True,
-    use_container_width=True
-)
-
-# --- 2. Logik-Check: Ergibt die Gewichtung 100%? ---
-summe_gewichtung = df_eingabe["Gewichtung (%)"].sum()
-
-if summe_gewichtung != 100:
-    st.error(
-        f"⚠️ Achtung: Die Gewichtung liegt aktuell bei **{summe_gewichtung} %**. Sie muss exakt 100 % ergeben, bevor du weiterrechnen kannst.")
-else:
-    st.success("✅ Die Gewichtung ergibt exakt 100 %. Sehr gut! Du kannst jetzt mit der Auswertung beginnen.")
-    st.divider()
-
-    # --- 3. Der Schüler-Arbeitsauftrag (Selber rechnen!) ---
-    st.subheader("2. Nutzwerte berechnen")
-    st.markdown("""
-    Berechne nun den finalen Nutzwert für beide Optionen selbstständig auf deinem Block. 
-    *(Tipp: Gewichtung als Dezimalzahl × vergebene Rohpunkte, z. B. 50 % von 8 Punkten = 0.5 × 8 = 4)*
-
-    Trage deine berechneten Endergebnisse (die Summe aller Teilnutzwerte) hier ein, um die visuelle Auswertung freizuschalten:
-    """)
-
-    # Das Programm berechnet heimlich die echten Werte im Hintergrund
-    # (Gewichtung / 100) * Punkte
-    echter_nutzwert_a = ((df_eingabe["Gewichtung (%)"] / 100) * df_eingabe["Rohpunkte / Ranking (Option A)"]).sum()
-    echter_nutzwert_b = ((df_eingabe["Gewichtung (%)"] / 100) * df_eingabe["Rohpunkte / Ranking (Option B)"]).sum()
-
-    # Eingabefelder für die Schüler
+# --- 1. Optionen benennen ---
+with st.container(border=True):
+    st.subheader("1. Was vergleichen wir?")
     col1, col2 = st.columns(2)
     with col1:
-        schueler_eingabe_a = st.number_input("Dein Ergebnis für Option A:", min_value=0.0, step=0.1, format="%.1f")
+        name_a = st.text_input("Name der 1. Option:", value="Option A", max_chars=20)
     with col2:
-        schueler_eingabe_b = st.number_input("Dein Ergebnis für Option B:", min_value=0.0, step=0.1, format="%.1f")
+        name_b = st.text_input("Name der 2. Option:", value="Option B", max_chars=20)
 
-    # --- 4. Auswertung und Visualisierung (Belohnung) ---
-    # Wir erlauben eine minimale Abweichung (0.05) wegen Rundungsfehlern bei Computern
-    if schueler_eingabe_a > 0 or schueler_eingabe_b > 0:  # Erst prüfen, wenn sie was eingetippt haben
+# --- Session State für dynamische Kriterienanzahl ---
+if 'anzahl_kriterien' not in st.session_state:
+    st.session_state.anzahl_kriterien = 3
 
-        a_korrekt = abs(schueler_eingabe_a - echter_nutzwert_a) < 0.05
-        b_korrekt = abs(schueler_eingabe_b - echter_nutzwert_b) < 0.05
 
-        if a_korrekt and b_korrekt:
-            st.balloons()
-            st.success("🎉 Beide Nutzwerte sind absolut korrekt berechnet! Hier ist deine Auswertung:")
+def add_kriterium():
+    st.session_state.anzahl_kriterien += 1
 
-            # Sieger ermitteln
-            if echter_nutzwert_a > echter_nutzwert_b:
-                sieger = "Option A"
-            elif echter_nutzwert_b > echter_nutzwert_a:
-                sieger = "Option B"
+
+def remove_kriterium():
+    if st.session_state.anzahl_kriterien > 1:
+        st.session_state.anzahl_kriterien -= 1
+
+
+# --- 2. Kriterien erfassen (Die Karten-Ansicht) ---
+st.subheader("2. Kriterien & Bewertung")
+st.markdown("Lege deine Kriterien fest, bestimme ihre Wichtigkeit (in %) und vergib die Rohpunkte von 1 bis 10.")
+
+gesamt_gewichtung = 0
+echter_nutzwert_a = 0.0
+echter_nutzwert_b = 0.0
+
+# Schleife baut für jedes Kriterium eine eigene visuelle Karte (Rahmen)
+for i in range(st.session_state.anzahl_kriterien):
+    with st.container(border=True):
+        col_krit, col_gew = st.columns([3, 1])
+        with col_krit:
+            krit_name = st.text_input(f"Kriterium {i + 1}:", value=f"Kriterium {i + 1}", key=f"name_{i}")
+        with col_gew:
+            gewicht = st.number_input("Gewichtung (%)", min_value=0, max_value=100, value=0, step=5, key=f"gew_{i}")
+            gesamt_gewichtung += gewicht
+
+        st.markdown("**Rohpunkte vergeben:**")
+        col_slider1, col_slider2 = st.columns(2)
+        with col_slider1:
+            punkte_a = st.slider(f"Punkte für {name_a}", min_value=1, max_value=10, value=5, key=f"pa_{i}")
+        with col_slider2:
+            punkte_b = st.slider(f"Punkte für {name_b}", min_value=1, max_value=10, value=5, key=f"pb_{i}")
+
+        # Hintergrundberechnung für dieses Kriterium
+        echter_nutzwert_a += (gewicht / 100) * punkte_a
+        echter_nutzwert_b += (gewicht / 100) * punkte_b
+
+# Buttons zum Hinzufügen/Entfernen von Kriterien
+col_btn1, col_btn2 = st.columns(2)
+with col_btn1:
+    st.button("➕ Kriterium hinzufügen", on_click=add_kriterium, use_container_width=True)
+with col_btn2:
+    st.button("➖ Kriterium entfernen", on_click=remove_kriterium, use_container_width=True)
+
+st.divider()
+
+# --- 3. Logik-Check: 100% Gewichtung ---
+st.subheader("3. Gewichtungs-Check")
+
+# Optischer Fortschrittsbalken
+progress_val = min(gesamt_gewichtung / 100.0, 1.0)
+st.progress(progress_val)
+
+if gesamt_gewichtung < 100:
+    st.warning(f"⏳ Du hast erst **{gesamt_gewichtung} %** verteilt. Es fehlen noch {100 - gesamt_gewichtung} %.")
+elif gesamt_gewichtung > 100:
+    st.error(f"🛑 Achtung! Du hast **{gesamt_gewichtung} %** verteilt. Das sind {gesamt_gewichtung - 100} % zu viel!")
+else:
+    st.success("✅ Perfekt! Du hast exakt 100 % verteilt.")
+
+    # --- 4. Der Schüler-Arbeitsauftrag ---
+    with st.container(border=True):
+        st.subheader("4. Deine Berechnung")
+        st.markdown(f"""
+        Rechne nun die finalen Nutzwerte selbst aus! 
+        *(Rechnung pro Kriterium: Gewichtung als Dezimalzahl × Rohpunkte. Am Ende alles addieren.)*
+        """)
+
+        col_erg1, col_erg2 = st.columns(2)
+        with col_erg1:
+            schueler_eingabe_a = st.number_input(f"Ergebnis für {name_a}:", min_value=0.0, step=0.1, format="%.1f")
+        with col_erg2:
+            schueler_eingabe_b = st.number_input(f"Ergebnis für {name_b}:", min_value=0.0, step=0.1, format="%.1f")
+
+        # --- 5. Auswertung ---
+        if schueler_eingabe_a > 0 or schueler_eingabe_b > 0:
+            a_korrekt = abs(schueler_eingabe_a - echter_nutzwert_a) < 0.05
+            b_korrekt = abs(schueler_eingabe_b - echter_nutzwert_b) < 0.05
+
+            if a_korrekt and b_korrekt:
+                st.balloons()
+                st.success("🎉 Hervorragend gerechnet! Hier ist deine visuelle Auswertung:")
+
+                # Diagramm zeichnen
+                diagramm_daten = pd.DataFrame({
+                    "Optionen": [name_a, name_b],
+                    "Finaler Nutzwert": [echter_nutzwert_a, echter_nutzwert_b]
+                })
+                st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="#2563eb")
+
             else:
-                sieger = "Beide Optionen sind exakt gleich auf (Unentschieden)"
-
-            st.info(f"🏆 **Entscheidungsempfehlung:** {sieger} gewinnt die Nutzwertanalyse!")
-
-            # Diagramm zeichnen
-            diagramm_daten = pd.DataFrame({
-                "Optionen": ["Option A", "Option B"],
-                "Finaler Nutzwert": [echter_nutzwert_a, echter_nutzwert_b]
-            })
-            # Streamlit Bar Chart
-            st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="#2563eb")
-
-        else:
-            st.warning(
-                "🧐 Das stimmt noch nicht ganz. Rechne noch einmal nach! Hast du die prozentuale Gewichtung richtig mit den Rohpunkten multipliziert und am Ende alles addiert?")
+                st.error("🧐 Das stimmt noch nicht ganz. Überprüfe deine Rechnung!")
