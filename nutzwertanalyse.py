@@ -166,7 +166,7 @@ for i in range(st.session_state.anzahl_kriterien):
 
         for opt_idx in range(anzahl_optionen):
             with cols_slider[opt_idx]:
-                punkte = st.slider(f"{option_namen[opt_idx]}", min_value=1, max_value=max_punkte, value=max_punkte // 2,
+                punkte = st.slider(f"{option_namen[opt_idx]}", min_value=0, max_value=max_punkte, value=0,
                                    key=f"p_{i}_{opt_idx}")
                 punkte_aktuell.append(punkte)
 
