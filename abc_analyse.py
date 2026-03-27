@@ -5,7 +5,7 @@ import altair as alt
 # --- Setup ---
 st.set_page_config(page_title="Profi-Übung: ABC-Analyse", layout="wide")
 
-# CSS für eine bessere Optik
+# CSS für eine perfekte, softe Optik
 st.markdown("""
     <style>
     .header-row {
@@ -13,27 +13,31 @@ st.markdown("""
         background-color: #f0f2f6;
         padding: 10px;
         border-radius: 5px;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
     }
+
+    /* Zarte, blaue Färbung für alle Aktions-Buttons (+, -, Pfeile) */
     button[kind="secondary"] {
-        border: none !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        font-size: 1.5rem !important;
+        background-color: #f0f9ff !important;
+        color: #0284c7 !important;
+        border: 1px solid #bae6fd !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease-in-out;
     }
     button[kind="secondary"]:hover {
         background-color: #e0f2fe !important;
-        color: #0284c7 !important;
-        border-radius: 5px;
+        border-color: #7dd3fc !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
     }
-    /* Zentriert den Rang vertikal mit den Eingabefeldern */
-    .rang-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        margin-top: 10px; /* Kleiner Offset für visuelle Mitte */
+
+    /* Millimetergenaue vertikale Ausrichtung der Rang-Zahlen */
+    .rang-text {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-top: 8px; 
+        text-align: center;
+        color: #334155;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -84,7 +88,7 @@ def add_item():
 st.markdown("""
     <div class="header-row">
         <div style="display: flex; justify-content: space-between;">
-            <span style="width: 5%;">Rang</span>
+            <span style="width: 5%; text-align: center;">Rang</span>
             <span style="width: 15%;">Artikel</span>
             <span style="width: 8%;">Menge</span>
             <span style="width: 8%;">Preis</span>
@@ -92,7 +96,7 @@ st.markdown("""
             <span style="width: 10%;">Anteil %</span>
             <span style="width: 10%;">Kum. %</span>
             <span style="width: 10%;">Klasse</span>
-            <span style="width: 10%;">Aktion</span>
+            <span style="width: 10%; text-align: center;">Aktion</span>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -105,12 +109,11 @@ live_kumuliert = 0.0
 
 for i, item in enumerate(current_list):
     with st.container():
-        # Rang-Spalte bekommt CSS-Klasse für vertikale Zentrierung
         cols = st.columns([0.5, 1.5, 0.8, 0.8, 1.2, 1, 1, 1, 1])
 
         with cols[0]:
-            # NEU: Formatiert (größer, fett) und per CSS zentriert
-            st.markdown(f"<div class='rang-container'><h4><b>{i + 1}.</b></h4></div>", unsafe_allow_html=True)
+            # Die Klasse 'rang-text' kümmert sich um die perfekte Ausrichtung
+            st.markdown(f"<div class='rang-text'>{i + 1}.</div>", unsafe_allow_html=True)
 
         with cols[1]:
             item['Artikel'] = st.text_input("Artikel", value=item['Artikel'], key=f"art_{item['id']}",
@@ -164,27 +167,30 @@ for i, item in enumerate(current_list):
             if c_down.button("↓", key=f"down_{item['id']}", disabled=(i == len(current_list) - 1)):
                 move_item(i, 'down')
                 st.rerun()
-    st.divider()
 
-# --- 5. NEU: GETRENNTE & GERAHMTE BUTTONS (+ / -) ---
-# Platzhalter-Spalten außen, um die beiden gerahmten Spalten mittig zu zentrieren
+    # Unsichtbarer Puffer für eine schöne Struktur ohne harte Linien
+    st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+
+# --- 5. GETRENNTE & GERAHMTE BUTTONS (+ / -) ---
+st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+
 col_space1, col_add_frame, col_remove_frame, col_space2 = st.columns([1.5, 2, 2, 1.5])
 
 with col_add_frame:
-    with st.container(border=True):  # Eigener Rahmen für PLUS
+    with st.container(border=True):
         if st.button("➕ Weiteren Artikel hinzufügen", use_container_width=True):
             add_item()
             st.rerun()
 
 with col_remove_frame:
-    with st.container(border=True):  # Eigener Rahmen für MINUS
+    with st.container(border=True):
         if st.button("➖ Letzten Artikel entfernen", use_container_width=True, disabled=(len(current_list) <= 1)):
             st.session_state.schueler_liste.pop()
             st.rerun()
 
-st.write("")
+st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
 
-# --- 6. LIVE-DIAGRAMM (Immer sichtbar) ---
+# --- 6. LIVE-DIAGRAMM ---
 st.subheader("📊 Live-Pareto-Diagramm deiner Eingaben")
 st.info(
     "Dieses Diagramm baut sich aus deinen eingegebenen Werten oben auf. Achte darauf, dass die Linie stetig steigt!")
@@ -217,7 +223,7 @@ combo_chart = alt.layer(bars, line).properties(height=400)
 st.altair_chart(combo_chart, use_container_width=True)
 
 # --- 7. AUSWERTUNG GANZ UNTEN ---
-st.divider()
+st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
 if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
     sol_df = pd.DataFrame(current_list)
