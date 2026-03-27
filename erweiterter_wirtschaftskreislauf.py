@@ -26,10 +26,10 @@ col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.subheader("1. Haushalte & Staat")
-    h_s = st.selectbox("Haushalte ➔ Staat (Geldstrom):", optionen, key="hs")
-    s_h = st.selectbox("Staat ➔ Haushalte (Geldstrom):", optionen, key="sh")
-    u_s = st.selectbox("Unternehmen ➔ Staat (Geldstrom):", optionen, key="us")
-    s_u = st.selectbox("Staat ➔ Unternehmen (Geldstrom):", optionen, key="su")
+    h_s = st.selectbox("Haushalte ➔ Staat:", optionen, key="hs")
+    s_h = st.selectbox("Staat ➔ Haushalte:", optionen, key="sh")
+    u_s = st.selectbox("Unternehmen ➔ Staat:", optionen, key="us")
+    s_u = st.selectbox("Staat ➔ Unternehmen:", optionen, key="su")
 
     # Logik-Check für die Kategorie
     staat_correct = (
@@ -42,11 +42,11 @@ with col1:
 
 with col2:
     st.subheader("2. Kernkreislauf (H & U)")
-    h_u_geld = st.selectbox("Haushalte ➔ Unternehmen (Geldstrom):", optionen, key="hug")
-    u_h_gut = st.selectbox("Unternehmen ➔ Haushalte (Güterstrom):", optionen, key="uhg")
+    h_u_geld = st.selectbox("Haushalte ➔ Unternehmen:", optionen, key="hug")
+    u_h_gut = st.selectbox("Unternehmen ➔ Haushalte:", optionen, key="uhg")
 
-    u_h_geld = st.selectbox("Unternehmen ➔ Haushalte (Geldstrom):", optionen, key="uhl")
-    h_u_gut = st.selectbox("Haushalte ➔ Unternehmen (Faktoren):", optionen, key="hua")
+    u_h_geld = st.selectbox("Unternehmen ➔ Haushalte:", optionen, key="uhl")
+    h_u_gut = st.selectbox("Haushalte ➔ Unternehmen:", optionen, key="hua")
 
     kern_correct = (
             h_u_geld == "Konsumausgaben" and u_h_gut == "Konsumgüter" and
@@ -58,10 +58,10 @@ with col2:
 
 with col3:
     st.subheader("3. Banken")
-    h_b = st.selectbox("Haushalte ➔ Banken (Geldstrom):", optionen, key="hb")
-    b_u = st.selectbox("Banken ➔ Unternehmen (Geldstrom):", optionen, key="bu")
-    s_b = st.selectbox("Staat ➔ Banken (Geldstrom):", optionen, key="sb")
-    b_s = st.selectbox("Banken ➔ Staat (Geldstrom):", optionen, key="bs")
+    h_b = st.selectbox("Haushalte ➔ Banken:", optionen, key="hb")
+    b_u = st.selectbox("Banken ➔ Unternehmen:", optionen, key="bu")
+    s_b = st.selectbox("Staat ➔ Banken:", optionen, key="sb")
+    b_s = st.selectbox("Banken ➔ Staat:", optionen, key="bs")
 
     banken_correct = (
             h_b == "Spareinlagen" and b_u == "Investitionen" and
@@ -73,10 +73,10 @@ with col3:
 
 with col4:
     st.subheader("4. Ausland")
-    h_a = st.selectbox("Haushalte ➔ Ausland (Geldstrom):", optionen, key="ha")
-    a_h = st.selectbox("Ausland ➔ Haushalte (Geldstrom):", optionen, key="ah")
-    a_u = st.selectbox("Ausland ➔ Unternehmen (Geldstrom):", optionen, key="au")
-    u_a = st.selectbox("Unternehmen ➔ Ausland (Geldstrom):", optionen, key="ua")
+    h_a = st.selectbox("Haushalte ➔ Ausland:", optionen, key="ha")
+    a_h = st.selectbox("Ausland ➔ Haushalte:", optionen, key="ah")
+    a_u = st.selectbox("Ausland ➔ Unternehmen:", optionen, key="au")
+    u_a = st.selectbox("Unternehmen ➔ Ausland:", optionen, key="ua")
 
     ausland_correct = (
             a_u == "Zahlungen für Exporte" and u_a == "Zahlungen für Importe" and
