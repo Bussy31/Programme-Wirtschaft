@@ -5,6 +5,22 @@ import plotly.graph_objects as go
 # --- Seitenkonfiguration ---
 st.set_page_config(page_title="Break-Even-Point Simulator", layout="wide")
 
+# --- COPYRIGHT FOOTER (Unten rechts) ---
+footer_html = """
+<style>
+.footer {
+    position: fixed;
+    bottom: 10px;
+    right: 15px;
+    font-size: 12px;
+    color: #888888;
+    z-index: 100;
+}
+</style>
+<div class="footer">© Philipp Bußmann</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
+
 # --- Titel und Einleitung ---
 st.title("📈 Break-Even-Point Simulator")
 st.markdown("""
