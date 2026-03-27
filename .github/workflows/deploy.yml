@@ -1,0 +1,21 @@
+name: Deploy Streamlit App
+
+on:
+  push:
+    branches:
+      - main  # Auch hier prüfen: main oder master?
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Python-Code updaten und App neustarten
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/Programme-Wirtschaft
+            git pull origin main
+            # Der Neustart-Befehl für Streamlit kommt später hier hin!
