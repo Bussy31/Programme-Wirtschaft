@@ -283,3 +283,4 @@ if st.button("Analyse final prüfen", use_container_width=True, type="primary"):
         if not fehler:
             st.success(
                 f"✅ Alles korrekt! Deine Klassifizierung ist perfekt berechnet und die Lorenz-Kurve ist stimmig.")
+            st.balloons()
