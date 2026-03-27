@@ -1,46 +1,83 @@
 import streamlit as st
 import pandas as pd
+import altair as alt  # NEU für bessere Diagramme
 from fpdf import FPDF
 
 # --- Seiten-Setup ---
 st.set_page_config(page_title="Nutzwertanalyse", layout="wide")
 
 
-# --- PDF GENERATOR FUNKTION (Jetzt sauber ganz oben ausgelagert) ---
-def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten):
+# --- PDF GENERATOR FUNKTION (Komplett überarbeitet für detaillierte Rechenwege) ---
+def generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten, max_punkte):
     pdf = FPDF()
     pdf.add_page()
 
     # Titel
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, txt="Auswertung: Nutzwertanalyse", ln=True, align="C")
-    pdf.ln(5)
+    pdf.ln(2)
+    pdf.set_font("Arial", size=10)
+    pdf.cell(0, 5, txt=f"Bewertungsskala: 1 bis {max_punkte} Rohpunkte", ln=True, align="C")
+    pdf.ln(8)
 
-    # Optionen & finale Punkte
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 10, txt="Finale Ergebnisse:", ln=True)
+    # 1. Abschnitt: Finale Ergebnisse
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, txt="1. Gesamtergebnis (Eure Berechnung)", ln=True)
+    pdf.set_font("Arial", size=12)
+    pdf.ln(2)
+
+    # Tabellenkopf für Ergebnisse
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(90, 8, txt="Option / Produkt", border=1, align="C")
+    pdf.cell(60, 8, txt="Finaler Nutzwert", border=1, align="C")
+    pdf.ln()
+
+    # Datenzeilen
     pdf.set_font("Arial", size=11)
     for idx, name in enumerate(option_namen):
-        # Text für PDF bereinigen, falls Sonderzeichen drin sind
         sicherer_name = name.encode('latin-1', 'replace').decode('latin-1')
-        pdf.cell(0, 7, txt=f"- {sicherer_name}: {echte_nutzwerte[idx]:.1f} Punkte", ln=True)
+        pdf.cell(90, 8, txt=f" {sicherer_name}", border=1)
+        pdf.cell(60, 8, txt=f" {echte_nutzwerte[idx]:.2f} Punkte", border=1, align="C")
+        pdf.ln()
+
+    pdf.ln(15)
+
+    # 2. Abschnitt: Detaillierter Rechenweg
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, txt="2. Detaillierter Rechenweg (Nachvollziehbarkeit)", ln=True)
+    pdf.ln(3)
+
+    # Formel-Erklärung
+    pdf.set_font("Arial", 'I', 10)
+    pdf.cell(0, 5, txt="Formel pro Kriterium: Rohpunkte * (Gewichtung / 100) = Teilnutzwert", ln=True)
     pdf.ln(5)
 
-    # Detailübersicht der Kriterien
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 10, txt="Bewertungsdetails:", ln=True)
-    pdf.set_font("Arial", size=10)
-
+    # Durch alle Kriterien iterieren
     for daten in export_daten:
         krit_text = daten['kriterium'].encode('latin-1', 'replace').decode('latin-1')
-        pdf.set_font("Arial", 'B', 10)
-        pdf.cell(0, 7, txt=f"Kriterium: {krit_text} ({daten['gewicht']}%)", ln=True)
+        gewicht_dezimal = daten['gewicht'] / 100.0
 
+        # Kriterium Header
+        pdf.set_font("Arial", 'B', 11)
+        pdf.set_fill_color(240, 240, 240)  # Hellgrauer Hintergrund
+        pdf.cell(0, 8, txt=f"Kriterium: {krit_text} (Gewichtung: {daten['gewicht']}%)", ln=True, fill=True)
         pdf.set_font("Arial", size=10)
+        pdf.ln(2)
+
+        # Rechnungen für jede Option innerhalb des Kriteriums
+        total_kriterium_nutzwert = 0
         for idx, p in enumerate(daten['punkte']):
             opt_text = option_namen[idx].encode('latin-1', 'replace').decode('latin-1')
-            pdf.cell(0, 6, txt=f"   -> {opt_text}: {p} Rohpunkte", ln=True)
-        pdf.ln(2)
+
+            # Die eigentliche Rechnung
+            teilnutzwert = p * gewicht_dezimal
+            total_kriterium_nutzwert += teilnutzwert
+
+            # Formatierte Zeile: Rohpunkte * Gewichtung = Teilnutzwert
+            rechenweg_txt = f"   -> {opt_text}: {p} * {gewicht_dezimal:.2f} = {teilnutzwert:.2f} Punkte"
+            pdf.cell(0, 6, txt=rechenweg_txt, ln=True)
+
+        pdf.ln(4)  # Abstand zum nächsten Kriterium
 
     return bytes(pdf.output(dest="S").encode("latin-1"))
 
@@ -90,7 +127,7 @@ def remove_kriterium():
 
 # --- 1. Kriterien erfassen ---
 st.subheader("2. Kriterien & Bewertung")
-st.markdown("Lege deine Kriterien fest, bestimme ihre Wichtigkeit (in %) und vergib die Rohpunkte.")
+st.markdown(f"Lege deine Kriterien fest (Gewichtung in %) und vergib die Rohpunkte (1 bis {max_punkte}).")
 
 gesamt_gewichtung = 0
 echte_nutzwerte = [0.0] * anzahl_optionen
@@ -107,7 +144,7 @@ for i in range(st.session_state.anzahl_kriterien):
             gewicht = st.number_input("Gewichtung (%)", min_value=0, max_value=100, value=0, step=5, key=f"gew_{i}")
             gesamt_gewichtung += gewicht
 
-        st.markdown(f"**Rohpunkte vergeben (1 bis {max_punkte}):**")
+        st.markdown(f"**Rohpunkte vergeben:**")
 
         cols_slider = st.columns(anzahl_optionen)
         punkte_aktuell = []  # Sammelt die Punkte dieses Kriteriums für den Export
@@ -119,7 +156,7 @@ for i in range(st.session_state.anzahl_kriterien):
                 punkte_aktuell.append(punkte)
 
                 # Hintergrundberechnung
-                echte_nutzwerte[opt_idx] += (gewicht / 100) * punkte
+                echte_nutzwerte[opt_idx] += (gewicht / 100.0) * punkte
 
         # Daten für PDF speichern
         export_daten.append({
@@ -162,39 +199,53 @@ else:
         cols_erg = st.columns(anzahl_optionen)
         for opt_idx in range(anzahl_optionen):
             with cols_erg[opt_idx]:
-                eingabe = st.number_input(f"Ergebnis für {option_namen[opt_idx]}:", min_value=0.0, step=0.1,
-                                          format="%.1f")
+                eingabe = st.number_input(f"Ergebnis für {option_namen[opt_idx]}:", min_value=0.0, step=0.01,
+                                          format="%.2f")
                 schueler_eingaben.append(eingabe)
 
         # --- 4. Auswertung & PDF Export ---
         if any(eingabe > 0 for eingabe in schueler_eingaben):
             alle_korrekt = True
             for opt_idx in range(anzahl_optionen):
+                # Wir erlauben 0.05 Abweichung wegen Rundungsfehlern
                 if abs(schueler_eingaben[opt_idx] - echte_nutzwerte[opt_idx]) >= 0.05:
                     alle_korrekt = False
                     break
 
             if alle_korrekt:
-                st.balloons()
+                # KEINE BALLONS MEHR HIER
                 st.success("🎉 Hervorragend gerechnet! Alle Nutzwerte stimmen. Hier ist das Ergebnis:")
 
-                # Buntes Diagramm
+                # Buntes Diagramm mit ALTAIR für bessere Skalierung (startet nicht bei 0)
                 diagramm_daten = pd.DataFrame({
                     "Optionen": option_namen,
                     "Finaler Nutzwert": echte_nutzwerte
                 })
-                st.bar_chart(data=diagramm_daten, x="Optionen", y="Finaler Nutzwert", color="Optionen")
+
+                # Altair Chart Konfiguration:
+                # Wir berechnen den Startpunkt der Y-Achse dynamisch (Min-Wert - ein kleiner Puffer)
+                min_y = max(0, min(echte_nutzwerte) - 0.5)
+                max_y = max(echte_nutzwerte) + 0.5
+
+                chart = alt.Chart(diagramm_daten).mark_bar().encode(
+                    x=alt.X('Optionen', title='Produkte / Optionen'),
+                    y=alt.Y('Finaler Nutzwert', title='Nutzwert (Punkte)', scale=alt.Scale(domain=[min_y, max_y])),
+                    color=alt.Color('Optionen', legend=None)  # Bunt, aber keine extra Legende
+                ).properties(height=400)
+
+                st.altair_chart(chart, use_container_width=True)
 
                 st.divider()
 
-                # Download Button erscheint hier!
-                st.write("Möchtest du deine Ergebnisse für den Unterricht sichern?")
+                # Download Button
+                st.write("Möchtest du deine Ergebnisse und Rechenwege für den Unterricht sichern?")
                 st.download_button(
-                    label="📄 Ergebnisse als PDF herunterladen",
-                    data=generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten),
-                    file_name="Nutzwertanalyse_Ergebnisse.pdf",
+                    label="📄 Ergebnisse & Rechenwege als PDF herunterladen",
+                    data=generiere_nutzwert_pdf(option_namen, echte_nutzwerte, export_daten, max_punkte),
+                    file_name="Nutzwertanalyse_Rechenweg.pdf",
                     mime="application/pdf"
                 )
 
             else:
-                st.error("🧐 Das stimmt noch nicht ganz. Überprüfe deine Rechnung bei allen Optionen!")
+                st.error(
+                    "🧐 Das stimmt noch nicht ganz. Überprüfe deine Rechnung bei allen Optionen! Achte auf die Dezimalstellen.")
