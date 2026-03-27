@@ -4,6 +4,22 @@ import streamlit.components.v1 as components
 # --- Seiten-Setup ---
 st.set_page_config(page_title="Wirtschafts-Lab Pro", layout="wide")
 
+# --- COPYRIGHT FOOTER (Unten rechts) ---
+footer_html = """
+<style>
+.footer {
+    position: fixed;
+    bottom: 10px;
+    right: 15px;
+    font-size: 12px;
+    color: #888888;
+    z-index: 100;
+}
+</style>
+<div class="footer">© Philipp Bußmann</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
+
 st.title("Der erweiterte Wirtschaftskreislauf")
 st.markdown("Beobachte das Modell und ordne alle **Geld- und Güterströme** korrekt zu!")
 st.divider()

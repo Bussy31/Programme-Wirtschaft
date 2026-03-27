@@ -4,6 +4,22 @@ from fpdf import FPDF
 import uuid
 import os
 
+# --- COPYRIGHT FOOTER (Unten rechts) ---
+footer_html = """
+<style>
+.footer {
+    position: fixed;
+    bottom: 10px;
+    right: 15px;
+    font-size: 12px;
+    color: #888888;
+    z-index: 100;
+}
+</style>
+<div class="footer">© Philipp Bußmann</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
+
 
 # --- HILFSFUNKTION FÜR DEN PDF-EXPORT ---
 def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
