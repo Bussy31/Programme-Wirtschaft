@@ -8,34 +8,34 @@ st.set_page_config(page_title="Profi-Übung: ABC-Analyse", layout="wide")
 # CSS für eine perfekte, softe Optik
 st.markdown("""
     <style>
+    /* Header-Reihe anpassen, damit sie gut zu den neuen gerahmten Zeilen passt */
     .header-row {
         font-weight: bold;
         background-color: #f0f2f6;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 5px;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
     }
 
-    /* Zarte, blaue Färbung für alle Aktions-Buttons (+, -, Pfeile) */
+    /* Buttons (+, -, Pfeile) exakt in den Blautönen des Diagramms */
     button[kind="secondary"] {
-        background-color: #f0f9ff !important;
-        color: #0284c7 !important;
-        border: 1px solid #bae6fd !important;
+        background-color: #e0f2fe !important; /* Zartes Diagramm-Hintergrundblau */
+        color: #0284c7 !important; /* Dunkles Blau der Diagramm-Linie */
+        border: none !important; /* Kein Rahmen mehr! */
         border-radius: 6px !important;
         font-weight: 500 !important;
         transition: all 0.2s ease-in-out;
     }
     button[kind="secondary"]:hover {
-        background-color: #e0f2fe !important;
-        border-color: #7dd3fc !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        background-color: #93c5fd !important; /* Blau der Diagramm-Balken beim Hovern */
+        color: #ffffff !important;
     }
 
     /* Millimetergenaue vertikale Ausrichtung der Rang-Zahlen */
     .rang-text {
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 600;
-        margin-top: 8px; 
+        margin-top: 6px; 
         text-align: center;
         color: #334155;
     }
@@ -101,18 +101,18 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 4. ZEILEN DER TABELLE ---
+# --- 4. ZEILEN DER TABELLE (Jetzt mit Rahmen pro Zeile!) ---
 current_list = st.session_state.schueler_liste
 
 gesamt_umsatz_live = sum(item['Menge'] * item['Preis'] for item in current_list)
 live_kumuliert = 0.0
 
 for i, item in enumerate(current_list):
-    with st.container():
+    # NEU: border=True sorgt für den Kasten um die gesamte Artikel-Zeile
+    with st.container(border=True):
         cols = st.columns([0.5, 1.5, 0.8, 0.8, 1.2, 1, 1, 1, 1])
 
         with cols[0]:
-            # Die Klasse 'rang-text' kümmert sich um die perfekte Ausrichtung
             st.markdown(f"<div class='rang-text'>{i + 1}.</div>", unsafe_allow_html=True)
 
         with cols[1]:
@@ -168,25 +168,20 @@ for i, item in enumerate(current_list):
                 move_item(i, 'down')
                 st.rerun()
 
-    # Unsichtbarer Puffer für eine schöne Struktur ohne harte Linien
-    st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
-
-# --- 5. GETRENNTE & GERAHMTE BUTTONS (+ / -) ---
+# --- 5. BUTTONS (+ / -) (Jetzt ohne eigenen Rahmen, frei stehend) ---
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-col_space1, col_add_frame, col_remove_frame, col_space2 = st.columns([1.5, 2, 2, 1.5])
+col_space1, col_add, col_remove, col_space2 = st.columns([1.5, 2, 2, 1.5])
 
-with col_add_frame:
-    with st.container(border=True):
-        if st.button("➕ Weiteren Artikel hinzufügen", use_container_width=True):
-            add_item()
-            st.rerun()
+with col_add:
+    if st.button("➕ Weiteren Artikel hinzufügen", use_container_width=True):
+        add_item()
+        st.rerun()
 
-with col_remove_frame:
-    with st.container(border=True):
-        if st.button("➖ Letzten Artikel entfernen", use_container_width=True, disabled=(len(current_list) <= 1)):
-            st.session_state.schueler_liste.pop()
-            st.rerun()
+with col_remove:
+    if st.button("➖ Letzten Artikel entfernen", use_container_width=True, disabled=(len(current_list) <= 1)):
+        st.session_state.schueler_liste.pop()
+        st.rerun()
 
 st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
 
@@ -205,16 +200,20 @@ chart_data = pd.DataFrame({
     "Kumulierter Umsatz (%)": kumuliert_live
 })
 
+# Farben für das Diagramm
+bar_color = "#93c5fd"  # Hellblau
+line_color = "#0284c7"  # Dunkelblau
+
 base = alt.Chart(chart_data).encode(
     x=alt.X("Artikel:N", sort=None, title="Artikel (nach Rang)")
 )
 
-bars = base.mark_bar(color="#93c5fd", size=40, opacity=0.8).encode(
+bars = base.mark_bar(color=bar_color, size=40, opacity=0.8).encode(
     y=alt.Y("Anteil einzeln (%):Q", scale=alt.Scale(domain=[0, 100]), title="Prozent (%)"),
     tooltip=[alt.Tooltip("Artikel:N"), alt.Tooltip("Anteil einzeln (%):Q", format=".2f")]
 )
 
-line = base.mark_line(color="#0284c7", point=True, strokeWidth=3).encode(
+line = base.mark_line(color=line_color, point=True, strokeWidth=3).encode(
     y=alt.Y("Kumulierter Umsatz (%):Q"),
     tooltip=[alt.Tooltip("Artikel:N"), alt.Tooltip("Kumulierter Umsatz (%):Q", format=".2f")]
 )
