@@ -73,14 +73,14 @@ with st.sidebar:
     grenze_c = st.slider("C-Güter bis (%)", grenze_b, 100, 100)
     st.write(f"Klassen: A (0-{grenze_a}%), B ({grenze_a}-{grenze_b}%), C ({grenze_b}-{grenze_c}%)")
 
-# --- 2. DATEN & SESSION STATE ---
+# --- 2. DATEN & SESSION STATE (Jetzt mit 5 leeren Startzeilen!) ---
 if 'schueler_liste' not in st.session_state:
     st.session_state.schueler_liste = [
-        {'id': 3, 'Artikel': 'Schreibtisch Premium', 'Menge': 5, 'Preis': 1200.0},
-        {'id': 5, 'Artikel': 'Bürostuhl', 'Menge': 15, 'Preis': 300.0},
-        {'id': 2, 'Artikel': 'Toner Schwarz', 'Menge': 10, 'Preis': 80.0},
-        {'id': 1, 'Artikel': 'Druckerpapier', 'Menge': 100, 'Preis': 5.0},
-        {'id': 4, 'Artikel': 'Kugelschreiber', 'Menge': 500, 'Preis': 1.0},
+        {'id': 1, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
+        {'id': 2, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
+        {'id': 3, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
+        {'id': 4, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
+        {'id': 5, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
     ]
 
 
@@ -95,7 +95,7 @@ def move_item(index, direction):
 
 def add_item():
     neue_id = max([item['id'] for item in st.session_state.schueler_liste], default=0) + 1
-    st.session_state.schueler_liste.append({'id': neue_id, 'Artikel': 'Neuer Artikel', 'Menge': 0, 'Preis': 0.0})
+    st.session_state.schueler_liste.append({'id': neue_id, 'Artikel': '', 'Menge': 0, 'Preis': 0.0})
 
 
 # --- ZENTRALES SPALTEN-VERHÄLTNIS ---
@@ -104,7 +104,6 @@ COL_RATIOS = [0.6, 1.8, 0.9, 0.9, 1.1, 0.9, 0.9, 0.9, 1.0]
 # --- 3. DIE PERFEKTE KOPFZEILE (Durchgehender HTML-Block ohne Lücken) ---
 headers = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (€)", "Anteil %", "Kum. %", "Klasse", "Aktion"]
 
-# Wir bauen EINE Box, deren innere Aufteilung exakt Streamlit nachahmt!
 header_html = "<div style='display: flex; gap: 0.5rem; background-color: #e2e8f0; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; align-items: center; border: 1px solid #cbd5e1;'>"
 for ratio, title in zip(COL_RATIOS, headers):
     header_html += f"<div style='flex: {ratio} 1 0%; text-align: center; font-weight: 700; color: #334155; font-size: 1.05rem;'>{title}</div>"
@@ -267,6 +266,9 @@ with col_pdf:
             for i, item in enumerate(daten):
                 pdf.cell(w[0], 8, f"{i + 1}.", border=1, align="C")
                 artikel_name = str(item.get('Artikel', '-')).encode('latin-1', 'replace').decode('latin-1')
+                # Falls das Feld komplett leer ist, einen Bindestrich drucken für die Optik
+                if not artikel_name.strip():
+                    artikel_name = "-"
                 pdf.cell(w[1], 8, artikel_name, border=1)
                 pdf.cell(w[2], 8, str(item.get('Menge', 0)), border=1, align="C")
                 pdf.cell(w[3], 8, f"{item.get('Preis', 0):.2f} EUR", border=1, align="R")
@@ -278,7 +280,7 @@ with col_pdf:
                 pdf.cell(w[7], 8, str(item.get('eingabe_kl', '-')), border=1, align="C")
                 pdf.ln()
 
-            # NEU: Der komplette Rechenweg für die SuS!
+            # Rechenweg für die SuS!
             pdf.ln(10)
             pdf.set_font("Arial", 'B', 12)
             pdf.cell(0, 8, "Detaillierte Rechenwege (Musterloesung):", ln=True)
@@ -296,6 +298,8 @@ with col_pdf:
 
                 klasse = "A" if kum_ist <= grenze_a + 0.01 else ("B" if kum_ist <= grenze_b + 0.01 else "C")
                 artikel_name = str(item.get('Artikel', '-')).encode('latin-1', 'replace').decode('latin-1')
+                if not artikel_name.strip():
+                    artikel_name = f"Artikel {i + 1}"
 
                 pdf.set_font("Arial", 'B', 10)
                 pdf.cell(0, 6, f"Rang {i + 1}: {artikel_name}", ln=True)
