@@ -236,7 +236,6 @@ with col_prüfen:
 
             if not fehler:
                 st.success("✅ Alles korrekt! Deine Klassifizierung ist perfekt berechnet.")
-                st.balloons()
 
 with col_pdf:
     if PDF_AVAILABLE:
