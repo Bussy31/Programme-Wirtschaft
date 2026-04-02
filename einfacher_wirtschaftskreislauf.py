@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # --- Seiten-Setup ---
-st.set_page_config(page_title="Wirtschaftskreislauf", layout="wide")
+st.set_page_config(page_title="https://wirtschaftslab-schule.freeddns.org/einfacher_wirtschaftskreislauf/", layout="wide")
 
 # --- COPYRIGHT FOOTER (Unten rechts) ---
 footer_html = """
