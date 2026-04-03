@@ -2,6 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
+import random
 
 # --- DATENBANK SETUP ---
 def init_db():
@@ -159,8 +160,61 @@ def reset_database():
     conn.commit()
     conn.close()
 
+
+def generiere_testdaten(spiel_id):
+    """Erzeugt 20 fiktive Schüler mit zufälligen Geboten für die aktuelle Runde."""
+    conn = sqlite3.connect('marktspiel.db')
+    c = conn.cursor()
+
+    # Spieldaten holen
+    c.execute("SELECT min_preis, max_preis, aktuelle_runde FROM Game_Setup WHERE spiel_id=?", (spiel_id,))
+    res = c.fetchone()
+    if not res: return
+    mini, maxi, runde = res
+
+    test_namen = ["Lukas", "Julia", "Tim", "Sophie", "Max", "Emma", "Felix", "Lena", "Moritz", "Mia",
+                  "Paul", "Hannah", "Leon", "Lea", "Jonas", "Laura", "Noah", "Anna", "Elias", "Mila"]
+
+    for i, name in enumerate(test_namen):
+        rolle = "Nachfrager" if i % 2 == 0 else "Anbieter"
+        # Spieler anlegen (falls noch nicht da)
+        try:
+            c.execute("INSERT INTO Players (spieler_name, spiel_id, rolle) VALUES (?, ?, ?)", (name, spiel_id, rolle))
+        except sqlite3.IntegrityError:
+            pass
+
+            # Zufälliges Gebot abgeben
+        gebot = round(random.uniform(mini, maxi), 2)
+        # Bestehendes Gebot für diese Runde überschreiben oder neu anlegen
+        c.execute("DELETE FROM Bids WHERE spieler_name=? AND spiel_id=? AND runde=?", (name, spiel_id, runde))
+        c.execute("INSERT INTO Bids (spieler_name, spiel_id, runde, gebot) VALUES (?, ?, ?, ?)",
+                  (name, spiel_id, runde, gebot))
+
+    conn.commit()
+    conn.close()
+
+
+def get_abgabe_status(spiel_id, runde):
+    """Gibt eine Liste aller Spieler und deren Abgabestatus (True/False) zurück."""
+    conn = sqlite3.connect('marktspiel.db')
+    c = conn.cursor()
+    c.execute('''
+              SELECT P.spieler_name,
+                     P.rolle,
+                     (SELECT COUNT(*)
+                      FROM Bids B
+                      WHERE B.spieler_name = P.spieler_name AND B.spiel_id = P.spiel_id AND B.runde = ?) as abgegeben
+              FROM Players P
+              WHERE P.spiel_id = ?
+              ''', (runde, spiel_id))
+    status = c.fetchall()
+    conn.close()
+    return status
+
 # Initiale Ausführung beim Start
 init_db()
+
+
 
 # --- STREAMLIT OBERFLÄCHE & NAVIGATION ---
 
@@ -268,7 +322,28 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
     conn.close()
 
     anzahl_spieler = len(spieler_liste)
+    # ... (vorheriger Code: Spiel_daten holen) ...
+
     st.write(f"👥 Angemeldete Schüler: {anzahl_spieler}")
+
+    # --- LIVE TRACKER LISTE ---
+    with st.expander("📝 Live-Abgabe-Status einsehen"):
+        status_liste = get_abgabe_status(st.session_state.spiel_id, aktuelle_runde)
+        cols = st.columns(2)  # Wir machen zwei Spalten für die Namensliste
+        for i, (name, rolle, hat_abgegeben) in enumerate(status_liste):
+            icon = "✅" if hat_abgegeben > 0 else "⏳"
+            cols[i % 2].write(f"{icon} {name} ({rolle})")
+
+    st.progress(anzahl_gebote / anzahl_spieler if anzahl_spieler > 0 else 0.0)
+
+    st.divider()
+
+    # --- TEST-TOOLS (NUR FÜR DICH) ---
+    with st.expander("🧪 Test-Werkzeuge (nur für Entwicklung)"):
+        if st.button("🤖 20 Dummy-Schüler & Gebote erzeugen"):
+            generiere_testdaten(st.session_state.spiel_id)
+            st.success("Testdaten generiert! Bitte Seite aktualisieren.")
+            st.rerun()
 
     # Prüfen, wie viele schon ein Gebot abgegeben haben, um es dem Lehrer anzuzeigen
     _, _, anzahl_gebote = runde_auswerten(st.session_state.spiel_id, aktuelle_runde)
@@ -450,6 +525,18 @@ elif st.session_state.ansicht == 'schueler_spiel':
         # Aktualisieren-Knopf, falls der Lehrer die nächste Runde gestartet hat
         if st.button("🔄 Seite aktualisieren (Warten auf nächste Runde)"):
             st.rerun()
+
+        st.divider()
+        st.subheader("Wer ist schon fertig?")
+        status_liste = get_abgabe_status(st.session_state.spiel_id, aktuelle_runde)
+
+        # Kurze Zusammenfassung für die Schüler
+        fertig = sum(1 for s in status_liste if s[2] > 0)
+        st.write(f"Gesamtfortschritt: {fertig} von {len(status_liste)} Schülern haben abgegeben.")
+
+        # Optional: Kleine Icons der Mitschüler (ohne Namen, um Anonymität zu wahren)
+        tracker_icons = "".join(["✅" if s[2] > 0 else "⚪" for s in status_liste])
+        st.title(tracker_icons)
 
     else:
         st.error("Fehler: Spieldaten konnten nicht gefunden werden. Vielleicht hat der Lehrer das Spiel beendet?")
