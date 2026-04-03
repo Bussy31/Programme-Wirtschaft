@@ -342,13 +342,6 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
     #        st.success("Testdaten generiert! Bitte Seite aktualisieren.")
     #        st.rerun()
 
-    # Prüfen, wie viele schon ein Gebot abgegeben haben, um es dem Lehrer anzuzeigen
-    _, _, anzahl_gebote = runde_auswerten(st.session_state.spiel_id, aktuelle_runde)
-
-    st.progress(anzahl_gebote / anzahl_spieler if anzahl_spieler > 0 else 0.0)
-    st.write(f"📝 Gebote in dieser Runde abgegeben: {anzahl_gebote} von {anzahl_spieler}")
-
-    st.divider()
 
     # --- STEUERUNG ---
     col1, col2, col3 = st.columns(3)
@@ -372,10 +365,40 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
             st.rerun()
 
     # Auswertung anzeigen, falls der Button geklickt wurde
-    if 'auswertung_text' in st.session_state and st.session_state.auswertung_text:
-        st.success(st.session_state.auswertung_text)
+        # Auswertung anzeigen, falls der Button geklickt wurde
+        if 'auswertung_text' in st.session_state and st.session_state.auswertung_text:
+            st.success(st.session_state.auswertung_text)
 
-    st.divider()
+            # NEU: Diagramm direkt im Dashboard anzeigen
+            conn = sqlite3.connect('marktspiel.db')
+            df_runde = pd.read_sql_query('''
+                                         SELECT P.rolle AS Rolle, B.gebot AS Gebot_in_Euro
+                                         FROM Bids B
+                                                  JOIN Players P ON B.spieler_name = P.spieler_name AND B.spiel_id = P.spiel_id
+                                         WHERE B.spiel_id = ?
+                                           AND B.runde = ?
+                                         ''', conn, params=(st.session_state.spiel_id, aktuelle_runde))
+            conn.close()
+
+            if not df_runde.empty:
+                nachfrage = df_runde[df_runde['Rolle'] == 'Nachfrager']['Gebot_in_Euro'].sort_values(
+                    ascending=False).tolist()
+                angebot = df_runde[df_runde['Rolle'] == 'Anbieter']['Gebot_in_Euro'].sort_values(
+                    ascending=True).tolist()
+
+                fig, ax = plt.subplots(figsize=(8, 4))
+                ax.step(range(1, len(nachfrage) + 1), nachfrage, where='mid', label='Nachfrage (Zahlungsbereitschaft)',
+                        color='#1f77b4', marker='o')
+                ax.step(range(1, len(angebot) + 1), angebot, where='mid', label='Angebot (Verkaufsbereitschaft)',
+                        color='#ff7f0e', marker='o')
+                ax.set_title(f"Marktgleichgewicht - Runde {aktuelle_runde}", fontsize=12)
+                ax.set_xlabel("Menge")
+                ax.set_ylabel("Preis in €")
+                ax.grid(True, linestyle='--', alpha=0.7)
+                ax.legend()
+                st.pyplot(fig)
+
+        st.divider()
 
     # --- NEUER BEENDEN BUTTON ---
     if st.button("🛑 Spiel beenden & Gesamtauswertung anzeigen", type="primary"):
@@ -384,71 +407,62 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
 
 # --- LEHRER BEREICH: GESAMTAUSWERTUNG ---
 elif st.session_state.ansicht == 'lehrer_auswertung':
-    st.header(f"🏁 Gesamtauswertung - Spiel: {st.session_state.spiel_id}")
+    st.header(f"🏁 Gesamtauswertung (Zahlen-Report) - Spiel: {st.session_state.spiel_id}")
 
-    # 1. SQL FEHLER BEHOBEN: "B.gebot DESC" statt "B.gebot_in_Euro"
+    # SQL Daten abrufen
     conn = sqlite3.connect('marktspiel.db')
     query = '''
-            SELECT B.runde AS Runde, B.spieler_name AS Name, P.rolle AS Rolle, B.gebot AS Gebot_in_Euro
+            SELECT B.runde AS Runde, P.rolle AS Rolle, B.gebot AS Gebot, B.spieler_name AS Name
             FROM Bids B
                      JOIN Players P ON B.spieler_name = P.spieler_name AND B.spiel_id = P.spiel_id
             WHERE B.spiel_id = ?
-            ORDER BY B.runde ASC, P.rolle ASC, B.gebot DESC \
             '''
     df = pd.read_sql_query(query, conn, params=(st.session_state.spiel_id,))
     conn.close()
 
     if df.empty:
-        st.warning("Es wurden keine Gebote in diesem Spiel abgegeben.")
+        st.warning("Es wurden noch keine Gebote in diesem Spiel abgegeben.")
     else:
-        # --- DIAGRAMM ZEICHNEN (Für die letzte gespielte Runde) ---
-        letzte_runde = df['Runde'].max()
-        st.subheader(f"📈 Preis-Mengen-Diagramm (Runde {letzte_runde})")
+        alle_runden = sorted(df['Runde'].unique())
 
-        # Daten der letzten Runde filtern
-        df_runde = df[df['Runde'] == letzte_runde]
-        nachfrage = df_runde[df_runde['Rolle'] == 'Nachfrager']['Gebot_in_Euro'].sort_values(ascending=False).tolist()
-        angebot = df_runde[df_runde['Rolle'] == 'Anbieter']['Gebot_in_Euro'].sort_values(ascending=True).tolist()
-
-        # Diagramm aufbauen
-        fig, ax = plt.subplots(figsize=(10, 6))
-
-        # Treppenstufen-Funktion für realistische Markt-Darstellung
-        x_nachfrage = list(range(1, len(nachfrage) + 1))
-        x_angebot = list(range(1, len(angebot) + 1))
-
-        ax.step(x_nachfrage, nachfrage, where='mid', label='Nachfrage (Zahlungsbereitschaft)', color='#1f77b4',
-                linewidth=2, marker='o')
-        ax.step(x_angebot, angebot, where='mid', label='Angebot (Verkaufsbereitschaft)', color='#ff7f0e', linewidth=2,
-                marker='o')
-
-        ax.set_title(f"Marktgleichgewicht in Runde {letzte_runde}", fontsize=14)
-        ax.set_xlabel("Menge (Anzahl der Schüler)", fontsize=12)
-        ax.set_ylabel("Preis in €", fontsize=12)
-        ax.grid(True, linestyle='--', alpha=0.7)
-        ax.legend(fontsize=12)
-
-        # Diagramm in Streamlit anzeigen
-        st.pyplot(fig)
-
+        st.write(
+            "Hier siehst du die sortierten Gebote aller Runden. Diese Ansicht ist ideal für den PDF-Export (ohne störende Diagramme).")
         st.divider()
 
-        # --- DATENTABELLE ---
-        st.subheader("📋 Komplette Datenübersicht")
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        # Für jede Runde die sortierten Tabellen nebeneinander anzeigen
+        for r in alle_runden:
+            st.subheader(f"📝 Ergebnisse aus Runde {r}")
+            df_runde = df[df['Runde'] == r]
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("**🛒 Nachfrager (Käufer)**")
+                st.caption("Sortiert von höchster zu niedrigster Zahlungsbereitschaft")
+                df_nachfrage = df_runde[df_runde['Rolle'] == 'Nachfrager'].sort_values(by='Gebot', ascending=False)
+                st.dataframe(df_nachfrage[['Name', 'Gebot']], hide_index=True, use_container_width=True)
+
+            with col2:
+                st.markdown("**🏭 Anbieter (Verkäufer)**")
+                st.caption("Sortiert von niedrigster zu höchster Verkaufsbereitschaft")
+                df_angebot = df_runde[df_runde['Rolle'] == 'Anbieter'].sort_values(by='Gebot', ascending=True)
+                st.dataframe(df_angebot[['Name', 'Gebot']], hide_index=True, use_container_width=True)
+
+            # Kleiner Umbruch für das PDF
+            st.write("<br>", unsafe_allow_html=True)
+            st.divider()
 
         # CSV Export als Backup
         csv = df.to_csv(index=False, sep=';', decimal=',').encode('utf-8')
         st.download_button(
-            label="📥 Daten als Excel/CSV herunterladen",
+            label="📥 Rohdaten als Excel/CSV herunterladen",
             data=csv,
             file_name=f"marktspiel_auswertung_{st.session_state.spiel_id}.csv",
             mime="text/csv",
         )
 
-    st.divider()
-    st.info(
-        "💡 **Tipp für den PDF-Export:** Drücke einfach `Strg + P` (Windows) oder `Cmd + P` (Mac) und wähle 'Als PDF speichern', um diese gesamte Ansicht inkl. Diagramm als PDF zu exportieren.")
+    st.success(
+        "💡 **Tipp für den PDF-Export:** Drücke einfach `Strg + P` (Windows) oder `Cmd + P` (Mac) und wähle im Druckdialog 'Als PDF speichern'.")
 
     if st.button("🚪 Zurück zur Startseite (Spiel endgültig verlassen)"):
         for key in ['spiel_id', 'auswertung_text']:
