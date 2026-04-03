@@ -144,6 +144,20 @@ def naechste_runde_starten(spiel_id):
     conn.commit()
     conn.close()
 
+
+# --- LOGIK: DATENBANK RESET (NUR ADMIN) ---
+def reset_database():
+    conn = sqlite3.connect('marktspiel.db')
+    c = conn.cursor()
+
+    # Löscht alle Einträge aus den Tabellen, behält aber die Struktur bei
+    c.execute("DELETE FROM Game_Setup")
+    c.execute("DELETE FROM Players")
+    c.execute("DELETE FROM Bids")
+
+    conn.commit()
+    conn.close()
+
 # Initiale Ausführung beim Start
 init_db()
 
@@ -162,12 +176,40 @@ if st.session_state.ansicht == 'startseite':
     with col1:
         if st.button("👨‍🏫 Ich bin Lehrer (Spiel erstellen)"):
             st.session_state.ansicht = 'lehrer_setup'
-            st.rerun()  # Lädt die Seite neu und wechselt die Ansicht
+            st.rerun()
 
     with col2:
         if st.button("🧑‍🎓 Ich bin Schüler (Spiel beitreten)"):
             st.session_state.ansicht = 'schueler_join'
             st.rerun()
+
+    st.divider()
+
+    # --- ADMIN BEREICH ---
+    with st.expander("🛠️ Admin-Bereich (Datenbank Reset)"):
+        st.write("Bitte mit Admin-Zugangsdaten anmelden, um das System zurückzusetzen.")
+
+        # Eingabefelder für Login
+        admin_user = st.text_input("Benutzername", key="admin_user")
+        admin_pass = st.text_input("Passwort", type="password", key="admin_pass")
+
+        # Hier trägst du im Code dein Wunsch-Passwort ein (statt 'DEIN_PASSWORT')
+        if st.button("Login überprüfen"):
+            if admin_user == "admin" and admin_pass == "6836":
+                st.session_state.is_admin = True
+                st.rerun()
+            else:
+                st.error("Falscher Benutzername oder Passwort.")
+
+        # Wenn der Admin erfolgreich eingeloggt ist (wird im Session State gemerkt)
+        if st.session_state.get('is_admin', False):
+            st.success("Erfolgreich als Admin angemeldet!")
+            st.warning("⚠️ ACHTUNG: Ein Klick auf diesen Button löscht ALLE Spiele, Spieler und Gebote unwiderruflich!")
+
+            if st.button("🔥 Komplette Datenbank resetten", type="primary"):
+                reset_database()
+                st.success("Datenbank wurde komplett geleert! Das System ist wieder sauber.")
+                st.session_state.is_admin = False  # Nach dem Löschen loggen wir den Admin zur Sicherheit wieder aus
 
 # --- LEHRER BEREICH: SPIEL ERSTELLEN ---
 elif st.session_state.ansicht == 'lehrer_setup':
