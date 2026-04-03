@@ -277,7 +277,7 @@ if st.session_state.ansicht == 'startseite':
 
         # Hier trägst du im Code dein Wunsch-Passwort ein (statt 'DEIN_PASSWORT')
         if st.button("Login überprüfen"):
-            if admin_user == "admin" and admin_pass == "6836":
+            if admin_user == "admin" and admin_pass == "1234":
                 st.session_state.is_admin = True
                 st.rerun()
             else:
