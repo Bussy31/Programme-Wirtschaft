@@ -657,14 +657,18 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                 df_a = pd.DataFrame(anbieter_stats)
                 if not df_a.empty:
                     df_a.columns = ['Name', 'Erfolgreiche Deals', 'Gesamtumsatz (€)', 'Ø Preis (€)']
-                    st.dataframe(df_a, hide_index=True)
+                    # --- NEU: .style.format zwingt die Spalten auf 2 Nachkommastellen ---
+                    st.dataframe(df_a.style.format({'Gesamtumsatz (€)': '{:.2f}', 'Ø Preis (€)': '{:.2f}'}),
+                                 hide_index=True)
 
             with col2:
                 st.subheader("Top Käufer (Schnäppchenjäger)")
                 df_n = pd.DataFrame(nachfrager_stats)
                 if not df_n.empty:
                     df_n.columns = ['Name', 'Erfolgreiche Deals', 'Ausgaben gesamt (€)', 'Ø Preis (€)']
-                    st.dataframe(df_n, hide_index=True)
+                    # --- NEU: .style.format zwingt die Spalten auf 2 Nachkommastellen ---
+                    st.dataframe(df_n.style.format({'Ausgaben gesamt (€)': '{:.2f}', 'Ø Preis (€)': '{:.2f}'}),
+                                 hide_index=True)
 
             # --- Ranking ins PDF schreiben ---
             pdf.set_font("Arial", 'B', 12)
