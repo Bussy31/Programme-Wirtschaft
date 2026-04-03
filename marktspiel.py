@@ -2,7 +2,10 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker  # NEU: Um die Diagramm-Achsen auf Komma umzustellen
 import random
+import os
+from fpdf import FPDF
 
 st.set_page_config(layout="wide", page_title="Marktspiel", page_icon="📈")
 
