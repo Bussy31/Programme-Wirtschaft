@@ -336,11 +336,11 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
     st.divider()
 
     # --- TEST-TOOLS ---
-    #with st.expander("🧪 Test-Werkzeuge (nur für Entwicklung)"):
-    #    if st.button("🤖 20 Dummy-Schüler & Gebote erzeugen"):
-    #        generiere_testdaten(st.session_state.spiel_id)
-    #        st.success("Testdaten generiert! Bitte Seite aktualisieren.")
-    #        st.rerun()
+    with st.expander("🧪 Test-Werkzeuge (nur für Entwicklung)"):
+        if st.button("🤖 20 Dummy-Schüler & Gebote erzeugen"):
+            generiere_testdaten(st.session_state.spiel_id)
+            st.success("Testdaten generiert! Bitte Seite aktualisieren.")
+            st.rerun()
 
 
     # --- STEUERUNG ---
