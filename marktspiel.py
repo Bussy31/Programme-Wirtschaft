@@ -4,6 +4,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import random
 
+# --- COPYRIGHT FOOTER (Unten rechts) ---
+footer_html = """
+<style>
+.footer {
+    position: fixed;
+    bottom: 10px;
+    right: 15px;
+    font-size: 12px;
+    color: #888888;
+    z-index: 100;
+}
+</style>
+<div class="footer">© Philipp Bußmann</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
+
 # --- DATENBANK SETUP ---
 def init_db():
     conn = sqlite3.connect('marktspiel.db')
