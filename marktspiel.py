@@ -477,13 +477,13 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
 
             # --- NEU: ZUSTANDE GEKOMMENE DEALS ANZEIGEN ---
             if matches:
-                with st.expander("🤝 Wer hat mit wem gehandelt? (Klick zum Ausklappen)", expanded=True):
+                with st.expander("🤝 Wer hat mit wem gehandelt? (Klick zum Ausklappen)", expanded=False):
                     pdf.set_font("Arial", 'B', 10)
                     pdf.cell(0, 8, "Details der Transaktionen (Deals):", ln=True)
                     pdf.set_font("Arial", '', 10)
 
                     for m in matches:
-                        deal_str = f"🛍️ **{m['kaeufer']}** (bot {m['k_preis']:.2f}€) KAUFT VON **{m['verkaeufer']}** (wollte {m['v_preis']:.2f}€) ➡️ Preis: **{m['deal_preis']:.2f} €**"
+                        deal_str = f"🛍️ **{m['kaeufer']}** (bot {m['k_preis']:.2f}€) kauft von **{m['verkaeufer']}** (wollte {m['v_preis']:.2f}€) ➡️ Preis: **{m['deal_preis']:.2f} €**"
                         st.write(deal_str)
 
                         # Text fürs PDF vorbereiten (Umlaute ersetzen)
