@@ -422,17 +422,15 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
                     marker='o',
                     linewidth=2)
 
-            # --- NEU: Die geraden Trendlinien ---
             # Wir ziehen eine Gerade vom ersten bis zum letzten Punkt in einer dunkleren Farbe
+            # --- NEU: Die geraden Trendlinien (jetzt transparent!) ---
             if len(nachfrage) > 1:
-                # Dunkleres Blau ('#104a75') für die Nachfrage-Gerade
                 ax.plot([1, len(nachfrage)], [nachfrage[0], nachfrage[-1]],
-                        color='#104a75', linestyle='-', linewidth=3, label='Nachfrage (Trend)')
+                        color='#104a75', linestyle='-', linewidth=4, label='Nachfrage (Trend)', alpha=0.3)
 
             if len(angebot) > 1:
-                # Dunkleres Orange ('#b35900') für die Angebot-Gerade
                 ax.plot([1, len(angebot)], [angebot[0], angebot[-1]],
-                        color='#b35900', linestyle='-', linewidth=3, label='Angebot (Trend)')
+                        color='#b35900', linestyle='-', linewidth=4, label='Angebot (Trend)', alpha=0.3)
             # ------------------------------------
 
             ax.set_title(f"Marktgleichgewicht - Runde {aktuelle_runde}", fontsize=16)
@@ -558,7 +556,53 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                 pdf.cell(95, 8, n_text, border=1)
                 pdf.cell(95, 8, a_text, border=1, ln=True)
 
-            # --- NEU: Seitenumbruch im PDF (außer nach der allerletzten Runde) ---
+            # --- NEU: DIAGRAMM FÜRS PDF GENERIEREN ---
+            pdf.ln(5)  # Etwas Abstand nach der Tabelle
+
+            # 1. Daten extrahieren (nur die Gebote aus der Liste)
+            n_preise = [x[1] for x in nachfrage_list]
+            a_preise = [x[1] for x in angebot_list]
+
+            # 2. Diagramm unsichtbar im Hintergrund zeichnen
+            fig_pdf, ax_pdf = plt.subplots(figsize=(10, 5))
+            ax_pdf.step(range(1, len(n_preise) + 1), n_preise, where='mid', label='Nachfrage', color='#1f77b4',
+                        marker='o', linewidth=2)
+            ax_pdf.step(range(1, len(a_preise) + 1), a_preise, where='mid', label='Angebot', color='#ff7f0e',
+                        marker='o', linewidth=2)
+
+            # Die schimmernden Trendlinien auch im PDF
+            if len(n_preise) > 1:
+                ax_pdf.plot([1, len(n_preise)], [n_preise[0], n_preise[-1]], color='#104a75', linestyle='-',
+                            linewidth=4, alpha=0.3)
+            if len(a_preise) > 1:
+                ax_pdf.plot([1, len(a_preise)], [a_preise[0], a_preise[-1]], color='#b35900', linestyle='-',
+                            linewidth=4, alpha=0.3)
+
+            ax_pdf.set_title(f"Marktgleichgewicht - Runde {r_int}", fontsize=14)
+            ax_pdf.set_xlabel("Menge (Schueler)", fontsize=10)
+            ax_pdf.set_ylabel("Preis in EUR", fontsize=10)
+            ax_pdf.grid(True, linestyle='--', alpha=0.7)
+
+            max_m = max(len(n_preise), len(a_preise))
+            if max_m > 0:
+                ax_pdf.set_xticks(range(1, max_m + 1))
+
+            ax_pdf.legend(fontsize=10)
+
+            # 3. Als Bild speichern, ins PDF packen und direkt wieder löschen
+            img_path = f"temp_plot_{r_int}.png"
+            fig_pdf.savefig(img_path, bbox_inches='tight')  # bbox_inches='tight' schneidet weiße Ränder ab
+            plt.close(fig_pdf)  # WICHTIG: Speicher im Hintergrund wieder freigeben!
+
+            pdf.image(img_path, w=170)  # Bild zentriert einfügen (ca. 170mm breit)
+
+            try:
+                os.remove(img_path)
+            except:
+                pass
+            # --- ENDE DIAGRAMM FÜRS PDF ---
+
+
             if r != alle_runden[-1]:
                 pdf.add_page()
             else:
