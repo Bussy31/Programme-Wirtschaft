@@ -335,7 +335,7 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
 
     st.divider()
 
-    # --- TEST-TOOLS (NUR FÜR DICH) ---
+    # --- TEST-TOOLS ---
     #with st.expander("🧪 Test-Werkzeuge (nur für Entwicklung)"):
     #    if st.button("🤖 20 Dummy-Schüler & Gebote erzeugen"):
     #        generiere_testdaten(st.session_state.spiel_id)
