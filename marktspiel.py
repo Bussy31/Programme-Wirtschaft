@@ -256,12 +256,12 @@ if st.session_state.ansicht == 'startseite':
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("👨‍🏫 Ich bin Lehrer (Spiel erstellen)"):
+        if st.button("👨‍🏫 Ich bin Lehrer:in (Spiel erstellen)"):
             st.session_state.ansicht = 'lehrer_setup'
             st.rerun()
 
     with col2:
-        if st.button("🧑‍🎓 Ich bin Schüler (Spiel beitreten)"):
+        if st.button("🧑‍🎓 Ich bin Schüler:in (Spiel beitreten)"):
             st.session_state.ansicht = 'schueler_join'
             st.rerun()
 
