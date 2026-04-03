@@ -248,7 +248,7 @@ if 'ansicht' not in st.session_state:
 
 # --- STARTSEITE ---
 if st.session_state.ansicht == 'startseite':
-    st.title("🍏 Das Gleichgewichts-Spiel")
+    st.title("🍏 Das Markt- und Gleichgewichts-Spiel")
     st.subheader("Basierend auf dem 'Pit Market'-Experiment von Vernon Smith")
     st.write("Willkommen! Bitte wähle deine Rolle:")
 
