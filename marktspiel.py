@@ -579,7 +579,7 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                             linewidth=4, alpha=0.3)
 
             ax_pdf.set_title(f"Marktgleichgewicht - Runde {r_int}", fontsize=14)
-            ax_pdf.set_xlabel("Menge (Schueler)", fontsize=10)
+            ax_pdf.set_xlabel("", fontsize=10)
             ax_pdf.set_ylabel("Preis in EUR", fontsize=10)
             ax_pdf.grid(True, linestyle='--', alpha=0.7)
 
