@@ -364,12 +364,11 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
             st.session_state.auswertung_text = ""  # Textfeld zurücksetzen
             st.rerun()
 
-    # Auswertung anzeigen, falls der Button geklickt wurde
-        # Auswertung anzeigen, falls der Button geklickt wurde
         if 'auswertung_text' in st.session_state and st.session_state.auswertung_text:
+            st.divider()  # Optische Trennung von den Buttons
             st.success(st.session_state.auswertung_text)
 
-            # NEU: Diagramm direkt im Dashboard anzeigen
+            # Diagramm direkt im Dashboard anzeigen
             conn = sqlite3.connect('marktspiel.db')
             df_runde = pd.read_sql_query('''
                                          SELECT P.rolle AS Rolle, B.gebot AS Gebot_in_Euro
@@ -386,17 +385,21 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
                 angebot = df_runde[df_runde['Rolle'] == 'Anbieter']['Gebot_in_Euro'].sort_values(
                     ascending=True).tolist()
 
-                fig, ax = plt.subplots(figsize=(8, 4))
-                ax.step(range(1, len(nachfrage) + 1), nachfrage, where='mid', label='Nachfrage (Zahlungsbereitschaft)',
-                        color='#1f77b4', marker='o')
-                ax.step(range(1, len(angebot) + 1), angebot, where='mid', label='Angebot (Verkaufsbereitschaft)',
-                        color='#ff7f0e', marker='o')
-                ax.set_title(f"Marktgleichgewicht - Runde {aktuelle_runde}", fontsize=12)
-                ax.set_xlabel("Menge")
-                ax.set_ylabel("Preis in €")
+                # figsize etwas breiter machen für bessere Beamer-Darstellung
+                fig, ax = plt.subplots(figsize=(12, 6))
+                ax.step(range(1, len(nachfrage) + 1), nachfrage, where='mid', label='Nachfrage', color='#1f77b4',
+                        marker='o', linewidth=2)
+                ax.step(range(1, len(angebot) + 1), angebot, where='mid', label='Angebot', color='#ff7f0e', marker='o',
+                        linewidth=2)
+
+                ax.set_title(f"Marktgleichgewicht - Runde {aktuelle_runde}", fontsize=16)
+                ax.set_xlabel("Menge (Anzahl der Schüler)", fontsize=12)
+                ax.set_ylabel("Preis in €", fontsize=12)
                 ax.grid(True, linestyle='--', alpha=0.7)
-                ax.legend()
-                st.pyplot(fig)
+                ax.legend(fontsize=12)
+
+                # DER WICHTIGSTE BEFEHL FÜR DIE BREITE: use_container_width=True
+                st.pyplot(fig, use_container_width=True)
 
         st.divider()
 
