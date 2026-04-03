@@ -389,7 +389,8 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
         if st.button("📈 Markt auswerten"):
             if anzahl_gebote > 0:
                 transaktionen, gleichgewicht, _, _ = runde_auswerten(st.session_state.spiel_id, aktuelle_runde)
-                st.session_state.auswertung_text = f"**Ergebnis Runde {aktuelle_runde}:**\nEs kamen {transaktionen} Geschäfte zustande. Der Gleichgewichtspreis liegt bei ca. {format_preis(gleichgewicht)} €" if gleichgewicht else f"**Ergebnis Runde {aktuelle_runde}:**\nEs kam kein Geschäft zustande. Die Preisvorstellungen lagen zu weit auseinander!"
+                st.session_state.auswertung_text = (f"**Ergebnis Runde {aktuelle_runde}:**\n"
+                    f"Es kamen {transaktionen} Geschäfte zustande. Der Gleichgewichtspreis liegt bei ca. {format_preis(gleichgewicht)} €") if gleichgewicht else f"**Ergebnis Runde {aktuelle_runde}:**\nEs kam kein Geschäft zustande. Die Preisvorstellungen lagen zu weit auseinander!"
             else:
                 st.warning("Noch keine Gebote abgegeben!")
 
@@ -504,23 +505,21 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
             # --- Wir fangen jetzt die 'matches' auf! ---
             transaktionen, gleichgewicht, _, matches = runde_auswerten(st.session_state.spiel_id, r_int)
 
+            # 1. Überschrift fürs PDF setzen
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(0, 10, f"Runde {r_int}", ln=True)
+            pdf.set_font("Arial", '', 11)
+
+            # 2. Fakten in Streamlit (Dashboard) und im PDF anzeigen
             if gleichgewicht is not None:
                 fakten_text = f"✅ **Gleichgewichtspreis:** {format_preis(gleichgewicht)} €  |  🤝 **Transaktionen (Verkäufe):** {transaktionen}"
                 st.info(fakten_text)
 
-                pdf.set_font("Arial", 'B', 11)
                 pdf_fakten = f"Gleichgewichtspreis: {format_preis(gleichgewicht)} EUR  |  Transaktionen: {transaktionen}"
                 pdf.cell(0, 8, pdf_fakten, ln=True)
             else:
                 st.warning("Kein Gleichgewicht in dieser Runde.")
                 pdf.cell(0, 8, "Kein Gleichgewicht in dieser Runde.", ln=True)
-
-            st.info(fakten_text)
-
-            pdf.set_font("Arial", 'B', 12)
-            pdf.cell(0, 10, f"Runde {r_int}", ln=True)
-            pdf.set_font("Arial", '', 11)
-            pdf.cell(0, 8, pdf_fakten, ln=True)
 
             # --- NEU: ZUSTANDE GEKOMMENE DEALS ANZEIGEN ---
             if matches:
