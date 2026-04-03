@@ -450,10 +450,11 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
 
         # Für jede Runde die Daten anzeigen und ins PDF schreiben
         for r in alle_runden:
-            st.subheader(f"📝 Ergebnisse aus Runde {r}")
+            r_int = int(r)  # WICHTIGER FIX: Numpy-Int in normales Python-Int umwandeln!
+            st.subheader(f"📝 Ergebnisse aus Runde {r_int}")
 
-            # --- NEU: Wichtige Fakten zur Runde berechnen ---
-            transaktionen, gleichgewicht, _ = runde_auswerten(st.session_state.spiel_id, r)
+            # --- Wichtige Fakten zur Runde berechnen ---
+            transaktionen, gleichgewicht, _ = runde_auswerten(st.session_state.spiel_id, r_int)
 
             if gleichgewicht is not None:
                 fakten_text = f"✅ **Gleichgewichtspreis:** {gleichgewicht:.2f} €  |  🤝 **Transaktionen (Verkäufe):** {transaktionen}"
@@ -467,13 +468,13 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
 
             # Fakten ins PDF schreiben
             pdf.set_font("Arial", 'B', 12)
-            pdf.cell(0, 10, f"Runde {r}", ln=True)
+            pdf.cell(0, 10, f"Runde {r_int}", ln=True)
             pdf.set_font("Arial", '', 11)
             pdf.cell(0, 8, pdf_fakten, ln=True)
             pdf.ln(2)
 
             # Tabellendaten vorbereiten
-            df_runde = df[df['Runde'] == r]
+            df_runde = df[df['Runde'] == r_int]
             df_nachfrage = df_runde[df_runde['Rolle'] == 'Nachfrager'].sort_values(by='Gebot', ascending=False)
             df_angebot = df_runde[df_runde['Rolle'] == 'Anbieter'].sort_values(by='Gebot', ascending=True)
 
@@ -511,43 +512,30 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
             pdf.ln(10)  # Abstand zur nächsten Runde im PDF
             st.divider()
 
-        # --- NEUE DOWNLOAD BUTTONS NEBENEINANDER ---
+        # --- NUR NOCH PDF DOWNLOAD ---
         st.write("### 📥 Daten exportieren")
-        col_down1, col_down2 = st.columns(2)
 
-        with col_down1:
-            # CSV Export
-            csv = df.to_csv(index=False, sep=';', decimal=',').encode('utf-8')
-            st.download_button(
-                label="📊 Rohdaten (Excel/CSV)",
-                data=csv,
-                file_name=f"marktspiel_auswertung_{st.session_state.spiel_id}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
+        # PDF speichern und als direkten Download anbieten
+        pdf_path = f"auswertung_{st.session_state.spiel_id}.pdf"
+        pdf.output(pdf_path, 'F')
 
-        with col_down2:
-            # PDF speichern und als direkten Download anbieten
-            pdf_path = f"auswertung_{st.session_state.spiel_id}.pdf"
-            pdf.output(pdf_path, 'F')
+        with open(pdf_path, "rb") as f:
+            pdf_bytes = f.read()
 
-            with open(pdf_path, "rb") as f:
-                pdf_bytes = f.read()
+        st.download_button(
+            label="📄 PDF-Report herunterladen",
+            data=pdf_bytes,
+            file_name=pdf_path,
+            mime="application/pdf",
+            use_container_width=True,
+            type="primary"
+        )
 
-            st.download_button(
-                label="📄 PDF-Report herunterladen",
-                data=pdf_bytes,
-                file_name=pdf_path,
-                mime="application/pdf",
-                use_container_width=True,
-                type="primary"
-            )
-
-            # Temporäre PDF-Datei nach dem Einlesen aufräumen
-            try:
-                os.remove(pdf_path)
-            except:
-                pass
+        # Temporäre PDF-Datei nach dem Einlesen aufräumen
+        try:
+            os.remove(pdf_path)
+        except:
+            pass
 
     st.write("<br><br>", unsafe_allow_html=True)
     if st.button("🚪 Zurück zur Startseite (Spiel endgültig verlassen)"):
