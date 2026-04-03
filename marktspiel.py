@@ -364,53 +364,53 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
             st.session_state.auswertung_text = ""  # Textfeld zurücksetzen
             st.rerun()
 
-        if 'auswertung_text' in st.session_state and st.session_state.auswertung_text:
-            st.divider()  # Optische Trennung von den Buttons
-            st.success(st.session_state.auswertung_text)
+    if 'auswertung_text' in st.session_state and st.session_state.auswertung_text:
+        st.divider()  # Optische Trennung von den Buttons
+        st.success(st.session_state.auswertung_text)
 
-            # Diagramm direkt im Dashboard anzeigen
-            conn = sqlite3.connect('marktspiel.db')
-            df_runde = pd.read_sql_query('''
-                                         SELECT P.rolle AS Rolle, B.gebot AS Gebot_in_Euro
-                                         FROM Bids B
-                                                  JOIN Players P ON B.spieler_name = P.spieler_name AND B.spiel_id = P.spiel_id
-                                         WHERE B.spiel_id = ?
-                                           AND B.runde = ?
-                                         ''', conn, params=(st.session_state.spiel_id, aktuelle_runde))
-            conn.close()
+        # Diagramm direkt im Dashboard anzeigen
+        conn = sqlite3.connect('marktspiel.db')
+        df_runde = pd.read_sql_query('''
+                                     SELECT P.rolle AS Rolle, B.gebot AS Gebot_in_Euro
+                                     FROM Bids B
+                                              JOIN Players P ON B.spieler_name = P.spieler_name AND B.spiel_id = P.spiel_id
+                                     WHERE B.spiel_id = ?
+                                       AND B.runde = ?
+                                     ''', conn, params=(st.session_state.spiel_id, aktuelle_runde))
+        conn.close()
 
-            if not df_runde.empty:
-                nachfrage = df_runde[df_runde['Rolle'] == 'Nachfrager']['Gebot_in_Euro'].sort_values(
-                    ascending=False).tolist()
-                angebot = df_runde[df_runde['Rolle'] == 'Anbieter']['Gebot_in_Euro'].sort_values(
-                    ascending=True).tolist()
+        if not df_runde.empty:
+            nachfrage = df_runde[df_runde['Rolle'] == 'Nachfrager']['Gebot_in_Euro'].sort_values(
+                ascending=False).tolist()
+            angebot = df_runde[df_runde['Rolle'] == 'Anbieter']['Gebot_in_Euro'].sort_values(
+                ascending=True).tolist()
 
-                # figsize etwas breiter machen für bessere Beamer-Darstellung
-                fig, ax = plt.subplots(figsize=(12, 6))
-                ax.step(range(1, len(nachfrage) + 1), nachfrage, where='mid', label='Nachfrage', color='#1f77b4',
-                        marker='o', linewidth=2)
-                ax.step(range(1, len(angebot) + 1), angebot, where='mid', label='Angebot', color='#ff7f0e', marker='o',
-                        linewidth=2)
+            # figsize etwas breiter machen für bessere Beamer-Darstellung
+            fig, ax = plt.subplots(figsize=(12, 6))
+            ax.step(range(1, len(nachfrage) + 1), nachfrage, where='mid', label='Nachfrage', color='#1f77b4',
+                    marker='o', linewidth=2)
+            ax.step(range(1, len(angebot) + 1), angebot, where='mid', label='Angebot', color='#ff7f0e', marker='o',
+                    linewidth=2)
 
-                ax.set_title(f"Marktgleichgewicht - Runde {aktuelle_runde}", fontsize=16)
+            ax.set_title(f"Marktgleichgewicht - Runde {aktuelle_runde}", fontsize=16)
 
-                # --- NEU: Eindeutige Beschriftung ---
-                ax.set_xlabel("Menge (Anzahl der Schüler / gehandelten Einheiten)", fontsize=12)
-                ax.set_ylabel("Preis in €", fontsize=12)
+            # --- NEU: Eindeutige Beschriftung ---
+            ax.set_xlabel("Schüler*innen", fontsize=12)
+            ax.set_ylabel("Preis in €", fontsize=12)
 
-                # --- NEU: Abstufung der X-Achse zwingend auf ganze Zahlen (1, 2, 3...) setzen ---
-                # Wir suchen uns die längste Liste (Nachfrager oder Anbieter), um das Maximum der Achse zu kennen
-                max_menge = max(len(nachfrage), len(angebot))
-                if max_menge > 0:
-                    ax.set_xticks(range(1, max_menge + 1))
+            # --- NEU: Abstufung der X-Achse zwingend auf ganze Zahlen (1, 2, 3...) setzen ---
+            # Wir suchen uns die längste Liste (Nachfrager oder Anbieter), um das Maximum der Achse zu kennen
+            max_menge = max(len(nachfrage), len(angebot))
+            if max_menge > 0:
+                ax.set_xticks(range(1, max_menge + 1))
 
-                ax.grid(True, linestyle='--', alpha=0.7)
-                ax.legend(fontsize=12)
+            ax.grid(True, linestyle='--', alpha=0.7)
+            ax.legend(fontsize=12)
 
-                # st.pyplot zwingt das Diagramm auf die volle Breite der Spalte/Seite
-                st.pyplot(fig, use_container_width=True)
+            # st.pyplot zwingt das Diagramm auf die volle Breite der Spalte/Seite
+            st.pyplot(fig, use_container_width=True)
 
-        st.divider()
+    st.divider()
 
     # --- NEUER BEENDEN BUTTON ---
     if st.button("🛑 Spiel beenden & Gesamtauswertung anzeigen", type="primary"):
