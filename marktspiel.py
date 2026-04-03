@@ -1,6 +1,6 @@
 import streamlit as st
 import sqlite3
-
+import pandas as pd
 
 # --- DATENBANK SETUP ---
 def init_db():
@@ -259,6 +259,54 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
     # Auswertung anzeigen, falls der Button geklickt wurde
     if 'auswertung_text' in st.session_state and st.session_state.auswertung_text:
         st.success(st.session_state.auswertung_text)
+
+    st.divider()
+
+    # --- NEUER BEENDEN BUTTON ---
+    if st.button("🛑 Spiel beenden & Gesamtauswertung anzeigen", type="primary"):
+        st.session_state.ansicht = 'lehrer_auswertung'
+        st.rerun()
+
+# --- LEHRER BEREICH: GESAMTAUSWERTUNG ---
+elif st.session_state.ansicht == 'lehrer_auswertung':
+    st.header(f"🏁 Gesamtauswertung - Spiel: {st.session_state.spiel_id}")
+
+    # Daten aus der Datenbank holen und als Pandas Tabelle (DataFrame) aufbereiten
+    conn = sqlite3.connect('marktspiel.db')
+    query = '''
+        SELECT B.runde AS Runde, B.spieler_name AS Name, P.rolle AS Rolle, B.gebot AS Gebot_in_Euro
+        FROM Bids B
+        JOIN Players P ON B.spieler_name = P.spieler_name AND B.spiel_id = P.spiel_id
+        WHERE B.spiel_id = ?
+        ORDER BY B.runde ASC, P.rolle ASC, B.gebot_in_Euro DESC
+    '''
+    df = pd.read_sql_query(query, conn, params=(st.session_state.spiel_id,))
+    conn.close()
+
+    if df.empty:
+        st.warning("Es wurden keine Gebote in diesem Spiel abgegeben.")
+    else:
+        st.write("Hier ist die komplette Übersicht aller Runden und Spieler:")
+        st.dataframe(df, use_container_width=True, hide_index=True)
+
+        # CSV Export vorbereiten (sep=';' sorgt dafür, dass deutsches Excel das sofort richtig liest)
+        csv = df.to_csv(index=False, sep=';', decimal=',').encode('utf-8')
+
+        st.download_button(
+            label="📥 Daten als Excel/CSV herunterladen",
+            data=csv,
+            file_name=f"marktspiel_auswertung_{st.session_state.spiel_id}.csv",
+            mime="text/csv",
+        )
+
+    st.divider()
+    if st.button("Zurück zur Startseite (Spiel endgültig verlassen)"):
+        # Session State aufräumen, damit kein altes Spiel im Speicher bleibt
+        for key in ['spiel_id', 'auswertung_text']:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.session_state.ansicht = 'startseite'
+        st.rerun()
 
 # --- SCHÜLER BEREICH ---
 elif st.session_state.ansicht == 'schueler_join':
