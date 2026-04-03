@@ -4,6 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import random
 
+st.set_page_config(layout="wide", page_title="Marktspiel", page_icon="📈")
+
 # --- COPYRIGHT FOOTER (Unten rechts) ---
 footer_html = """
 <style>
