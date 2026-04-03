@@ -487,6 +487,8 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
         pdf.cell(0, 10, f"Marktspiel Auswertung - Spiel-ID: {st.session_state.spiel_id}", ln=True, align='C')
         pdf.ln(5)
 
+        spieler_statistik = {}
+
         for r in alle_runden:
             r_int = int(r)
             st.subheader(f"📝 Ergebnisse aus Runde {r_int}")
@@ -523,6 +525,18 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                         pdf_deal = f"-> {m['kaeufer']} (bot {m['k_preis']:.2f} EUR) kauft von {m['verkaeufer']} (wollte {m['v_preis']:.2f} EUR) zum Preis von {m['deal_preis']:.2f} EUR"
                         pdf_deal = pdf_deal.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
                         pdf.cell(0, 6, pdf_deal, ln=True)
+
+                        k = m['kaeufer']
+                        v = m['verkaeufer']
+                        p = m['deal_preis']
+                        if k not in spieler_statistik: spieler_statistik[k] = {'Rolle': 'Nachfrager', 'Deals': 0,
+                                                                               'Geld': 0.0}
+                        if v not in spieler_statistik: spieler_statistik[v] = {'Rolle': 'Anbieter', 'Deals': 0,
+                                                                               'Geld': 0.0}
+                        spieler_statistik[k]['Deals'] += 1;
+                        spieler_statistik[k]['Geld'] += p
+                        spieler_statistik[v]['Deals'] += 1;
+                        spieler_statistik[v]['Geld'] += p
             pdf.ln(5)
 
             # Tabellendaten
@@ -609,6 +623,67 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                 pdf.ln(10)
 
             st.divider()  # Optische Trennung im Streamlit-Dashboard
+
+        st.divider()  # Optische Trennung im Streamlit-Dashboard (DIESE ZEILE GIBT ES SCHON)
+
+        # ==========================================
+        # --- NEU: BESTENLISTE AM ENDE DES SPIELS ---
+        # ==========================================
+        if spieler_statistik:
+            st.header("🏆 Gesamtranking & Statistiken")
+            pdf.add_page()
+            pdf.set_font("Arial", 'B', 16)
+            pdf.cell(0, 10, "Bestenliste & Statistiken", ln=True, align='C')
+            pdf.ln(5)
+
+            anbieter_stats = []
+            nachfrager_stats = []
+
+            for name, daten in spieler_statistik.items():
+                schnitt = daten['Geld'] / daten['Deals'] if daten['Deals'] > 0 else 0
+                eintrag = {'Name': name, 'Deals': daten['Deals'], 'Summe': daten['Geld'], 'Schnitt': schnitt}
+                if daten['Rolle'] == 'Anbieter':
+                    anbieter_stats.append(eintrag)
+                else:
+                    nachfrager_stats.append(eintrag)
+
+            # Sortieren! Anbieter: Meiste Deals, dann höchster Umsatz. Käufer: Meiste Deals, dann niedrigste Ausgaben.
+            anbieter_stats = sorted(anbieter_stats, key=lambda x: (x['Deals'], x['Summe']), reverse=True)
+            nachfrager_stats = sorted(nachfrager_stats, key=lambda x: (x['Deals'], -x['Summe']), reverse=True)
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader("Top Verkäufer (Umsatz)")
+                df_a = pd.DataFrame(anbieter_stats)
+                if not df_a.empty:
+                    df_a.columns = ['Name', 'Erfolgreiche Deals', 'Gesamtumsatz (€)', 'Ø Preis (€)']
+                    st.dataframe(df_a, hide_index=True)
+
+            with col2:
+                st.subheader("Top Käufer (Schnäppchenjäger)")
+                df_n = pd.DataFrame(nachfrager_stats)
+                if not df_n.empty:
+                    df_n.columns = ['Name', 'Erfolgreiche Deals', 'Ausgaben gesamt (€)', 'Ø Preis (€)']
+                    st.dataframe(df_n, hide_index=True)
+
+            # --- Ranking ins PDF schreiben ---
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(0, 8, "Top Verkaeufer (Meiste Deals & Hoher Umsatz)", ln=True)
+            pdf.set_font("Arial", '', 10)
+            for a in anbieter_stats:
+                text = f"{a['Name']} -> {a['Deals']} Deals | Umsatz: {a['Summe']:.2f} EUR | Durchschnittspreis: {a['Schnitt']:.2f} EUR"
+                text = text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+                pdf.cell(0, 6, text, ln=True)
+
+            pdf.ln(5)
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(0, 8, "Top Kaeufer (Meiste Deals & Geringe Ausgaben)", ln=True)
+            pdf.set_font("Arial", '', 10)
+            for n in nachfrager_stats:
+                text = f"{n['Name']} -> {n['Deals']} Deals | Ausgaben: {n['Summe']:.2f} EUR | Durchschnittspreis: {n['Schnitt']:.2f} EUR"
+                text = text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+                pdf.cell(0, 6, text, ln=True)
+        # ==========================================
 
         st.write("### 📥 Daten exportieren")
         pdf_path = f"auswertung_{st.session_state.spiel_id}.pdf"
