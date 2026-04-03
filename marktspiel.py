@@ -414,10 +414,26 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
 
             # figsize etwas breiter machen für bessere Beamer-Darstellung
             fig, ax = plt.subplots(figsize=(12, 6))
-            ax.step(range(1, len(nachfrage) + 1), nachfrage, where='mid', label='Nachfrage', color='#1f77b4',
+
+            # 1. Die originalen Treppen-Funktionen (Schüler-Gebote)
+            ax.step(range(1, len(nachfrage) + 1), nachfrage, where='mid', label='Nachfrage (Treppe)', color='#1f77b4',
                     marker='o', linewidth=2)
-            ax.step(range(1, len(angebot) + 1), angebot, where='mid', label='Angebot', color='#ff7f0e', marker='o',
+            ax.step(range(1, len(angebot) + 1), angebot, where='mid', label='Angebot (Treppe)', color='#ff7f0e',
+                    marker='o',
                     linewidth=2)
+
+            # --- NEU: Die geraden Trendlinien ---
+            # Wir ziehen eine Gerade vom ersten bis zum letzten Punkt in einer dunkleren Farbe
+            if len(nachfrage) > 1:
+                # Dunkleres Blau ('#104a75') für die Nachfrage-Gerade
+                ax.plot([1, len(nachfrage)], [nachfrage[0], nachfrage[-1]],
+                        color='#104a75', linestyle='-', linewidth=3, label='Nachfrage (Trend)')
+
+            if len(angebot) > 1:
+                # Dunkleres Orange ('#b35900') für die Angebot-Gerade
+                ax.plot([1, len(angebot)], [angebot[0], angebot[-1]],
+                        color='#b35900', linestyle='-', linewidth=3, label='Angebot (Trend)')
+            # ------------------------------------
 
             ax.set_title(f"Marktgleichgewicht - Runde {aktuelle_runde}", fontsize=16)
 
