@@ -304,37 +304,34 @@ elif st.session_state.ansicht == 'lehrer_setup':
 elif st.session_state.ansicht == 'lehrer_dashboard':
     st.header(f"📊 Dashboard - Spiel: {st.session_state.spiel_id}")
 
-    # Spieldaten und aktuelle Runde holen
     spiel_daten = get_spiel_daten(st.session_state.spiel_id)
     if not spiel_daten:
         st.error("Spiel nicht gefunden.")
         st.stop()
 
     gegenstand, min_preis, max_preis, aktuelle_runde = spiel_daten
-    st.subheader(f"🔄 Aktuelle Runde: {aktuelle_runde}")
-    st.write(f"Gehandelt wird: **{gegenstand}**")
+    st.subheader(f"🔄 Aktuelle Runde: {aktuelle_runde} (Handelsobjekt: {gegenstand})")
 
-    # Spieler aus der Datenbank laden
+    # --- DATEN ERST ABFRAGEN ---
     conn = sqlite3.connect('marktspiel.db')
     c = conn.cursor()
-    c.execute("SELECT spieler_name, rolle FROM Players WHERE spiel_id=?", (st.session_state.spiel_id,))
-    spieler_liste = c.fetchall()
+    # 1. Anzahl der angemeldeten Schüler
+    c.execute("SELECT COUNT(*) FROM Players WHERE spiel_id=?", (st.session_state.spiel_id,))
+    anzahl_spieler = c.fetchone()[0]
+
+    # 2. Anzahl der bereits abgegebenen Gebote in DIESER Runde
+    c.execute("SELECT COUNT(*) FROM Bids WHERE spiel_id=? AND runde=?", (st.session_state.spiel_id, aktuelle_runde))
+    anzahl_gebote = c.fetchone()[0]
     conn.close()
 
-    anzahl_spieler = len(spieler_liste)
-    # ... (vorheriger Code: Spiel_daten holen) ...
-
+    # --- DANN DIE UI ANZEIGEN ---
     st.write(f"👥 Angemeldete Schüler: {anzahl_spieler}")
 
-    # --- LIVE TRACKER LISTE ---
-    with st.expander("📝 Live-Abgabe-Status einsehen"):
-        status_liste = get_abgabe_status(st.session_state.spiel_id, aktuelle_runde)
-        cols = st.columns(2)  # Wir machen zwei Spalten für die Namensliste
-        for i, (name, rolle, hat_abgegeben) in enumerate(status_liste):
-            icon = "✅" if hat_abgegeben > 0 else "⏳"
-            cols[i % 2].write(f"{icon} {name} ({rolle})")
+    # Jetzt ist 'anzahl_gebote' definiert und st.progress funktioniert!
+    fortschritt = anzahl_gebote / anzahl_spieler if anzahl_spieler > 0 else 0.0
+    st.progress(fortschritt)
+    st.write(f"📝 Gebote abgegeben: {anzahl_gebote} von {anzahl_spieler}")
 
-    st.progress(anzahl_gebote / anzahl_spieler if anzahl_spieler > 0 else 0.0)
 
     st.divider()
 
