@@ -393,12 +393,21 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
                         linewidth=2)
 
                 ax.set_title(f"Marktgleichgewicht - Runde {aktuelle_runde}", fontsize=16)
-                ax.set_xlabel("Menge (Anzahl der Schüler)", fontsize=12)
+
+                # --- NEU: Eindeutige Beschriftung ---
+                ax.set_xlabel("Menge (Anzahl der Schüler / gehandelten Einheiten)", fontsize=12)
                 ax.set_ylabel("Preis in €", fontsize=12)
+
+                # --- NEU: Abstufung der X-Achse zwingend auf ganze Zahlen (1, 2, 3...) setzen ---
+                # Wir suchen uns die längste Liste (Nachfrager oder Anbieter), um das Maximum der Achse zu kennen
+                max_menge = max(len(nachfrage), len(angebot))
+                if max_menge > 0:
+                    ax.set_xticks(range(1, max_menge + 1))
+
                 ax.grid(True, linestyle='--', alpha=0.7)
                 ax.legend(fontsize=12)
 
-                # DER WICHTIGSTE BEFEHL FÜR DIE BREITE: use_container_width=True
+                # st.pyplot zwingt das Diagramm auf die volle Breite der Spalte/Seite
                 st.pyplot(fig, use_container_width=True)
 
         st.divider()
@@ -428,45 +437,119 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
     else:
         alle_runden = sorted(df['Runde'].unique())
 
-        st.write(
-            "Hier siehst du die sortierten Gebote aller Runden. Diese Ansicht ist ideal für den PDF-Export (ohne störende Diagramme).")
-        st.divider()
+        # --- PDF INITIALISIEREN ---
+        from fpdf import FPDF
+        import os
 
-        # Für jede Runde die sortierten Tabellen nebeneinander anzeigen
+        pdf = FPDF()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.add_page()
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, f"Marktspiel Auswertung - Spiel-ID: {st.session_state.spiel_id}", ln=True, align='C')
+        pdf.ln(5)
+
+        # Für jede Runde die Daten anzeigen und ins PDF schreiben
         for r in alle_runden:
             st.subheader(f"📝 Ergebnisse aus Runde {r}")
+
+            # --- NEU: Wichtige Fakten zur Runde berechnen ---
+            transaktionen, gleichgewicht, _ = runde_auswerten(st.session_state.spiel_id, r)
+
+            if gleichgewicht is not None:
+                fakten_text = f"✅ **Gleichgewichtspreis:** {gleichgewicht:.2f} €  |  🤝 **Transaktionen (Verkäufe):** {transaktionen}"
+                pdf_fakten = f"Gleichgewichtspreis: {gleichgewicht:.2f} EUR  |  Transaktionen: {transaktionen}"
+            else:
+                fakten_text = f"❌ **Kein Geschäft zustande gekommen** (Preisvorstellungen zu weit entfernt)"
+                pdf_fakten = "Kein Geschaeft zustande gekommen."
+
+            # Fakten im Streamlit Dashboard anzeigen
+            st.info(fakten_text)
+
+            # Fakten ins PDF schreiben
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(0, 10, f"Runde {r}", ln=True)
+            pdf.set_font("Arial", '', 11)
+            pdf.cell(0, 8, pdf_fakten, ln=True)
+            pdf.ln(2)
+
+            # Tabellendaten vorbereiten
             df_runde = df[df['Runde'] == r]
+            df_nachfrage = df_runde[df_runde['Rolle'] == 'Nachfrager'].sort_values(by='Gebot', ascending=False)
+            df_angebot = df_runde[df_runde['Rolle'] == 'Anbieter'].sort_values(by='Gebot', ascending=True)
 
             col1, col2 = st.columns(2)
 
             with col1:
                 st.markdown("**🛒 Nachfrager (Käufer)**")
-                st.caption("Sortiert von höchster zu niedrigster Zahlungsbereitschaft")
-                df_nachfrage = df_runde[df_runde['Rolle'] == 'Nachfrager'].sort_values(by='Gebot', ascending=False)
                 st.dataframe(df_nachfrage[['Name', 'Gebot']], hide_index=True, use_container_width=True)
 
             with col2:
                 st.markdown("**🏭 Anbieter (Verkäufer)**")
-                st.caption("Sortiert von niedrigster zu höchster Verkaufsbereitschaft")
-                df_angebot = df_runde[df_runde['Rolle'] == 'Anbieter'].sort_values(by='Gebot', ascending=True)
                 st.dataframe(df_angebot[['Name', 'Gebot']], hide_index=True, use_container_width=True)
 
-            # Kleiner Umbruch für das PDF
-            st.write("<br>", unsafe_allow_html=True)
+            # Tabellenstruktur für das PDF im Hintergrund aufbauen
+            pdf.set_font("Arial", 'B', 10)
+            pdf.cell(95, 8, "Nachfrager (Kaeufer)", border=1, align='C')
+            pdf.cell(95, 8, "Anbieter (Verkaeufer)", border=1, align='C', ln=True)
+
+            pdf.set_font("Arial", '', 10)
+            nachfrage_list = df_nachfrage[['Name', 'Gebot']].values.tolist()
+            angebot_list = df_angebot[['Name', 'Gebot']].values.tolist()
+            max_len = max(len(nachfrage_list), len(angebot_list))
+
+            for i in range(max_len):
+                n_text = f"{nachfrage_list[i][0]}: {nachfrage_list[i][1]:.2f} EUR" if i < len(nachfrage_list) else ""
+                a_text = f"{angebot_list[i][0]}: {angebot_list[i][1]:.2f} EUR" if i < len(angebot_list) else ""
+
+                # Umlaute bereinigen für den PDF-Export (sichert Kompatibilität)
+                n_text = n_text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+                a_text = a_text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+
+                pdf.cell(95, 8, n_text, border=1)
+                pdf.cell(95, 8, a_text, border=1, ln=True)
+
+            pdf.ln(10)  # Abstand zur nächsten Runde im PDF
             st.divider()
 
-        # CSV Export als Backup
-        csv = df.to_csv(index=False, sep=';', decimal=',').encode('utf-8')
-        st.download_button(
-            label="📥 Rohdaten als Excel/CSV herunterladen",
-            data=csv,
-            file_name=f"marktspiel_auswertung_{st.session_state.spiel_id}.csv",
-            mime="text/csv",
-        )
+        # --- NEUE DOWNLOAD BUTTONS NEBENEINANDER ---
+        st.write("### 📥 Daten exportieren")
+        col_down1, col_down2 = st.columns(2)
 
-    st.success(
-        "💡 **Tipp für den PDF-Export:** Drücke einfach `Strg + P` (Windows) oder `Cmd + P` (Mac) und wähle im Druckdialog 'Als PDF speichern'.")
+        with col_down1:
+            # CSV Export
+            csv = df.to_csv(index=False, sep=';', decimal=',').encode('utf-8')
+            st.download_button(
+                label="📊 Rohdaten (Excel/CSV)",
+                data=csv,
+                file_name=f"marktspiel_auswertung_{st.session_state.spiel_id}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
 
+        with col_down2:
+            # PDF speichern und als direkten Download anbieten
+            pdf_path = f"auswertung_{st.session_state.spiel_id}.pdf"
+            pdf.output(pdf_path, 'F')
+
+            with open(pdf_path, "rb") as f:
+                pdf_bytes = f.read()
+
+            st.download_button(
+                label="📄 PDF-Report herunterladen",
+                data=pdf_bytes,
+                file_name=pdf_path,
+                mime="application/pdf",
+                use_container_width=True,
+                type="primary"
+            )
+
+            # Temporäre PDF-Datei nach dem Einlesen aufräumen
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
+
+    st.write("<br><br>", unsafe_allow_html=True)
     if st.button("🚪 Zurück zur Startseite (Spiel endgültig verlassen)"):
         for key in ['spiel_id', 'auswertung_text']:
             if key in st.session_state:
