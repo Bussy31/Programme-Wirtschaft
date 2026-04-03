@@ -101,12 +101,12 @@ def gebot_abgeben(spieler_name, spiel_id, runde, gebot):
     conn.commit()
     conn.close()
 
+
 # --- LOGIK: RUNDE AUSWERTEN ---
 def runde_auswerten(spiel_id, runde):
     conn = sqlite3.connect('marktspiel.db')
     c = conn.cursor()
 
-    # Alle Gebote der aktuellen Runde mit der jeweiligen Rolle des Schülers abrufen
     c.execute('''
               SELECT B.spieler_name, B.gebot, P.rolle
               FROM Bids B
@@ -118,25 +118,33 @@ def runde_auswerten(spiel_id, runde):
     gebote = c.fetchall()
     conn.close()
 
-    # Listen sortieren für das Marktgleichgewicht
-    # Anbieter wollen teuer verkaufen, fangen beim Matchen aber billig an (aufsteigend)
-    anbieter_preise = sorted([g[1] for g in gebote if g[2] == 'Anbieter'])
-    # Nachfrager wollen billig kaufen, fangen beim Matchen hoch an (absteigend)
-    nachfrager_preise = sorted([g[1] for g in gebote if g[2] == 'Nachfrager'], reverse=True)
+    # NEU: Wir sortieren ganze Datensätze (Name, Preis, Rolle), nicht nur die Preise!
+    anbieter = sorted([g for g in gebote if g[2] == 'Anbieter'], key=lambda x: x[1])
+    nachfrager = sorted([g for g in gebote if g[2] == 'Nachfrager'], key=lambda x: x[1], reverse=True)
 
     transaktionen = 0
     gleichgewichtspreis = None
+    matches = []  # Hier speichern wir, wer mit wem gehandelt hat
 
-    # Paare bilden und prüfen, ob ein Handel zustande kommt
-    for a_preis, n_preis in zip(anbieter_preise, nachfrager_preise):
+    for a, n in zip(anbieter, nachfrager):
+        a_name, a_preis, _ = a
+        n_name, n_preis, _ = n
+
         if n_preis >= a_preis:
             transaktionen += 1
-            # Als einfachen Gleichgewichtspreis nehmen wir die Mitte der beiden Gebote
             gleichgewichtspreis = (n_preis + a_preis) / 2
-        else:
-            break  # Sobald ein Käufer weniger zahlen will, als der Verkäufer fordert, stoppt der Handel
 
-    return transaktionen, gleichgewichtspreis, len(gebote)
+            # Deal speichern für das PDF und Dashboard!
+            matches.append({
+                'kaeufer': n_name, 'k_preis': n_preis,
+                'verkaeufer': a_name, 'v_preis': a_preis,
+                'deal_preis': gleichgewichtspreis
+            })
+        else:
+            break  # Handel stoppt, Käufer will weniger zahlen als Verkäufer verlangt
+
+    # Gibt jetzt 4 Dinge zurück (inklusive der Match-Liste)
+    return transaktionen, gleichgewichtspreis, len(gebote), matches
 
 # --- LOGIK: NÄCHSTE RUNDE STARTEN ---
 def naechste_runde_starten(spiel_id):
@@ -353,7 +361,7 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
     with col2:
         if st.button("📈 Markt auswerten"):
             if anzahl_gebote > 0:
-                transaktionen, gleichgewicht, _ = runde_auswerten(st.session_state.spiel_id, aktuelle_runde)
+                transaktionen, gleichgewicht, _, _ = runde_auswerten(st.session_state.spiel_id, aktuelle_runde)
                 st.session_state.auswertung_text = f"**Ergebnis Runde {aktuelle_runde}:**\nEs kamen {transaktionen} Geschäfte zustande. Der Gleichgewichtspreis liegt bei ca. {gleichgewicht:.2f} €" if gleichgewicht else f"**Ergebnis Runde {aktuelle_runde}:**\nEs kam kein Geschäft zustande. Die Preisvorstellungen lagen zu weit auseinander!"
             else:
                 st.warning("Noch keine Gebote abgegeben!")
@@ -421,7 +429,6 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
 elif st.session_state.ansicht == 'lehrer_auswertung':
     st.header(f"🏁 Gesamtauswertung (Zahlen-Report) - Spiel: {st.session_state.spiel_id}")
 
-    # SQL Daten abrufen
     conn = sqlite3.connect('marktspiel.db')
     query = '''
             SELECT B.runde AS Runde, P.rolle AS Rolle, B.gebot AS Gebot, B.spieler_name AS Name
@@ -437,7 +444,6 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
     else:
         alle_runden = sorted(df['Runde'].unique())
 
-        # --- PDF INITIALISIEREN ---
         from fpdf import FPDF
         import os
 
@@ -448,13 +454,12 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
         pdf.cell(0, 10, f"Marktspiel Auswertung - Spiel-ID: {st.session_state.spiel_id}", ln=True, align='C')
         pdf.ln(5)
 
-        # Für jede Runde die Daten anzeigen und ins PDF schreiben
         for r in alle_runden:
-            r_int = int(r)  # WICHTIGER FIX: Numpy-Int in normales Python-Int umwandeln!
+            r_int = int(r)
             st.subheader(f"📝 Ergebnisse aus Runde {r_int}")
 
-            # --- Wichtige Fakten zur Runde berechnen ---
-            transaktionen, gleichgewicht, _ = runde_auswerten(st.session_state.spiel_id, r_int)
+            # --- Wir fangen jetzt die 'matches' auf! ---
+            transaktionen, gleichgewicht, _, matches = runde_auswerten(st.session_state.spiel_id, r_int)
 
             if gleichgewicht is not None:
                 fakten_text = f"✅ **Gleichgewichtspreis:** {gleichgewicht:.2f} €  |  🤝 **Transaktionen (Verkäufe):** {transaktionen}"
@@ -463,35 +468,47 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                 fakten_text = f"❌ **Kein Geschäft zustande gekommen** (Preisvorstellungen zu weit entfernt)"
                 pdf_fakten = "Kein Geschaeft zustande gekommen."
 
-            # Fakten im Streamlit Dashboard anzeigen
             st.info(fakten_text)
 
-            # Fakten ins PDF schreiben
             pdf.set_font("Arial", 'B', 12)
             pdf.cell(0, 10, f"Runde {r_int}", ln=True)
             pdf.set_font("Arial", '', 11)
             pdf.cell(0, 8, pdf_fakten, ln=True)
-            pdf.ln(2)
 
-            # Tabellendaten vorbereiten
+            # --- NEU: ZUSTANDE GEKOMMENE DEALS ANZEIGEN ---
+            if matches:
+                with st.expander("🤝 Wer hat mit wem gehandelt? (Klick zum Ausklappen)", expanded=True):
+                    pdf.set_font("Arial", 'B', 10)
+                    pdf.cell(0, 8, "Details der Transaktionen (Deals):", ln=True)
+                    pdf.set_font("Arial", '', 10)
+
+                    for m in matches:
+                        deal_str = f"🛍️ **{m['kaeufer']}** (bot {m['k_preis']:.2f}€) KAUFT VON **{m['verkaeufer']}** (wollte {m['v_preis']:.2f}€) ➡️ Preis: **{m['deal_preis']:.2f} €**"
+                        st.write(deal_str)
+
+                        # Text fürs PDF vorbereiten (Umlaute ersetzen)
+                        pdf_deal = f"-> {m['kaeufer']} (bot {m['k_preis']:.2f} EUR) kauft von {m['verkaeufer']} (wollte {m['v_preis']:.2f} EUR) zum Preis von {m['deal_preis']:.2f} EUR"
+                        pdf_deal = pdf_deal.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+                        pdf.cell(0, 6, pdf_deal, ln=True)
+            pdf.ln(5)
+
+            # Tabellendaten
             df_runde = df[df['Runde'] == r_int]
             df_nachfrage = df_runde[df_runde['Rolle'] == 'Nachfrager'].sort_values(by='Gebot', ascending=False)
             df_angebot = df_runde[df_runde['Rolle'] == 'Anbieter'].sort_values(by='Gebot', ascending=True)
 
             col1, col2 = st.columns(2)
-
             with col1:
                 st.markdown("**🛒 Nachfrager (Käufer)**")
                 st.dataframe(df_nachfrage[['Name', 'Gebot']], hide_index=True, use_container_width=True)
-
             with col2:
                 st.markdown("**🏭 Anbieter (Verkäufer)**")
                 st.dataframe(df_angebot[['Name', 'Gebot']], hide_index=True, use_container_width=True)
 
-            # Tabellenstruktur für das PDF im Hintergrund aufbauen
+            # Tabelle ins PDF
             pdf.set_font("Arial", 'B', 10)
-            pdf.cell(95, 8, "Nachfrager (Kaeufer)", border=1, align='C')
-            pdf.cell(95, 8, "Anbieter (Verkaeufer)", border=1, align='C', ln=True)
+            pdf.cell(95, 8, "Nachfrager (Kaeufer - Absteigend)", border=1, align='C')
+            pdf.cell(95, 8, "Anbieter (Verkaeufer - Aufsteigend)", border=1, align='C', ln=True)
 
             pdf.set_font("Arial", '', 10)
             nachfrage_list = df_nachfrage[['Name', 'Gebot']].values.tolist()
@@ -501,21 +518,20 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
             for i in range(max_len):
                 n_text = f"{nachfrage_list[i][0]}: {nachfrage_list[i][1]:.2f} EUR" if i < len(nachfrage_list) else ""
                 a_text = f"{angebot_list[i][0]}: {angebot_list[i][1]:.2f} EUR" if i < len(angebot_list) else ""
-
-                # Umlaute bereinigen für den PDF-Export (sichert Kompatibilität)
                 n_text = n_text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
                 a_text = a_text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
-
                 pdf.cell(95, 8, n_text, border=1)
                 pdf.cell(95, 8, a_text, border=1, ln=True)
 
-            pdf.ln(10)  # Abstand zur nächsten Runde im PDF
-            st.divider()
+            # --- NEU: Seitenumbruch im PDF (außer nach der allerletzten Runde) ---
+            if r != alle_runden[-1]:
+                pdf.add_page()
+            else:
+                pdf.ln(10)
 
-        # --- NUR NOCH PDF DOWNLOAD ---
+            st.divider()  # Optische Trennung im Streamlit-Dashboard
+
         st.write("### 📥 Daten exportieren")
-
-        # PDF speichern und als direkten Download anbieten
         pdf_path = f"auswertung_{st.session_state.spiel_id}.pdf"
         pdf.output(pdf_path, 'F')
 
@@ -531,7 +547,6 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
             type="primary"
         )
 
-        # Temporäre PDF-Datei nach dem Einlesen aufräumen
         try:
             os.remove(pdf_path)
         except:
