@@ -506,10 +506,14 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
 
             if gleichgewicht is not None:
                 fakten_text = f"✅ **Gleichgewichtspreis:** {format_preis(gleichgewicht)} €  |  🤝 **Transaktionen (Verkäufe):** {transaktionen}"
+                st.info(fakten_text)
+
+                pdf.set_font("Arial", 'B', 11)
                 pdf_fakten = f"Gleichgewichtspreis: {format_preis(gleichgewicht)} EUR  |  Transaktionen: {transaktionen}"
+                pdf.cell(0, 8, pdf_fakten, ln=True)
             else:
-                fakten_text = f"❌ **Kein Geschäft zustande gekommen** (Preisvorstellungen zu weit entfernt)"
-                pdf_fakten = "Kein Geschaeft zustande gekommen."
+                st.warning("Kein Gleichgewicht in dieser Runde.")
+                pdf.cell(0, 8, "Kein Gleichgewicht in dieser Runde.", ln=True)
 
             st.info(fakten_text)
 
@@ -526,12 +530,12 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                     pdf.set_font("Arial", '', 10)
 
                     for m in matches:
-                        deal_str = f"🛍️ **{m['kaeufer']}** (bot {format_preis(m['k_preis'])}€) kauft von **{m['verkaeufer']}** (wollte {format_preis(m['v_preis'])}€) ➡️ Preis: **{format_preis(m['deal_preis'])} €**"
+                        # Streamlit Anzeige
+                        deal_str = f"🛍️ **{m['kaeufer']}** (bot {format_preis(m['k_preis'])} €) kauft von **{m['verkaeufer']}** (wollte {format_preis(m['v_preis'])} €) ➡️ Preis: **{format_preis(m['deal_preis'])} €**"
                         st.write(deal_str)
-                        pdf_deal = f"-> {m['kaeufer']} (bot {format_preis(m['k_preis'])} EUR) kauft von {m['verkaeufer']} (wollte {format_preis(m['v_preis'])} EUR) zum Preis von {format_preis(m['deal_preis'])} EUR"
 
-                        # Text fürs PDF vorbereiten (Umlaute ersetzen)
-                        pdf_deal = f"-> {m['kaeufer']} (bot {m['k_preis']:.2f} EUR) kauft von {m['verkaeufer']} (wollte {m['v_preis']:.2f} EUR) zum Preis von {m['deal_preis']:.2f} EUR"
+                        # PDF Zeile
+                        pdf_deal = f"-> {m['kaeufer']} (bot {format_preis(m['k_preis'])} EUR) kauft von {m['verkaeufer']} (wollte {format_preis(m['v_preis'])} EUR) zum Preis von {format_preis(m['deal_preis'])} EUR"
                         pdf_deal = pdf_deal.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
                         pdf.cell(0, 6, pdf_deal, ln=True)
 
@@ -688,13 +692,13 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                         {'Ausgaben gesamt (€)': lambda x: format_preis(x), 'Ø Preis (€)': lambda x: format_preis(x)}),
                                  hide_index=True)
 
-
             # --- Ranking ins PDF schreiben ---
             pdf.set_font("Arial", 'B', 12)
             pdf.cell(0, 8, "Top Verkaeufer (Meiste Deals & Hoher Umsatz)", ln=True)
             pdf.set_font("Arial", '', 10)
             for a in anbieter_stats:
-                text = f"{a['Name']} -> {a['Deals']} Deals | Umsatz: {format_preis(a['Summe'])} EUR | Durchschnittspreis: {format_preis(a['Schnitt'])} EUR"
+                # Hier format_preis() nutzen statt :.2f
+                text = f"{a['Name']} -> {a['Deals']} Deals | Umsatz: {format_preis(a['Summe'])} EUR | Durchschnitt: {format_preis(a['Schnitt'])} EUR"
                 text = text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
                 pdf.cell(0, 6, text, ln=True)
 
@@ -703,10 +707,11 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
             pdf.cell(0, 8, "Top Kaeufer (Meiste Deals & Geringe Ausgaben)", ln=True)
             pdf.set_font("Arial", '', 10)
             for n in nachfrager_stats:
-                text = f"{n['Name']} -> {n['Deals']} Deals | Ausgaben: {n['Summe']:.2f} EUR | Durchschnittspreis: {n['Schnitt']:.2f} EUR"
+                # Und hier ebenfalls für die Käufer
+                text = f"{n['Name']} -> {n['Deals']} Deals | Ausgaben: {format_preis(n['Summe'])} EUR | Durchschnitt: {format_preis(n['Schnitt'])} EUR"
                 text = text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
                 pdf.cell(0, 6, text, ln=True)
-        # ==========================================
+
 
         st.write("### 📥 Daten exportieren")
         pdf_path = f"auswertung_{st.session_state.spiel_id}.pdf"
