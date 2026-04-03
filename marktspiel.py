@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # --- DATENBANK SETUP ---
 def init_db():
@@ -313,27 +314,59 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
 elif st.session_state.ansicht == 'lehrer_auswertung':
     st.header(f"🏁 Gesamtauswertung - Spiel: {st.session_state.spiel_id}")
 
-    # Daten aus der Datenbank holen und als Pandas Tabelle (DataFrame) aufbereiten
+    # 1. SQL FEHLER BEHOBEN: "B.gebot DESC" statt "B.gebot_in_Euro"
     conn = sqlite3.connect('marktspiel.db')
     query = '''
-        SELECT B.runde AS Runde, B.spieler_name AS Name, P.rolle AS Rolle, B.gebot AS Gebot_in_Euro
-        FROM Bids B
-        JOIN Players P ON B.spieler_name = P.spieler_name AND B.spiel_id = P.spiel_id
-        WHERE B.spiel_id = ?
-        ORDER BY B.runde ASC, P.rolle ASC, B.gebot_in_Euro DESC
-    '''
+            SELECT B.runde AS Runde, B.spieler_name AS Name, P.rolle AS Rolle, B.gebot AS Gebot_in_Euro
+            FROM Bids B
+                     JOIN Players P ON B.spieler_name = P.spieler_name AND B.spiel_id = P.spiel_id
+            WHERE B.spiel_id = ?
+            ORDER BY B.runde ASC, P.rolle ASC, B.gebot DESC \
+            '''
     df = pd.read_sql_query(query, conn, params=(st.session_state.spiel_id,))
     conn.close()
 
     if df.empty:
         st.warning("Es wurden keine Gebote in diesem Spiel abgegeben.")
     else:
-        st.write("Hier ist die komplette Übersicht aller Runden und Spieler:")
+        # --- DIAGRAMM ZEICHNEN (Für die letzte gespielte Runde) ---
+        letzte_runde = df['Runde'].max()
+        st.subheader(f"📈 Preis-Mengen-Diagramm (Runde {letzte_runde})")
+
+        # Daten der letzten Runde filtern
+        df_runde = df[df['Runde'] == letzte_runde]
+        nachfrage = df_runde[df_runde['Rolle'] == 'Nachfrager']['Gebot_in_Euro'].sort_values(ascending=False).tolist()
+        angebot = df_runde[df_runde['Rolle'] == 'Anbieter']['Gebot_in_Euro'].sort_values(ascending=True).tolist()
+
+        # Diagramm aufbauen
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        # Treppenstufen-Funktion für realistische Markt-Darstellung
+        x_nachfrage = list(range(1, len(nachfrage) + 1))
+        x_angebot = list(range(1, len(angebot) + 1))
+
+        ax.step(x_nachfrage, nachfrage, where='mid', label='Nachfrage (Zahlungsbereitschaft)', color='#1f77b4',
+                linewidth=2, marker='o')
+        ax.step(x_angebot, angebot, where='mid', label='Angebot (Verkaufsbereitschaft)', color='#ff7f0e', linewidth=2,
+                marker='o')
+
+        ax.set_title(f"Marktgleichgewicht in Runde {letzte_runde}", fontsize=14)
+        ax.set_xlabel("Menge (Anzahl der Schüler)", fontsize=12)
+        ax.set_ylabel("Preis in €", fontsize=12)
+        ax.grid(True, linestyle='--', alpha=0.7)
+        ax.legend(fontsize=12)
+
+        # Diagramm in Streamlit anzeigen
+        st.pyplot(fig)
+
+        st.divider()
+
+        # --- DATENTABELLE ---
+        st.subheader("📋 Komplette Datenübersicht")
         st.dataframe(df, use_container_width=True, hide_index=True)
 
-        # CSV Export vorbereiten (sep=';' sorgt dafür, dass deutsches Excel das sofort richtig liest)
+        # CSV Export als Backup
         csv = df.to_csv(index=False, sep=';', decimal=',').encode('utf-8')
-
         st.download_button(
             label="📥 Daten als Excel/CSV herunterladen",
             data=csv,
@@ -342,8 +375,10 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
         )
 
     st.divider()
-    if st.button("Zurück zur Startseite (Spiel endgültig verlassen)"):
-        # Session State aufräumen, damit kein altes Spiel im Speicher bleibt
+    st.info(
+        "💡 **Tipp für den PDF-Export:** Drücke einfach `Strg + P` (Windows) oder `Cmd + P` (Mac) und wähle 'Als PDF speichern', um diese gesamte Ansicht inkl. Diagramm als PDF zu exportieren.")
+
+    if st.button("🚪 Zurück zur Startseite (Spiel endgültig verlassen)"):
         for key in ['spiel_id', 'auswertung_text']:
             if key in st.session_state:
                 del st.session_state[key]
