@@ -460,7 +460,7 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
 
 # --- LEHRER BEREICH: GESAMTAUSWERTUNG ---
 elif st.session_state.ansicht == 'lehrer_auswertung':
-    st.header(f"🏁 Gesamtauswertung (Zahlen-Report) - Spiel: {st.session_state.spiel_id}")
+    st.header(f"🏁 Gesamtauswertung (Zahlen-Report) - Spiel: {st.session_state.gegenstand}")
 
     conn = sqlite3.connect('marktspiel.db')
     query = '''
