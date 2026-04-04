@@ -468,8 +468,15 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
         st.rerun()
 
 # --- LEHRER BEREICH: GESAMTAUSWERTUNG ---
+# --- LEHRER BEREICH: GESAMTAUSWERTUNG ---
 elif st.session_state.ansicht == 'lehrer_auswertung':
-    st.header(f"🏁 Gesamtauswertung (Zahlen-Report) - Gegenstand: {st.session_state.gegenstand}")
+
+    # --- NEU: Gegenstand sicher aus der Datenbank abrufen ---
+    spiel_daten = get_spiel_daten(st.session_state.spiel_id)
+    gegenstand_name = spiel_daten[0] if spiel_daten else "Unbekannt"
+
+    # Streamlit Überschrift anpassen
+    st.header(f"🏁 Gesamtauswertung (Zahlen-Report) - Gegenstand: {gegenstand_name}")
 
     conn = sqlite3.connect('marktspiel.db')
     query = '''
@@ -493,7 +500,9 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
         pdf.set_auto_page_break(auto=True, margin=15)
         pdf.add_page()
         pdf.set_font("Arial", 'B', 16)
-        pdf.cell(0, 10, f"Marktspiel Auswertung - Spiel-ID: {st.session_state.spiel_id}", ln=True, align='C')
+
+        # --- NEU: PDF Überschrift anpassen ---
+        pdf.cell(0, 10, f"Marktspiel Auswertung - Gegenstand: {gegenstand_name}", ln=True, align='C')
         pdf.ln(5)
 
         spieler_statistik = {}
