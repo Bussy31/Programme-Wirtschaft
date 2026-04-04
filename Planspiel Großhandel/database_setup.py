@@ -20,7 +20,7 @@ def create_database():
               )
               ''')
 
-    # 2. Teams (Nur noch Kontostand, das Lager wird ausgelagert)
+    # 2. Teams (Jetzt mit Passwort!)
     c.execute('''
               CREATE TABLE IF NOT EXISTS Teams
               (
@@ -31,9 +31,18 @@ def create_database():
                   game_id
                   TEXT,
                   bank_balance
-                  REAL
+                  REAL,
+                  password
+                  TEXT
               )
               ''')
+
+    # ... (Rest bleibt gleich) ...
+
+    # Spiel und Teams anlegen (Startkapital jetzt 100.000 + Passwörter!)
+    c.execute("INSERT OR IGNORE INTO Game_State VALUES ('Klasse10B', 1, 'Start des neuen Quartals.')")
+    c.execute("INSERT OR IGNORE INTO Teams VALUES ('Raiffeisen Nord', 'Klasse10B', 100000.0, 'nord123')")
+    c.execute("INSERT OR IGNORE INTO Teams VALUES ('Agravis Süd', 'Klasse10B', 100000.0, 'sued456')")
 
     # 3. Produkte (Unser Katalog)
     c.execute('''
