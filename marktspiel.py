@@ -2,7 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker  # NEU: Um die Diagramm-Achsen auf Komma umzustellen
+import matplotlib.ticker as ticker
 import random
 import os
 from fpdf import FPDF
@@ -614,13 +614,13 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
             # Die schimmernden Trendlinien auch im PDF
             if len(n_preise) > 1:
                 ax_pdf.plot([1, len(n_preise)], [n_preise[0], n_preise[-1]], color='#104a75', linestyle='-',
-                            linewidth=4, alpha=0.3)
+                            linewidth=4, alpha=0.3, label='Nachfrage (Trend)')
             if len(a_preise) > 1:
                 ax_pdf.plot([1, len(a_preise)], [a_preise[0], a_preise[-1]], color='#b35900', linestyle='-',
-                            linewidth=4, alpha=0.3)
+                            linewidth=4, alpha=0.3, label='Angebot (Trend)')
 
             ax_pdf.set_title(f"Marktgleichgewicht - Runde {r_int}", fontsize=14)
-            ax_pdf.set_xlabel("Menge (Schueler)", fontsize=10)
+            ax_pdf.set_xlabel("Schueler:innen", fontsize=10)
             ax_pdf.set_ylabel("Preis in EUR", fontsize=10)
 
             ax_pdf.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: format_preis(x)))
