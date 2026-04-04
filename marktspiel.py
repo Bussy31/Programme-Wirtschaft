@@ -2,7 +2,15 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker  # NEU: Um die Diagramm-Achsen auf Komma umzustellen
 import random
+import os
+from fpdf import FPDF
+
+def format_preis(wert):
+    if wert is None or pd.isna(wert):
+        return "0,00"
+    return f"{wert:.2f}".replace('.', ',')
 
 st.set_page_config(layout="wide", page_title="Marktspiel", page_icon="📈")
 
@@ -381,7 +389,8 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
         if st.button("📈 Markt auswerten"):
             if anzahl_gebote > 0:
                 transaktionen, gleichgewicht, _, _ = runde_auswerten(st.session_state.spiel_id, aktuelle_runde)
-                st.session_state.auswertung_text = f"**Ergebnis Runde {aktuelle_runde}:**\nEs kamen {transaktionen} Geschäfte zustande. Der Gleichgewichtspreis liegt bei ca. {gleichgewicht:.2f} €" if gleichgewicht else f"**Ergebnis Runde {aktuelle_runde}:**\nEs kam kein Geschäft zustande. Die Preisvorstellungen lagen zu weit auseinander!"
+                st.session_state.auswertung_text = (f"**Ergebnis Runde {aktuelle_runde}:**\n"
+                    f"Es kamen {transaktionen} Geschäfte zustande. Der Gleichgewichtspreis liegt bei ca. {format_preis(gleichgewicht)} €") if gleichgewicht else f"**Ergebnis Runde {aktuelle_runde}:**\nEs kam kein Geschäft zustande. Die Preisvorstellungen lagen zu weit auseinander!"
             else:
                 st.warning("Noch keine Gebote abgegeben!")
 
@@ -438,8 +447,8 @@ elif st.session_state.ansicht == 'lehrer_dashboard':
             # --- NEU: Eindeutige Beschriftung ---
             ax.set_xlabel("Schüler*innen", fontsize=12)
             ax.set_ylabel("Preis in €", fontsize=12)
+            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: format_preis(x)))
 
-            # --- NEU: Abstufung der X-Achse zwingend auf ganze Zahlen (1, 2, 3...) setzen ---
             # Wir suchen uns die längste Liste (Nachfrager oder Anbieter), um das Maximum der Achse zu kennen
             max_menge = max(len(nachfrage), len(angebot))
             if max_menge > 0:
@@ -487,6 +496,8 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
         pdf.cell(0, 10, f"Marktspiel Auswertung - Spiel-ID: {st.session_state.spiel_id}", ln=True, align='C')
         pdf.ln(5)
 
+        spieler_statistik = {}
+
         for r in alle_runden:
             r_int = int(r)
             st.subheader(f"📝 Ergebnisse aus Runde {r_int}")
@@ -494,19 +505,21 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
             # --- Wir fangen jetzt die 'matches' auf! ---
             transaktionen, gleichgewicht, _, matches = runde_auswerten(st.session_state.spiel_id, r_int)
 
-            if gleichgewicht is not None:
-                fakten_text = f"✅ **Gleichgewichtspreis:** {gleichgewicht:.2f} €  |  🤝 **Transaktionen (Verkäufe):** {transaktionen}"
-                pdf_fakten = f"Gleichgewichtspreis: {gleichgewicht:.2f} EUR  |  Transaktionen: {transaktionen}"
-            else:
-                fakten_text = f"❌ **Kein Geschäft zustande gekommen** (Preisvorstellungen zu weit entfernt)"
-                pdf_fakten = "Kein Geschaeft zustande gekommen."
-
-            st.info(fakten_text)
-
+            # 1. Überschrift fürs PDF setzen
             pdf.set_font("Arial", 'B', 12)
             pdf.cell(0, 10, f"Runde {r_int}", ln=True)
             pdf.set_font("Arial", '', 11)
-            pdf.cell(0, 8, pdf_fakten, ln=True)
+
+            # 2. Fakten in Streamlit (Dashboard) und im PDF anzeigen
+            if gleichgewicht is not None:
+                fakten_text = f"✅ **Gleichgewichtspreis:** {format_preis(gleichgewicht)} €  |  🤝 **Transaktionen (Verkäufe):** {transaktionen}"
+                st.info(fakten_text)
+
+                pdf_fakten = f"Gleichgewichtspreis: {format_preis(gleichgewicht)} EUR  |  Transaktionen: {transaktionen}"
+                pdf.cell(0, 8, pdf_fakten, ln=True)
+            else:
+                st.warning("Kein Gleichgewicht in dieser Runde.")
+                pdf.cell(0, 8, "Kein Gleichgewicht in dieser Runde.", ln=True)
 
             # --- NEU: ZUSTANDE GEKOMMENE DEALS ANZEIGEN ---
             if matches:
@@ -516,13 +529,26 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                     pdf.set_font("Arial", '', 10)
 
                     for m in matches:
-                        deal_str = f"🛍️ **{m['kaeufer']}** (bot {m['k_preis']:.2f}€) kauft von **{m['verkaeufer']}** (wollte {m['v_preis']:.2f}€) ➡️ Preis: **{m['deal_preis']:.2f} €**"
+                        # Streamlit Anzeige
+                        deal_str = f"🛍️ **{m['kaeufer']}** (bot {format_preis(m['k_preis'])} €) kauft von **{m['verkaeufer']}** (wollte {format_preis(m['v_preis'])} €) ➡️ Preis: **{format_preis(m['deal_preis'])} €**"
                         st.write(deal_str)
 
-                        # Text fürs PDF vorbereiten (Umlaute ersetzen)
-                        pdf_deal = f"-> {m['kaeufer']} (bot {m['k_preis']:.2f} EUR) kauft von {m['verkaeufer']} (wollte {m['v_preis']:.2f} EUR) zum Preis von {m['deal_preis']:.2f} EUR"
+                        # PDF Zeile
+                        pdf_deal = f"-> {m['kaeufer']} (bot {format_preis(m['k_preis'])} EUR) kauft von {m['verkaeufer']} (wollte {format_preis(m['v_preis'])} EUR) zum Preis von {format_preis(m['deal_preis'])} EUR"
                         pdf_deal = pdf_deal.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
                         pdf.cell(0, 6, pdf_deal, ln=True)
+
+                        k = m['kaeufer']
+                        v = m['verkaeufer']
+                        p = m['deal_preis']
+                        if k not in spieler_statistik: spieler_statistik[k] = {'Rolle': 'Nachfrager', 'Deals': 0,
+                                                                               'Geld': 0.0}
+                        if v not in spieler_statistik: spieler_statistik[v] = {'Rolle': 'Anbieter', 'Deals': 0,
+                                                                               'Geld': 0.0}
+                        spieler_statistik[k]['Deals'] += 1;
+                        spieler_statistik[k]['Geld'] += p
+                        spieler_statistik[v]['Deals'] += 1;
+                        spieler_statistik[v]['Geld'] += p
             pdf.ln(5)
 
             # Tabellendaten
@@ -533,10 +559,14 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("**🛒 Nachfrager (Käufer)**")
-                st.dataframe(df_nachfrage[['Name', 'Gebot']], hide_index=True, use_container_width=True)
+                df_n_disp = df_nachfrage[['Name', 'Gebot']].copy()
+                df_n_disp['Gebot'] = df_n_disp['Gebot'].apply(lambda x: format_preis(x))
+                st.dataframe(df_n_disp, hide_index=True, use_container_width=True)
             with col2:
                 st.markdown("**🏭 Anbieter (Verkäufer)**")
-                st.dataframe(df_angebot[['Name', 'Gebot']], hide_index=True, use_container_width=True)
+                df_a_disp = df_angebot[['Name', 'Gebot']].copy()
+                df_a_disp['Gebot'] = df_a_disp['Gebot'].apply(lambda x: format_preis(x))
+                st.dataframe(df_a_disp, hide_index=True, use_container_width=True)
 
             # Tabelle ins PDF
             pdf.set_font("Arial", 'B', 10)
@@ -549,8 +579,10 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
             max_len = max(len(nachfrage_list), len(angebot_list))
 
             for i in range(max_len):
-                n_text = f"{nachfrage_list[i][0]}: {nachfrage_list[i][1]:.2f} EUR" if i < len(nachfrage_list) else ""
-                a_text = f"{angebot_list[i][0]}: {angebot_list[i][1]:.2f} EUR" if i < len(angebot_list) else ""
+                n_text = f"{nachfrage_list[i][0]}: {format_preis(nachfrage_list[i][1])} EUR" if i < len(
+                    nachfrage_list) else ""
+                a_text = f"{angebot_list[i][0]}: {format_preis(angebot_list[i][1])} EUR" if i < len(
+                    angebot_list) else ""
                 n_text = n_text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
                 a_text = a_text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
                 pdf.cell(95, 8, n_text, border=1)
@@ -579,8 +611,11 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                             linewidth=4, alpha=0.3)
 
             ax_pdf.set_title(f"Marktgleichgewicht - Runde {r_int}", fontsize=14)
-            ax_pdf.set_xlabel("", fontsize=10)
+            ax_pdf.set_xlabel("Menge (Schueler)", fontsize=10)
             ax_pdf.set_ylabel("Preis in EUR", fontsize=10)
+
+            ax_pdf.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: format_preis(x)))
+
             ax_pdf.grid(True, linestyle='--', alpha=0.7)
 
             max_m = max(len(n_preise), len(a_preise))
@@ -609,6 +644,73 @@ elif st.session_state.ansicht == 'lehrer_auswertung':
                 pdf.ln(10)
 
             st.divider()  # Optische Trennung im Streamlit-Dashboard
+
+        st.divider()  # Optische Trennung im Streamlit-Dashboard (DIESE ZEILE GIBT ES SCHON)
+
+        # ==========================================
+        # --- NEU: BESTENLISTE AM ENDE DES SPIELS ---
+        # ==========================================
+        if spieler_statistik:
+            st.header("🏆 Gesamtranking & Statistiken")
+            pdf.add_page()
+            pdf.set_font("Arial", 'B', 16)
+            pdf.cell(0, 10, "Bestenliste & Statistiken", ln=True, align='C')
+            pdf.ln(5)
+
+            anbieter_stats = []
+            nachfrager_stats = []
+
+            for name, daten in spieler_statistik.items():
+                schnitt = daten['Geld'] / daten['Deals'] if daten['Deals'] > 0 else 0
+                eintrag = {'Name': name, 'Deals': daten['Deals'], 'Summe': daten['Geld'], 'Schnitt': schnitt}
+                if daten['Rolle'] == 'Anbieter':
+                    anbieter_stats.append(eintrag)
+                else:
+                    nachfrager_stats.append(eintrag)
+
+            # Sortieren! Anbieter: Meiste Deals, dann höchster Umsatz. Käufer: Meiste Deals, dann niedrigste Ausgaben.
+            anbieter_stats = sorted(anbieter_stats, key=lambda x: (x['Deals'], x['Summe']), reverse=True)
+            nachfrager_stats = sorted(nachfrager_stats, key=lambda x: (x['Deals'], -x['Summe']), reverse=True)
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader("Top Verkäufer (Umsatz)")
+                df_a = pd.DataFrame(anbieter_stats)
+                if not df_a.empty:
+                    df_a.columns = ['Name', 'Erfolgreiche Deals', 'Gesamtumsatz (€)', 'Ø Preis (€)']
+                    st.dataframe(df_a.style.format(
+                        {'Gesamtumsatz (€)': lambda x: format_preis(x), 'Ø Preis (€)': lambda x: format_preis(x)}),
+                                 hide_index=True)
+
+            with col2:
+                st.subheader("Top Käufer (Schnäppchenjäger)")
+                df_n = pd.DataFrame(nachfrager_stats)
+                if not df_n.empty:
+                    df_n.columns = ['Name', 'Erfolgreiche Deals', 'Ausgaben gesamt (€)', 'Ø Preis (€)']
+                    st.dataframe(df_n.style.format(
+                        {'Ausgaben gesamt (€)': lambda x: format_preis(x), 'Ø Preis (€)': lambda x: format_preis(x)}),
+                                 hide_index=True)
+
+            # --- Ranking ins PDF schreiben ---
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(0, 8, "Top Verkaeufer (Meiste Deals & Hoher Umsatz)", ln=True)
+            pdf.set_font("Arial", '', 10)
+            for a in anbieter_stats:
+                # Hier format_preis() nutzen statt :.2f
+                text = f"{a['Name']} -> {a['Deals']} Deals | Umsatz: {format_preis(a['Summe'])} EUR | Durchschnitt: {format_preis(a['Schnitt'])} EUR"
+                text = text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+                pdf.cell(0, 6, text, ln=True)
+
+            pdf.ln(5)
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(0, 8, "Top Kaeufer (Meiste Deals & Geringe Ausgaben)", ln=True)
+            pdf.set_font("Arial", '', 10)
+            for n in nachfrager_stats:
+                # Und hier ebenfalls für die Käufer
+                text = f"{n['Name']} -> {n['Deals']} Deals | Ausgaben: {format_preis(n['Summe'])} EUR | Durchschnitt: {format_preis(n['Schnitt'])} EUR"
+                text = text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+                pdf.cell(0, 6, text, ln=True)
+
 
         st.write("### 📥 Daten exportieren")
         pdf_path = f"auswertung_{st.session_state.spiel_id}.pdf"
@@ -699,7 +801,8 @@ elif st.session_state.ansicht == 'schueler_spiel':
 
             if submit_gebot:
                 gebot_abgeben(st.session_state.spieler_name, st.session_state.spiel_id, aktuelle_runde, mein_gebot)
-                st.success(f"✅ Dein Gebot von {mein_gebot:.2f} € für Runde {aktuelle_runde} wurde gespeichert!")
+                st.success(
+                    f"✅ Dein Gebot von {format_preis(mein_gebot)} € für Runde {aktuelle_runde} wurde gespeichert!")
 
         # Aktualisieren-Knopf, falls der Lehrer die nächste Runde gestartet hat
         if st.button("🔄 Seite aktualisieren (Warten auf nächste Runde)"):
