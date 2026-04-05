@@ -241,15 +241,19 @@ else:
         with c[7]:
             b1, b2, b3, feedback = st.columns([1, 1, 1, 2])
 
-            if b1.button("↑", key=f"up_{row['id']}") and i > 0:
+            # Pfeil hoch ist ausgegraut, wenn es die allererste Zeile (Index 0) ist
+            if b1.button("↑", key=f"up_{row['id']}", disabled=(i == 0)):
                 st.session_state['uebungen_daten'][i], st.session_state['uebungen_daten'][i - 1] = \
-                st.session_state['uebungen_daten'][i - 1], st.session_state['uebungen_daten'][i]
+                    st.session_state['uebungen_daten'][i - 1], st.session_state['uebungen_daten'][i]
                 st.rerun()
-            if b2.button("↓", key=f"dn_{row['id']}") and i < len(st.session_state['uebungen_daten']) - 1:
+
+            # Pfeil runter ist ausgegraut, wenn es die letzte Zeile der Liste ist
+            if b2.button("↓", key=f"dn_{row['id']}", disabled=(i == len(st.session_state['uebungen_daten']) - 1)):
                 st.session_state['uebungen_daten'][i], st.session_state['uebungen_daten'][i + 1] = \
-                st.session_state['uebungen_daten'][i + 1], st.session_state['uebungen_daten'][i]
+                    st.session_state['uebungen_daten'][i + 1], st.session_state['uebungen_daten'][i]
                 st.rerun()
-            if b3.button("🗑️", key=f"del_{row['id']}"):
+
+            if b3.button("🗑", key=f"del_{row['id']}"):
                 st.session_state['uebungen_daten'].pop(i)
                 st.rerun()
 
