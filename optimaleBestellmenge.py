@@ -136,10 +136,11 @@ if app_modus == "🚀 Simulator (Automatik)":
         # Layout-Anpassungen (Achsenbeschriftung & Deutsch-Format)
         fig.update_layout(
             hovermode="x unified",
+            separators=",.",  # HIER GEHÖRT ES HIN (Komma für Dezimal, Punkt für Tausender)
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             margin=dict(l=0, r=0, t=30, b=0),
-            xaxis=dict(title="Bestellmenge (Stück)", tickformat=",", separators=".,"),
-            yaxis=dict(title="Gesamtkosten (€)", tickformat=",", separators=".,")
+            xaxis=dict(title="Bestellmenge (Stück)", tickformat=","),
+            yaxis=dict(title="Gesamtkosten (€)", tickformat=",")
         )
         st.plotly_chart(fig, use_container_width=True)
 # ==========================================
