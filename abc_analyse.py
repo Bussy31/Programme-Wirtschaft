@@ -30,30 +30,16 @@ footer_html = """
 """
 st.markdown(footer_html, unsafe_allow_html=True)
 
-# CSS für softe Optik & Buttons
+# CSS für anpassungsfähige Optik (Light/Dark Mode kompatibel)
 st.markdown("""
     <style>
-    /* Buttons (+, -, Pfeile) in den Blautönen des Diagramms */
-    button[kind="secondary"] {
-        background-color: #e0f2fe !important; 
-        color: #0284c7 !important; 
-        border: none !important; 
-        border-radius: 6px !important;
-        font-weight: 500 !important;
-        transition: all 0.2s ease-in-out;
-    }
-    button[kind="secondary"]:hover {
-        background-color: #93c5fd !important; 
-        color: #ffffff !important;
-    }
-
     /* Millimetergenaue Ausrichtung der Rang-Zahlen an die Textfelder */
     .rang-text {
         font-size: 1.1rem;
         font-weight: 600;
         margin-top: 6px; 
         text-align: center;
-        color: #334155;
+        color: var(--text-color); /* Passt sich automatisch Hell/Dunkel an */
     }
     </style>
 """, unsafe_allow_html=True)
@@ -101,12 +87,12 @@ def add_item():
 # --- ZENTRALES SPALTEN-VERHÄLTNIS ---
 COL_RATIOS = [0.6, 1.8, 0.9, 0.9, 1.1, 0.9, 0.9, 0.9, 1.0]
 
-# --- 3. DIE PERFEKTE KOPFZEILE (Durchgehender HTML-Block ohne Lücken) ---
+# --- 3. DIE PERFEKTE KOPFZEILE (Light & Dark Mode kompatibel) ---
 headers = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (€)", "Anteil %", "Kum. %", "Klasse", "Aktion"]
 
-header_html = "<div style='display: flex; gap: 0.5rem; background-color: #e2e8f0; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; align-items: center; border: 1px solid #cbd5e1;'>"
+header_html = "<div style='display: flex; gap: 0.5rem; background-color: var(--secondary-background-color); padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; align-items: center; border: 1px solid var(--border-color);'>"
 for ratio, title in zip(COL_RATIOS, headers):
-    header_html += f"<div style='flex: {ratio} 1 0%; text-align: center; font-weight: 700; color: #334155; font-size: 1.05rem;'>{title}</div>"
+    header_html += f"<div style='flex: {ratio} 1 0%; text-align: center; font-weight: 700; color: var(--text-color); font-size: 1.05rem;'>{title}</div>"
 header_html += "</div>"
 
 st.markdown(header_html, unsafe_allow_html=True)
