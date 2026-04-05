@@ -241,11 +241,11 @@ else:
         with c[7]:
             b1, b2, b3, feedback = st.columns([1, 1, 1, 2])
 
-            if b1.button("⬆️", key=f"up_{row['id']}") and i > 0:
+            if b1.button("↑", key=f"up_{row['id']}") and i > 0:
                 st.session_state['uebungen_daten'][i], st.session_state['uebungen_daten'][i - 1] = \
                 st.session_state['uebungen_daten'][i - 1], st.session_state['uebungen_daten'][i]
                 st.rerun()
-            if b2.button("⬇️", key=f"dn_{row['id']}") and i < len(st.session_state['uebungen_daten']) - 1:
+            if b2.button("↓", key=f"dn_{row['id']}") and i < len(st.session_state['uebungen_daten']) - 1:
                 st.session_state['uebungen_daten'][i], st.session_state['uebungen_daten'][i + 1] = \
                 st.session_state['uebungen_daten'][i + 1], st.session_state['uebungen_daten'][i]
                 st.rerun()
