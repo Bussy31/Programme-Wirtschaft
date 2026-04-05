@@ -110,7 +110,7 @@ if app_modus == "🚀 Simulator (Automatik)":
 
     # Metriken (wie gehabt)
     c1, c2, c3 = st.columns(3)
-    c1.metric("📦 Menge", f"{formatiere_zahl(akt_menge)} Stk.", f"{formatiere_zahl(akt_bestellungen, 1)} x p.a.")
+    c1.metric("📦 Menge", f"{formatiere_zahl(akt_menge)} Stk.", f"{formatiere_zahl(akt_bestellungen, 1)} Bestellungen/Jahr")
     c2.metric("⏱️ Rhythmus", f"Alle {rhythmus} Tage")
     opt_k_ges = (jahresbedarf / opt_menge_theorie) * bestellkosten + (
                 mindestbestand + (opt_menge_theorie / 2)) * einstandspreis * (lagerkostensatz / 100)

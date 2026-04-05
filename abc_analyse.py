@@ -250,6 +250,7 @@ with col_pdf:
 
             # Tabellenkopf
             pdf.set_font("Arial", 'B', 9)
+            pdf.set_fill_color(226, 232, 240)  # Passend zum Web-Grau
             headers_pdf = ["Rang", "Artikel", "Menge", "Preis", "Umsatz (Eing.)", "Ant. %", "Kum. %", "Kl."]
             w = [10, 48, 15, 25, 30, 20, 20, 15]  # Breiten (Total = 183, ca. Seitenbreite)
 
