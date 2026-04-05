@@ -3,6 +3,7 @@ import uuid
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from fpdf import FPDF
 
 # --- HILFSFUNKTIONEN ---
 def formatiere_waehrung(wert):
@@ -29,7 +30,7 @@ if 'sim_daten' not in st.session_state:
 # Speicher für den Übungsmodus
 if 'uebungen_daten' not in st.session_state:
     st.session_state['uebungen_daten'] = []
-    default_mengen = [15000.0, 10000.0, 5000.0]
+    default_mengen = [0.0, 0.0, 0.0]
     for m in default_mengen:
         st.session_state['uebungen_daten'].append({
             'id': str(uuid.uuid4()), 'm': float(m), 'h': 0.0, 'bk': 0.0,
@@ -43,17 +44,30 @@ st.title("📦 Optimale Bestellmenge")
 
 # --- 2. RAHMENDATEN ---
 st.sidebar.header("⚙️ Rahmendaten")
-jahresbedarf = st.sidebar.number_input("Jahresbedarf (Stück)", min_value=1, value=240000, step=1000)
-bestellkosten = st.sidebar.number_input("Kosten je Bestellvorgang (€)", min_value=1.0, value=500.0, step=10.0)
-einstandspreis = st.sidebar.number_input("Bezugspreis/Stück (€)", min_value=0.1, value=40.0, step=1.0)
-lagerkostensatz = st.sidebar.number_input("Lagerkostensatz (%)", min_value=0.1, value=8.0, step=0.5)
-mindestbestand = st.sidebar.number_input("Mindestbestand (Stück)", min_value=0, value=2000, step=100)
+jahresbedarf = st.sidebar.number_input("Jahresbedarf (Stück)", min_value=0, value=0, step=1000)
+bestellkosten = st.sidebar.number_input("Kosten je Bestellvorgang (€)", min_value=0.0, value=0.0, step=10.0)
+einstandspreis = st.sidebar.number_input("Bezugspreis/Stück (€)", min_value=0.0, value=0.0, step=1.0)
+lagerkostensatz = st.sidebar.number_input("Lagerkostensatz (%)", min_value=0.0, value=0.0, step=1.0)
+mindestbestand = st.sidebar.number_input("Mindestbestand (Stück)", min_value=0, value=0, step=100)
 
 st.sidebar.divider()
-app_modus = st.sidebar.radio("Haupt-Modus:", ["🚀 Simulator (Automatik)", "📝 Übungsmodus (Manuell)"])
+app_modus = st.sidebar.radio("Haupt-Modus:", ["📝 Übungsmodus (Manuell)","🚀 Simulator (Automatik)"])
 
-# Basisberechnung für Startwerte
-opt_menge_theorie = math.sqrt((200 * jahresbedarf * bestellkosten) / (einstandspreis * lagerkostensatz))
+# --- SICHERHEITS-CHECK ---
+if jahresbedarf <= 0 or einstandspreis <= 0:
+    st.warning("⚠️ Bitte gib für den Jahresbedarf und den Bezugspreis Werte größer als 0 ein.")
+    st.stop()
+
+# Basisberechnung für Startwerte (Absicherung gegen Teilen durch 0)
+formel_moeglich = True
+if lagerkostensatz > 0:
+    opt_menge_theorie = math.sqrt((200 * jahresbedarf * bestellkosten) / (einstandspreis * lagerkostensatz))
+    opt_k_ges = (jahresbedarf/opt_menge_theorie)*bestellkosten + (mindestbestand + (opt_menge_theorie/2))*einstandspreis*(lagerkostensatz/100)
+else:
+    formel_moeglich = False
+    opt_menge_theorie = float(jahresbedarf) # Fallback
+    opt_k_ges = 0.0 # Fallback
+
 
 # Setze Startwerte für den Simulator, falls noch leer
 if st.session_state['sim_daten']['menge'] is None:
@@ -106,7 +120,7 @@ if app_modus == "🚀 Simulator (Automatik)":
     tab_grafik, tab_tabelle, tab_formel = st.tabs(["📉 Grafik", "🧮 Tabelle", "📝 Berechnung"])
 
     with tab_grafik:
-        # Daten für das Diagramm berechnen (Bereich eingrenzen auf 2x die Optimalmenge)
+        # Daten für das Diagramm berechnen
         max_x = int(opt_menge_theorie * 2.5)
         schritt = max(100, max_x // 50)
         m_range = list(range(schritt, max_x, schritt))
@@ -133,16 +147,51 @@ if app_modus == "🚀 Simulator (Automatik)":
             marker=dict(color='red', size=12, symbol="diamond")
         ))
 
-        # Layout-Anpassungen (Achsenbeschriftung & Deutsch-Format)
+        # Layout-Anpassungen
+        # Layout-Anpassungen (Im Plotly-Teil)
         fig.update_layout(
             hovermode="x unified",
-            separators=",.",  # HIER GEHÖRT ES HIN (Komma für Dezimal, Punkt für Tausender)
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            separators=",.",
+            legend=dict(orientation="v", yanchor="top", y=1, xanchor="left", x=1.02),
             margin=dict(l=0, r=0, t=30, b=0),
             xaxis=dict(title="Bestellmenge (Stück)", tickformat=","),
-            yaxis=dict(title="Gesamtkosten (€)", tickformat=",")
+            # WICHTIG: Wenn opt_k_ges 0 ist, schalten wir das Limit ab (None)
+            yaxis=dict(title="Gesamtkosten (€)", tickformat=",", range=[0, opt_k_ges * 2.5] if opt_k_ges > 0 else None)
         )
         st.plotly_chart(fig, use_container_width=True)
+
+    with tab_tabelle:
+        t_data = [[n, jahresbedarf / n, n * bestellkosten,
+                   (mindestbestand + (jahresbedarf / n / 2)) * einstandspreis * (lagerkostensatz / 100)] for n in
+                  range(max(1, int(akt_bestellungen) - 5), int(akt_bestellungen) + 10)]
+        df_tab = pd.DataFrame(t_data, columns=["Bestellungen", "Menge", "Bestellk.", "Lagerk."])
+        df_tab["Gesamtk."] = df_tab["Bestellk."] + df_tab["Lagerk."]
+        st.dataframe(df_tab.style.format(
+            {"Menge": "{:,.0f}", "Bestellk.": "{:,.2f} €", "Lagerk.": "{:,.2f} €", "Gesamtk.": "{:,.2f} €"}),
+                     use_container_width=True)
+
+    with tab_formel:
+        if not formel_moeglich:
+            st.warning("⚠️ Die Andler-Formel kann nicht angewendet werden, da der Lagerkostensatz 0% beträgt (Teilen durch Null ist nicht möglich).")
+        else:
+            st.subheader("Rechenweg (Andler-Formel)")
+            st.markdown(f"""
+            **Legende der Variablen:**
+            * **$B$** (Jahresbedarf): **{formatiere_zahl(jahresbedarf)} Stück**
+            * **$K_f$** (Bestellfixe Kosten): **{formatiere_waehrung(bestellkosten)}**
+            * **$p$** (Einstandspreis): **{formatiere_waehrung(einstandspreis)}**
+            * **$l$** (Lagerkostensatz): **{formatiere_zahl(lagerkostensatz, 1)} %**
+            """)
+            st.write("---")
+            st.markdown("**1. Formel:**")
+            st.markdown(r"$\displaystyle x_{opt} = \sqrt{\frac{200 \cdot B \cdot K_f}{p \cdot l}}$")
+            st.markdown("**2. Einsetzen:**")
+            st.markdown(rf"$\displaystyle x_{{opt}} = \sqrt{{\frac{{200 \cdot {jahresbedarf} \cdot {bestellkosten}}}{{{einstandspreis} \cdot {lagerkostensatz}}}}}$")
+            st.markdown("**3. Zwischenschritt:**")
+            st.markdown(rf"$\displaystyle x_{{opt}} = \sqrt{{\frac{{{200 * jahresbedarf * bestellkosten}}}{{{einstandspreis * lagerkostensatz}}}}}$")
+            st.write("---")
+            st.success(f"Optimale Bestellmenge: **{formatiere_zahl(opt_menge_theorie, 2)} Stück**")
+
 # ==========================================
 # MODUS 2: ÜBUNGSMODUS
 # ==========================================
@@ -150,7 +199,7 @@ else:
     st.subheader("📝 Übungsmodus")
 
     with st.expander("➕ Neue Zeile hinzufügen"):
-        n_menge = st.number_input("Start-Menge:", min_value=1.0, value=9000.0, step=500.0)
+        n_menge = st.number_input("Start-Menge:", min_value=0.0, value=0.0, step=500.0)
         if st.button("Hinzufügen"):
             st.session_state['uebungen_daten'].append({
                 'id': str(uuid.uuid4()), 'm': float(n_menge), 'h': 0.0, 'bk': 0.0,
@@ -159,7 +208,7 @@ else:
             st.rerun()
 
     cols = st.columns([1.2, 0.9, 1.1, 1.1, 1.1, 1.1, 1.1, 2.0])
-    labels = ["Menge", "Häufigk.", "Bestellk.", "Ø Lager(Stk)", "Ø Lager(€)", "Lagerk.", "Gesamtk.", "Aktionen"]
+    labels = ["Menge", "Häufigkeit", "Bestellkosten", "Ø Lager (Stk)", "Ø Lager (€)", "Lagerkosten", "Gesamtkosten", "Aktionen"]
     for col, label in zip(cols, labels): col.write(f"**{label}**")
 
     for i, row in enumerate(st.session_state['uebungen_daten']):
@@ -214,10 +263,62 @@ else:
                     unsafe_allow_html=True)
 
     st.write("---")
+
+    # --- DATEN-EXPORT (PDF) VORBEREITEN ---
+    def erstelle_pdf(daten):
+        pdf = FPDF(orientation="L", unit="mm", format="A4")
+        pdf.add_page()
+        pdf.set_font("Arial", "B", 14)
+        pdf.cell(0, 10, "Optimale Bestellmenge - Übungsergebnisse", ln=True, align="C")
+        pdf.ln(5)
+
+        # Spaltenkoepfe formatieren
+        pdf.set_font("Arial", "B", 10)
+        cols = [25, 25, 35, 35, 40, 35, 40]
+        headers = ["Menge", "Haeufigk.", "Bestellkosten", "Lager (Stk)", "Lager (EUR)", "Lagerkosten", "Gesamtkosten"]
+
+        for i, h in enumerate(headers):
+            pdf.cell(cols[i], 10, h, border=1, align="C")
+        pdf.ln()
+
+        # Daten eintragen
+        pdf.set_font("Arial", "", 10)
+        for row in daten:
+            pdf.cell(cols[0], 10, f"{row['m']:.0f}", border=1, align="C")
+            pdf.cell(cols[1], 10, f"{row['h']:.1f}", border=1, align="C")
+            pdf.cell(cols[2], 10, f"{row['bk']:,.2f} EUR".replace(',', 'X').replace('.', ',').replace('X', '.'),
+                     border=1, align="C")
+            pdf.cell(cols[3], 10, f"{row['dls']:.0f}", border=1, align="C")
+            pdf.cell(cols[4], 10, f"{row['dle']:,.2f} EUR".replace(',', 'X').replace('.', ',').replace('X', '.'),
+                     border=1, align="C")
+            pdf.cell(cols[5], 10, f"{row['lk']:,.2f} EUR".replace(',', 'X').replace('.', ',').replace('X', '.'),
+                     border=1, align="C")
+            pdf.cell(cols[6], 10, f"{row['gk']:,.2f} EUR".replace(',', 'X').replace('.', ',').replace('X', '.'),
+                     border=1, align="C")
+            pdf.ln()
+
+        # PDF sicher konvertieren (kompatibel mit FPDF 1 und 2)
+        try:
+            return pdf.output(dest="S").encode("latin-1")
+        except TypeError:
+            return bytes(pdf.output())
+
+
+    pdf_daten = erstelle_pdf(st.session_state['uebungen_daten'])
+
+    # --- BUTTONS (UNTEREINANDER) ---
     if st.button("Ergebnisse prüfen", type="primary"):
         st.session_state['geprueft'] = True
         st.rerun()
+
     if st.session_state['geprueft']:
         if st.button("Korrekturmodus aus"):
             st.session_state['geprueft'] = False
             st.rerun()
+
+    st.download_button(
+        label="📥 Als PDF exportieren",
+        data=pdf_daten,
+        file_name="bestellmenge_uebung.pdf",
+        mime="application/pdf"
+    )
