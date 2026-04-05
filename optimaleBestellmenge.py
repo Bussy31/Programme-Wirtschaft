@@ -15,6 +15,18 @@ def formatiere_zahl(wert, dezimalstellen=0):
     formatiert = f"{wert:,.{dezimalstellen}f}"
     return formatiert.replace(",", "X").replace(".", ",").replace("X", ".")
 
+# --- CSS FÜR MAXIMALE BILDSCHIRMBREITE ---
+st.markdown("""
+    <style>
+    /* Zwingt den Hauptbereich, die volle Breite ohne große Ränder zu nutzen */
+    .block-container {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        padding-top: 2rem !important;
+        max-width: 100% !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # --- 1. INITIALISIERUNG (UNZERSTÖRBARER DATENSPEICHER) ---
 st.set_page_config(page_title="Bestellmengen-Profi", layout="wide")
