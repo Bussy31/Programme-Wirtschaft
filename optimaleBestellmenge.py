@@ -253,7 +253,7 @@ else:
                     st.session_state['uebungen_daten'][i + 1], st.session_state['uebungen_daten'][i]
                 st.rerun()
 
-            if b3.button("🗑", key=f"del_{row['id']}"):
+            if b3.button("🗑️", key=f"del_{row['id']}"):
                 st.session_state['uebungen_daten'].pop(i)
                 st.rerun()
 
