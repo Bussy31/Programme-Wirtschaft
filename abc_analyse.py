@@ -122,10 +122,15 @@ for i, item in enumerate(current_list):
         b_anteil = (b_umsatz / gesamt_umsatz_live * 100) if gesamt_umsatz_live > 0 else 0.0
         live_kumuliert += b_anteil
 
-        vorauswahl_klasse = "A" if live_kumuliert <= grenze_a + 0.01 else (
-            "B" if live_kumuliert <= grenze_b + 0.01 else "C")
         auswahl_optionen = ["-", "A", "B", "C"]
-        vorauswahl_index = auswahl_optionen.index(vorauswahl_klasse)
+
+        # Wenn der Artikel noch keinen Umsatz hat, zeige standardmäßig "-"
+        if b_umsatz == 0:
+            vorauswahl_index = 0
+        else:
+            vorauswahl_klasse = "A" if live_kumuliert <= grenze_a + 0.01 else (
+                "B" if live_kumuliert <= grenze_b + 0.01 else "C")
+            vorauswahl_index = auswahl_optionen.index(vorauswahl_klasse)
 
         with cols[4]:
             item['eingabe_ums'] = st.number_input("Umsatz", value=b_umsatz, key=f"ums_{item['id']}",
