@@ -28,7 +28,7 @@ def reset_alles():
     st.session_state['lagerkostensatz'] = 0.0
     st.session_state['mindestbestand'] = 0
     st.session_state['app_modus'] = "📝 Übungsmodus (Manuell)"
-    st.session_state['uebungen_daten'] = [{"id": str(uuid.uuid4()), "m": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0}]
+    st.session_state['uebungen_daten'] = [{"id": str(uuid.uuid4()), "m": 0, "h": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0}]
 
     st.session_state.daten_geladen = True
 
