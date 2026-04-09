@@ -36,13 +36,14 @@ st.set_page_config(page_title="Bestellmengen-Profi", layout="wide")
 
 # --- LOCAL STORAGE LADEN ---
 localS = LocalStorage()
-gespeicherte_daten = localS.getItem("bestellmenge_daten")
+# NEU: Wir ändern den Namen, um die alten, kaputten Daten im Browser zu umgehen!
+gespeicherte_daten = localS.getItem("bestell_v2")
 
 if gespeicherte_daten and "daten_geladen" not in st.session_state:
     try:
         geladene_daten = json.loads(gespeicherte_daten)
         for key, value in geladene_daten.items():
-            # NEU: Wir ignorieren Buttons ("up_", "down_", etc.) beim Laden!
+            # Buttons strengstens ignorieren
             if not key.startswith(("up_", "down_", "del_", "FormSubmitter")):
                 st.session_state[key] = value
         st.session_state.daten_geladen = True
@@ -87,11 +88,18 @@ app_modus = st.sidebar.radio("Haupt-Modus:", ["📝 Übungsmodus (Manuell)","�
 
 st.sidebar.divider()
 
-# NEU: Der Reset-Button in der Seitenleiste
+# NEU: Der 100% sichere Reset-Button ohne JavaScript
 if st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True):
-    localS.setItem("bestellmenge_daten", "")
+    # 1. Kompletten internen Speicher leeren
     st.session_state.clear()
-    components.html("<script>parent.window.location.reload();</script>", height=0)
+
+    # 2. Dem Programm verbieten, die Daten beim nächsten Start wieder aus dem Browser zu laden
+    st.session_state.daten_geladen = True
+
+    # 3. Programm hart von oben neu starten
+    st.rerun()
+    # (Wenn das Programm jetzt nach unten durchläuft, speichert es
+    # am Ende automatisch eine leere Seite ab und überschreibt den Browser!)
 
 # --- SICHERHEITS-CHECK ---
 if jahresbedarf <= 0 or einstandspreis <= 0:
@@ -370,10 +378,10 @@ else:
 # --- AUTOMATISCHES SPEICHERN ---
 speicher_dict = {}
 for key, value in st.session_state.items():
-    # NEU: Wir ignorieren Buttons auch beim Speichern!
+    # Keine Buttons speichern!
     if key != "daten_geladen" and not key.startswith(("up_", "down_", "del_", "FormSubmitter")):
         speicher_dict[key] = value
 
 aktuelle_daten = json.dumps(speicher_dict)
 if aktuelle_daten != gespeicherte_daten:
-    localS.setItem("bestellmenge_daten", aktuelle_daten)
+    localS.setItem("bestell_v2", aktuelle_daten)
