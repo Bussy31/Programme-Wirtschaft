@@ -16,6 +16,9 @@ except ImportError:
 # --- Setup ---
 st.set_page_config(page_title="Profi-Übung: ABC-Analyse", layout="wide")
 
+# NEU: Local Storage GANZ OBEN initialisieren, damit er überall verfügbar ist!
+localS = LocalStorage()
+
 # --- COPYRIGHT FOOTER ---
 footer_html = """
 <style>
@@ -73,8 +76,6 @@ with st.sidebar:
         st.rerun()
 
 # --- 2. DATEN & SESSION STATE ---
-localS = LocalStorage()
-
 # Versuchen, alte Daten aus dem Browser zu laden
 gespeicherte_daten = localS.getItem("abc_daten")
 
