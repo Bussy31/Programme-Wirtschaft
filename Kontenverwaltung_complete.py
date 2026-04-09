@@ -108,8 +108,6 @@ st.sidebar.download_button(
     use_container_width=True
 )
 
-st.sidebar.divider()
-
 # --- LADEN (Upload) ---
 # NEU: Der Zähler ist an den Schlüssel (Key) des Uploaders gebunden
 uploaded_file = st.sidebar.file_uploader(
