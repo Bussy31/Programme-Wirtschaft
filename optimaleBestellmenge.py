@@ -95,9 +95,23 @@ app_modus = st.sidebar.radio("Haupt-Modus:", ["📝 Übungsmodus (Manuell)","�
 st.sidebar.divider()
 
 # --- RESET BUTTON ---
+# --- RESET BUTTON ---
 if st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True):
+    # 1. Speicher im Browser endgültig löschen
+    localS.setItem("bestell_v4", "")
+
+    # 2. Python-Speicher leeren
     st.session_state.clear()
     st.session_state.daten_geladen = True
+
+    # 3. WICHTIG: Den Eingabefeldern explizit sagen, dass sie auf 0 müssen!
+    st.session_state['jahresbedarf'] = 0
+    st.session_state['bestellkosten'] = 0.0
+    st.session_state['einstandspreis'] = 0.0
+    st.session_state['lagerkostensatz'] = 0.0
+    st.session_state['mindestbestand'] = 0
+
+    # 4. Neu laden
     st.rerun()
 
 # --- SICHERHEITS-CHECK ---
