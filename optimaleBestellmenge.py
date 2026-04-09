@@ -143,7 +143,7 @@ if app_modus == "🚀 Simulator (Automatik)":
         akt_bestellungen = jahresbedarf / akt_menge
         st.session_state['sim_daten']['freq'] = round(akt_bestellungen, 1)  # Synchronisieren
     else:
-        akt_bestellungen = st.number_input("Häufigkeit wählen:", min_value=1.0,
+        akt_bestellungen = st.number_input("Häufigkeit wählen:", min_value=0.0,
                                            value=st.session_state['sim_daten']['freq'], step=1.0, key="input_h")
         st.session_state['sim_daten']['freq'] = akt_bestellungen
         akt_menge = jahresbedarf / akt_bestellungen
