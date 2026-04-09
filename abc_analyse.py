@@ -66,14 +66,27 @@ with st.sidebar:
 
     st.markdown("---")  # Trennstrich
 
-    # NEU: Der Reset-Button
+    # NEU: Der korrigierte Reset-Button (ohne st.rerun)
     if st.button("🔄 Alles löschen & Neu starten", use_container_width=True):
-        # 1. Den Local Storage im Browser mit einem leeren Wert überschreiben
-        localS.setItem("abc_daten", "")
-        # 2. Den Zwischenspeicher von Streamlit löschen
+        # 1. Wir leeren den Zwischenspeicher komplett (alle vorherigen Eingaben weg)
         st.session_state.clear()
-        # 3. Die Seite sofort neu laden
-        st.rerun()
+
+        # 2. WICHTIG: Wir setzen diesen Marker, damit das Skript gleich NICHT
+        # versucht, die alten Daten wieder aus dem Browser-Speicher zu laden!
+        st.session_state.daten_geladen = True
+
+        # 3. Wir stellen die 5 leeren Startzeilen wieder her
+        st.session_state.schueler_liste = [
+            {'id': 1, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
+            {'id': 2, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
+            {'id': 3, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
+            {'id': 4, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
+            {'id': 5, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
+        ]
+
+        # KEIN st.rerun() hier! Das Skript läuft jetzt einfach weiter,
+        # zeichnet die leere Tabelle und überschreibt ganz am Ende
+        # automatisch den Speicher im Browser.
 
 # --- 2. DATEN & SESSION STATE ---
 # Versuchen, alte Daten aus dem Browser zu laden
