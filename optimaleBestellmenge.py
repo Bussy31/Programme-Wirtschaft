@@ -34,15 +34,14 @@ st.markdown("""
 # --- 1. INITIALISIERUNG (UNZERSTÖRBARER DATENSPEICHER) ---
 st.set_page_config(page_title="Bestellmengen-Profi", layout="wide")
 
-# --- LOCAL STORAGE LADEN (Wie bei ABC-Analyse) ---
+# --- LOCAL STORAGE LADEN & INITIALISIEREN ---
 localS = LocalStorage()
-gespeicherte_daten = localS.getItem("bestell_v4")
+gespeicherte_daten = localS.getItem("bestell_v5")
 
 if gespeicherte_daten and "daten_geladen" not in st.session_state:
     try:
         geladene_daten = json.loads(gespeicherte_daten)
 
-        # Wir laden NUR exakt die Daten, die wir wirklich brauchen. Kein Button-Müll!
         if 'uebungen_daten' in geladene_daten: st.session_state['uebungen_daten'] = geladene_daten['uebungen_daten']
         if 'sim_daten' in geladene_daten: st.session_state['sim_daten'] = geladene_daten['sim_daten']
         if 'jahresbedarf' in geladene_daten: st.session_state['jahresbedarf'] = geladene_daten['jahresbedarf']
@@ -55,6 +54,19 @@ if gespeicherte_daten and "daten_geladen" not in st.session_state:
         st.session_state.daten_geladen = True
     except:
         pass
+
+# DEIN GEDANKE: Wenn der Speicher leer ist (oder gelöscht wurde),
+# setzen wir hier zentral unsere Standardwerte!
+if 'jahresbedarf' not in st.session_state:
+    st.session_state['jahresbedarf'] = 0
+    st.session_state['bestellkosten'] = 0.0
+    st.session_state['einstandspreis'] = 0.0
+    st.session_state['lagerkostensatz'] = 0.0
+    st.session_state['mindestbestand'] = 0
+    st.session_state['app_modus'] = "📝 Übungsmodus (Manuell)"
+    # Startwert für die Tabelle
+    st.session_state['uebungen_daten'] = [
+        {"id": str(uuid.uuid4()), "menge": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0}]
 
 # Speicher für den Simulator
 if 'sim_daten' not in st.session_state:
@@ -98,20 +110,8 @@ st.sidebar.divider()
 # --- RESET BUTTON ---
 if st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True):
     # 1. Speicher im Browser endgültig löschen
-    localS.setItem("bestell_v4", "")
-
-    # 2. Python-Speicher leeren
+    localS.setItem("bestell_v5", "")
     st.session_state.clear()
-    st.session_state.daten_geladen = True
-
-    # 3. WICHTIG: Den Eingabefeldern explizit sagen, dass sie auf 0 müssen!
-    st.session_state['jahresbedarf'] = 0
-    st.session_state['bestellkosten'] = 0.0
-    st.session_state['einstandspreis'] = 0.0
-    st.session_state['lagerkostensatz'] = 0.0
-    st.session_state['mindestbestand'] = 0
-
-    # 4. Neu laden
     st.rerun()
 
 # --- SICHERHEITS-CHECK ---
@@ -388,8 +388,7 @@ else:
         mime="application/pdf"
     )
 
-# --- AUTOMATISCHES SPEICHERN (Wie bei ABC-Analyse) ---
-# Wir packen nur unsere echten Daten in den Koffer. Buttons werden komplett ignoriert!
+# --- AUTOMATISCHES SPEICHERN ---
 speicher_dict = {
     "uebungen_daten": st.session_state.get('uebungen_daten'),
     "sim_daten": st.session_state.get('sim_daten'),
@@ -403,4 +402,4 @@ speicher_dict = {
 
 aktuelle_daten = json.dumps(speicher_dict)
 if aktuelle_daten != gespeicherte_daten:
-    localS.setItem("bestell_v4", aktuelle_daten)
+    localS.setItem("bestell_v5", aktuelle_daten)
