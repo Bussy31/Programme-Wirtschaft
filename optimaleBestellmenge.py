@@ -107,11 +107,24 @@ app_modus = st.sidebar.radio("Haupt-Modus:", ["📝 Übungsmodus (Manuell)","�
 st.sidebar.divider()
 
 # --- RESET BUTTON ---
-# --- RESET BUTTON ---
+# --- RESET BUTTON (Der absolut bombensichere Weg) ---
 if st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True):
-    # 1. Speicher im Browser endgültig löschen
-    localS.setItem("bestell_v5", "")
-    st.session_state.clear()
+    # 1. Wir überschreiben alle Werte hart mit 0, statt sie zu "vergessen"
+    st.session_state['jahresbedarf'] = 0
+    st.session_state['bestellkosten'] = 0.0
+    st.session_state['einstandspreis'] = 0.0
+    st.session_state['lagerkostensatz'] = 0.0
+    st.session_state['mindestbestand'] = 0
+    st.session_state['app_modus'] = "📝 Übungsmodus (Manuell)"
+
+    # 2. Die Tabelle auf eine leere Startzeile zurücksetzen
+    st.session_state['uebungen_daten'] = [
+        {"id": str(uuid.uuid4()), "menge": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0}]
+
+    # 3. Dem Programm verbieten, die alten Daten aus dem Browser zu laden
+    st.session_state.daten_geladen = True
+
+    # 4. Neustart
     st.rerun()
 
 # --- SICHERHEITS-CHECK ---
