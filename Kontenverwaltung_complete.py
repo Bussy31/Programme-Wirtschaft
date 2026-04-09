@@ -5,7 +5,7 @@ import copy
 import json
 import os
 import uuid
-from streamlit_local_storage import LocalStorage
+from streamlit_local_storage import LocalStorage  # <--- NEU
 
 # ---  SEITEN-KONFIGURATION  ---
 st.set_page_config(page_title="Buchhaltungstrainer", layout="wide")
@@ -51,15 +51,17 @@ if gespeicherte_daten and "daten_geladen" not in st.session_state:
     except:
         pass
 
-# --- STANDARDWERTE (Wenn der Speicher leer ist) ---
-if "konten" not in st.session_state:
-    st.session_state['konten'] = {}
-    st.session_state['journal'] = []
-    st.session_state['form_msg'] = None
-    st.session_state['soll_count'] = 1
-    st.session_state['haben_count'] = 1
-    st.session_state['sort_orders'] = {"Aktiv": [], "Passiv": [], "Aufwand": [], "Ertrag": []}
-    st.session_state['uploader_key'] = 0
+# --- STANDARDWERTE SICHERSETZEN (Jede Variable einzeln!) ---
+if "konten" not in st.session_state: st.session_state['konten'] = {}
+if "journal" not in st.session_state: st.session_state['journal'] = []
+if "soll_count" not in st.session_state: st.session_state['soll_count'] = 1
+if "haben_count" not in st.session_state: st.session_state['haben_count'] = 1
+if "sort_orders" not in st.session_state: st.session_state['sort_orders'] = {"Aktiv": [], "Passiv": [], "Aufwand": [],
+                                                                             "Ertrag": []}
+
+# Reine UI-Variablen, die bei jedem Start da sein müssen (auch wenn Daten geladen wurden)
+if "form_msg" not in st.session_state: st.session_state['form_msg'] = None
+if "uploader_key" not in st.session_state: st.session_state['uploader_key'] = 0
 
 
 def reset_alles():
@@ -76,7 +78,6 @@ def reset_alles():
     st.session_state['uploader_key'] = 0
 
     st.session_state.daten_geladen = True
-
 # ==========================================
 # SEITENLEISTE: SPEICHERN & LADEN
 # ==========================================
@@ -87,7 +88,6 @@ if "uploader_key" not in st.session_state:
 st.sidebar.header("💾 Speichern & Laden")
 st.sidebar.write("Sichere hier deinen aktuellen Stand, um später weiterzuarbeiten.")
 
-# NEU: Unser Reset-Button, gekoppelt an die Funktion oben
 st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True, on_click=reset_alles)
 st.sidebar.divider()
 
