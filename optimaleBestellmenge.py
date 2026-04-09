@@ -17,18 +17,24 @@ def formatiere_zahl(wert, dezimalstellen=0):
     formatiert = f"{wert:,.{dezimalstellen}f}"
     return formatiert.replace(",", "X").replace(".", ",").replace("X", ".")
 
-def reset_alles():
-    # 1. Speicher komplett leeren
-    st.session_state.clear()
 
-    # 2. Direkt die Nullen erzwingen, BEVOR die Seite neu lädt
+def reset_alles():
+    # WICHTIG: Kein clear() mehr, damit die Verbindung zu den Feldern bleibt!
+
+    # 1. Rahmendaten auf 0 zwingen
     st.session_state['jahresbedarf'] = 0
     st.session_state['bestellkosten'] = 0.0
     st.session_state['einstandspreis'] = 0.0
     st.session_state['lagerkostensatz'] = 0.0
     st.session_state['mindestbestand'] = 0
     st.session_state['app_modus'] = "📝 Übungsmodus (Manuell)"
-    st.session_state['uebungen_daten'] = [{"id": str(uuid.uuid4()), "m": 0, "h": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0}]
+
+    # 2. Hier sind jetzt DREI Zeilen in der Liste!
+    st.session_state['uebungen_daten'] = [
+        {"id": str(uuid.uuid4()), "m": 0, "h": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0},
+        {"id": str(uuid.uuid4()), "m": 0, "h": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0},
+        {"id": str(uuid.uuid4()), "m": 0, "h": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0}
+    ]
 
     st.session_state.daten_geladen = True
 
@@ -78,9 +84,12 @@ if 'jahresbedarf' not in st.session_state:
     st.session_state['lagerkostensatz'] = 0.0
     st.session_state['mindestbestand'] = 0
     st.session_state['app_modus'] = "📝 Übungsmodus (Manuell)"
-    # Startwert für die Tabelle
+    # Beim allerersten Start auch direkt 3 Zeilen laden!
     st.session_state['uebungen_daten'] = [
-        {"id": str(uuid.uuid4()), "menge": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0}]
+        {"id": str(uuid.uuid4()), "m": 0, "h": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0},
+        {"id": str(uuid.uuid4()), "m": 0, "h": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0},
+        {"id": str(uuid.uuid4()), "m": 0, "h": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0}
+    ]
 
 # Speicher für den Simulator
 if 'sim_daten' not in st.session_state:
