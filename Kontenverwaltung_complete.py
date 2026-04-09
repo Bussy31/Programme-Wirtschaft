@@ -78,6 +78,7 @@ def reset_alles():
     st.session_state['uploader_key'] = 0
 
     st.session_state.daten_geladen = True
+
 # ==========================================
 # SEITENLEISTE: SPEICHERN & LADEN
 # ==========================================

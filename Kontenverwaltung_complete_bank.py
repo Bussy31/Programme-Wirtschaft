@@ -5,6 +5,8 @@ import copy
 import json
 import os
 import uuid
+from streamlit_local_storage import LocalStorage
+
 
 # ---  SEITEN-KONFIGURATION  ---
 st.set_page_config(page_title="Buchhaltungstrainer", layout="wide")
@@ -31,18 +33,54 @@ def format_german_num(value):
     return f"{value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-# --- SESSION STATE (Das Gedächtnis der App) ---
-if "konten" not in st.session_state:
-    st.session_state.konten = {}
-if "journal" not in st.session_state:
-    st.session_state.journal = []
-if "form_msg" not in st.session_state:
-    st.session_state.form_msg = None
+# --- LOCAL STORAGE LADEN & INITIALISIEREN ---
+localS = LocalStorage()
+gespeicherte_daten = localS.getItem("buchhaltung_bank_v1")
 
-if "soll_count" not in st.session_state:
+if gespeicherte_daten and "daten_geladen" not in st.session_state:
+    try:
+        geladene_daten = json.loads(gespeicherte_daten)
+
+        # Daten laden
+        if 'konten' in geladene_daten: st.session_state.konten = geladene_daten['konten']
+        if 'journal' in geladene_daten: st.session_state.journal = geladene_daten['journal']
+        if 'soll_count' in geladene_daten: st.session_state.soll_count = geladene_daten['soll_count']
+        if 'haben_count' in geladene_daten: st.session_state.haben_count = geladene_daten['haben_count']
+        if 'sort_orders' in geladene_daten: st.session_state.sort_orders = geladene_daten['sort_orders']
+        if 'hide_closed_accounts' in geladene_daten: st.session_state.hide_closed_accounts = geladene_daten[
+            'hide_closed_accounts']
+
+        st.session_state.daten_geladen = True
+    except:
+        pass
+
+# --- STANDARDWERTE SICHERSETZEN (Jede Variable einzeln!) ---
+if "konten" not in st.session_state: st.session_state.konten = {}
+if "journal" not in st.session_state: st.session_state.journal = []
+if "soll_count" not in st.session_state: st.session_state.soll_count = 1
+if "haben_count" not in st.session_state: st.session_state.haben_count = 1
+if "sort_orders" not in st.session_state: st.session_state.sort_orders = {"Aktiv": [], "Passiv": [], "Aufwand": [],
+                                                                          "Ertrag": []}
+if "hide_closed_accounts" not in st.session_state: st.session_state.hide_closed_accounts = True
+
+# Reine UI-Variablen, die bei jedem Start da sein müssen
+if "form_msg" not in st.session_state: st.session_state.form_msg = None
+if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
+
+
+def reset_alles():
+    st.session_state.clear()
+
+    st.session_state.konten = {}
+    st.session_state.journal = []
     st.session_state.soll_count = 1
-if "haben_count" not in st.session_state:
     st.session_state.haben_count = 1
+    st.session_state.sort_orders = {"Aktiv": [], "Passiv": [], "Aufwand": [], "Ertrag": []}
+    st.session_state.hide_closed_accounts = True
+    st.session_state.form_msg = None
+    st.session_state.uploader_key = 0
+
+    st.session_state.daten_geladen = True
 
 # ==========================================
 # SEITENLEISTE: SPEICHERN & LADEN
@@ -53,6 +91,9 @@ if "uploader_key" not in st.session_state:
 
 st.sidebar.header("💾 Speichern & Laden")
 st.sidebar.write("Sichere hier deinen aktuellen Stand, um später weiterzuarbeiten.")
+
+st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True, on_click=reset_alles)
+st.sidebar.divider()
 
 # --- SPEICHERN (Download) ---
 save_data = {
@@ -70,8 +111,6 @@ st.sidebar.download_button(
     data=json_string,
     use_container_width=True
 )
-
-st.sidebar.divider()
 
 # --- LADEN (Upload) ---
 # NEU: Der Zähler ist an den Schlüssel (Key) des Uploaders gebunden
@@ -1207,3 +1246,17 @@ with tab4:
             st.success("PDF erfolgreich generiert! Dein aktueller Arbeitsstand wurde gedruckt.")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,
                                file_name="Jahresabschluss_export.pdf", mime='application/octet-stream')
+
+# --- AUTOMATISCHES SPEICHERN ---
+speicher_dict = {
+    "konten": st.session_state.get('konten'),
+    "journal": st.session_state.get('journal'),
+    "soll_count": st.session_state.get('soll_count'),
+    "haben_count": st.session_state.get('haben_count'),
+    "sort_orders": st.session_state.get('sort_orders'),
+    "hide_closed_accounts": st.session_state.get('hide_closed_accounts')
+}
+
+aktuelle_daten = json.dumps(speicher_dict)
+if aktuelle_daten != gespeicherte_daten:
+    localS.setItem("buchhaltung_bank_v1", aktuelle_daten)
