@@ -13,10 +13,25 @@ def formatiere_waehrung(wert):
     formatiert = f"{wert:,.2f}"
     return formatiert.replace(",", "X").replace(".", ",").replace("X", ".") + " €"
 
-
 def formatiere_zahl(wert, dezimalstellen=0):
     formatiert = f"{wert:,.{dezimalstellen}f}"
     return formatiert.replace(",", "X").replace(".", ",").replace("X", ".")
+
+def reset_alles():
+    # 1. Speicher komplett leeren
+    st.session_state.clear()
+
+    # 2. Direkt die Nullen erzwingen, BEVOR die Seite neu lädt
+    st.session_state['jahresbedarf'] = 0
+    st.session_state['bestellkosten'] = 0.0
+    st.session_state['einstandspreis'] = 0.0
+    st.session_state['lagerkostensatz'] = 0.0
+    st.session_state['mindestbestand'] = 0
+    st.session_state['app_modus'] = "📝 Übungsmodus (Manuell)"
+    st.session_state['uebungen_daten'] = [
+        {"id": str(uuid.uuid4()), "menge": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0}]
+
+    st.session_state.daten_geladen = True
 
 # --- CSS FÜR MAXIMALE BILDSCHIRMBREITE ---
 st.markdown("""
@@ -106,25 +121,8 @@ app_modus = st.sidebar.radio("Haupt-Modus:", ["📝 Übungsmodus (Manuell)","�
 
 st.sidebar.divider()
 
-# --- RESET BUTTON (Der absolut bombensichere Weg) ---
-if st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True):
-    # 1. Wir überschreiben alle Werte hart mit 0, statt sie zu "vergessen"
-    st.session_state['jahresbedarf'] = 0
-    st.session_state['bestellkosten'] = 0.0
-    st.session_state['einstandspreis'] = 0.0
-    st.session_state['lagerkostensatz'] = 0.0
-    st.session_state['mindestbestand'] = 0
-    st.session_state['app_modus'] = "📝 Übungsmodus (Manuell)"
-
-    # 2. Die Tabelle auf eine leere Startzeile zurücksetzen
-    st.session_state['uebungen_daten'] = [
-        {"id": str(uuid.uuid4()), "menge": 0, "bk": 0.0, "dls": 0, "dle": 0.0, "lk": 0.0, "gk": 0.0}]
-
-    # 3. Dem Programm verbieten, die alten Daten aus dem Browser zu laden
-    st.session_state.daten_geladen = True
-
-    # 4. Neustart
-    st.rerun()
+# --- RESET BUTTON (Der offizielle Streamlit-Weg) ---
+st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True, on_click=reset_alles)
 
 # --- SICHERHEITS-CHECK ---
 if jahresbedarf <= 0 or einstandspreis <= 0:
