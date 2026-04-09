@@ -300,10 +300,10 @@ else:
                     "🧐 Das stimmt noch nicht ganz. Überprüfe deine Rechnung bei allen Optionen! Achte auf die Dezimalstellen.")
 
 # --- AUTOMATISCHES SPEICHERN ---
-# Wir sammeln alle aktuellen Eingaben (Zahlen, Texte, Kriterien-Anzahl) ein
 speicher_dict = {}
 for key, value in st.session_state.items():
-    if key != "daten_geladen":
+    # WICHTIG: Wir schließen die Schieberegler (beginnen mit "p_") aus!
+    if key != "daten_geladen" and not key.startswith("p_"):
         speicher_dict[key] = value
 
 # Umwandeln und speichern, falls es Änderungen gab
