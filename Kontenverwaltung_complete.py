@@ -5,6 +5,7 @@ import copy
 import json
 import os
 import uuid
+from streamlit_local_storage import LocalStorage
 
 # ---  SEITEN-KONFIGURATION  ---
 st.set_page_config(page_title="Buchhaltungstrainer", layout="wide")
@@ -31,18 +32,50 @@ def format_german_num(value):
     return f"{value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-# --- SESSION STATE (Das Gedächtnis der App) ---
-if "konten" not in st.session_state:
-    st.session_state.konten = {}
-if "journal" not in st.session_state:
-    st.session_state.journal = []
-if "form_msg" not in st.session_state:
-    st.session_state.form_msg = None
+# --- LOCAL STORAGE LADEN & INITIALISIEREN ---
+localS = LocalStorage()
+gespeicherte_daten = localS.getItem("buchhaltung_v1")
 
-if "soll_count" not in st.session_state:
-    st.session_state.soll_count = 1
-if "haben_count" not in st.session_state:
-    st.session_state.haben_count = 1
+if gespeicherte_daten and "daten_geladen" not in st.session_state:
+    try:
+        geladene_daten = json.loads(gespeicherte_daten)
+
+        # Wir laden nur unsere echten Buchhaltungsdaten
+        if 'konten' in geladene_daten: st.session_state['konten'] = geladene_daten['konten']
+        if 'journal' in geladene_daten: st.session_state['journal'] = geladene_daten['journal']
+        if 'soll_count' in geladene_daten: st.session_state['soll_count'] = geladene_daten['soll_count']
+        if 'haben_count' in geladene_daten: st.session_state['haben_count'] = geladene_daten['haben_count']
+        if 'sort_orders' in geladene_daten: st.session_state['sort_orders'] = geladene_daten['sort_orders']
+
+        st.session_state.daten_geladen = True
+    except:
+        pass
+
+# --- STANDARDWERTE (Wenn der Speicher leer ist) ---
+if "konten" not in st.session_state:
+    st.session_state['konten'] = {}
+    st.session_state['journal'] = []
+    st.session_state['form_msg'] = None
+    st.session_state['soll_count'] = 1
+    st.session_state['haben_count'] = 1
+    st.session_state['sort_orders'] = {"Aktiv": [], "Passiv": [], "Aufwand": [], "Ertrag": []}
+    st.session_state['uploader_key'] = 0
+
+
+def reset_alles():
+    # 1. Python-Gedächtnis komplett fegen
+    st.session_state.clear()
+
+    # 2. Direkt die Nullen erzwingen, BEVOR die Seite neu lädt
+    st.session_state['konten'] = {}
+    st.session_state['journal'] = []
+    st.session_state['form_msg'] = None
+    st.session_state['soll_count'] = 1
+    st.session_state['haben_count'] = 1
+    st.session_state['sort_orders'] = {"Aktiv": [], "Passiv": [], "Aufwand": [], "Ertrag": []}
+    st.session_state['uploader_key'] = 0
+
+    st.session_state.daten_geladen = True
 
 # ==========================================
 # SEITENLEISTE: SPEICHERN & LADEN
@@ -53,6 +86,10 @@ if "uploader_key" not in st.session_state:
 
 st.sidebar.header("💾 Speichern & Laden")
 st.sidebar.write("Sichere hier deinen aktuellen Stand, um später weiterzuarbeiten.")
+
+# NEU: Unser Reset-Button, gekoppelt an die Funktion oben
+st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True, on_click=reset_alles)
+st.sidebar.divider()
 
 # --- SPEICHERN (Download) ---
 save_data = {
@@ -1111,3 +1148,16 @@ with tab4:
             st.success("PDF erfolgreich generiert! Dein aktueller Arbeitsstand wurde gedruckt.")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,
                                file_name="Jahresabschluss_export.pdf", mime='application/octet-stream')
+
+# --- AUTOMATISCHES SPEICHERN ---
+speicher_dict = {
+    "konten": st.session_state.get('konten'),
+    "journal": st.session_state.get('journal'),
+    "soll_count": st.session_state.get('soll_count'),
+    "haben_count": st.session_state.get('haben_count'),
+    "sort_orders": st.session_state.get('sort_orders')
+}
+
+aktuelle_daten = json.dumps(speicher_dict)
+if aktuelle_daten != gespeicherte_daten:
+    localS.setItem("buchhaltung_v1", aktuelle_daten)
