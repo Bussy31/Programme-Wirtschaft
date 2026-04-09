@@ -61,6 +61,17 @@ with st.sidebar:
     grenze_c = st.slider("C-Güter bis (%)", grenze_b, 100, 100)
     st.write(f"Klassen: A (0-{grenze_a}%), B ({grenze_a}-{grenze_b}%), C ({grenze_b}-{grenze_c}%)")
 
+    st.markdown("---")  # Trennstrich
+
+    # NEU: Der Reset-Button
+    if st.button("🔄 Alles löschen & Neu starten", use_container_width=True):
+        # 1. Den Local Storage im Browser mit einem leeren Wert überschreiben
+        localS.setItem("abc_daten", "")
+        # 2. Den Zwischenspeicher von Streamlit löschen
+        st.session_state.clear()
+        # 3. Die Seite sofort neu laden
+        st.rerun()
+
 # --- 2. DATEN & SESSION STATE ---
 localS = LocalStorage()
 
