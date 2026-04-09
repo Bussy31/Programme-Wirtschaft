@@ -4,6 +4,9 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from fpdf import FPDF
+import json
+from streamlit_local_storage import LocalStorage
+import streamlit.components.v1 as components
 
 # --- HILFSFUNKTIONEN ---
 def formatiere_waehrung(wert):
@@ -31,6 +34,19 @@ st.markdown("""
 # --- 1. INITIALISIERUNG (UNZERSTÖRBARER DATENSPEICHER) ---
 st.set_page_config(page_title="Bestellmengen-Profi", layout="wide")
 
+# --- LOCAL STORAGE LADEN ---
+localS = LocalStorage()
+gespeicherte_daten = localS.getItem("bestellmenge_daten")
+
+if gespeicherte_daten and "daten_geladen" not in st.session_state:
+    try:
+        geladene_daten = json.loads(gespeicherte_daten)
+        for key, value in geladene_daten.items():
+            st.session_state[key] = value
+        st.session_state.daten_geladen = True
+    except:
+        pass
+
 # Speicher für den Simulator
 if 'sim_daten' not in st.session_state:
     st.session_state['sim_daten'] = {
@@ -56,14 +72,24 @@ st.title("📦 Optimale Bestellmenge")
 
 # --- 2. RAHMENDATEN ---
 st.sidebar.header("⚙️ Rahmendaten")
-jahresbedarf = st.sidebar.number_input("Jahresbedarf (Stück)", min_value=0, value=0, step=1000)
-bestellkosten = st.sidebar.number_input("Kosten je Bestellvorgang (€)", min_value=0.0, value=0.0, step=10.0)
-einstandspreis = st.sidebar.number_input("Bezugspreis/Stück (€)", min_value=0.0, value=0.0, step=1.0)
-lagerkostensatz = st.sidebar.number_input("Lagerkostensatz (%)", min_value=0.0, value=0.0, step=1.0)
-mindestbestand = st.sidebar.number_input("Mindestbestand (Stück)", min_value=0, value=0, step=100)
+
+# NEU: Überall wurde key="..." hinzugefügt, damit der Speicher sie findet
+jahresbedarf = st.sidebar.number_input("Jahresbedarf (Stück)", min_value=0, value=0, step=1000, key="jahresbedarf")
+bestellkosten = st.sidebar.number_input("Kosten je Bestellvorgang (€)", min_value=0.0, value=0.0, step=10.0, key="bestellkosten")
+einstandspreis = st.sidebar.number_input("Bezugspreis/Stück (€)", min_value=0.0, value=0.0, step=1.0, key="einstandspreis")
+lagerkostensatz = st.sidebar.number_input("Lagerkostensatz (%)", min_value=0.0, value=0.0, step=1.0, key="lagerkostensatz")
+mindestbestand = st.sidebar.number_input("Mindestbestand (Stück)", min_value=0, value=0, step=100, key="mindestbestand")
 
 st.sidebar.divider()
-app_modus = st.sidebar.radio("Haupt-Modus:", ["📝 Übungsmodus (Manuell)","🚀 Simulator (Automatik)"])
+app_modus = st.sidebar.radio("Haupt-Modus:", ["📝 Übungsmodus (Manuell)","🚀 Simulator (Automatik)"], key="app_modus")
+
+st.sidebar.divider()
+
+# NEU: Der Reset-Button in der Seitenleiste
+if st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True):
+    localS.setItem("bestellmenge_daten", "")
+    st.session_state.clear()
+    components.html("<script>parent.window.location.reload();</script>", height=0)
 
 # --- SICHERHEITS-CHECK ---
 if jahresbedarf <= 0 or einstandspreis <= 0:
@@ -338,3 +364,13 @@ else:
         file_name="bestellmenge_uebung.pdf",
         mime="application/pdf"
     )
+
+# --- AUTOMATISCHES SPEICHERN ---
+speicher_dict = {}
+for key, value in st.session_state.items():
+    if key != "daten_geladen":
+        speicher_dict[key] = value
+
+aktuelle_daten = json.dumps(speicher_dict)
+if aktuelle_daten != gespeicherte_daten:
+    localS.setItem("bestellmenge_daten", aktuelle_daten)
