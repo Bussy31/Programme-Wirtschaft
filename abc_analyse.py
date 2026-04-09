@@ -124,25 +124,21 @@ for i, item in enumerate(current_list):
 
         auswahl_optionen = ["-", "A", "B", "C"]
 
-        # Wenn der Artikel noch keinen Umsatz hat, zeige standardmäßig "-"
-        if b_umsatz == 0:
-            vorauswahl_index = 0
-        else:
-            vorauswahl_klasse = "A" if live_kumuliert <= grenze_a + 0.01 else (
-                "B" if live_kumuliert <= grenze_b + 0.01 else "C")
-            vorauswahl_index = auswahl_optionen.index(vorauswahl_klasse)
+        # --- NEU: Keine Automatik mehr, wir laden nur die vorherige Auswahl ---
+        aktueller_wert = item.get('eingabe_kl', '-')
+        vorauswahl_index = auswahl_optionen.index(aktueller_wert) if aktueller_wert in auswahl_optionen else 0
 
         with cols[4]:
             item['eingabe_ums'] = st.number_input("Umsatz", value=b_umsatz, key=f"ums_{item['id']}",
                                                   label_visibility="collapsed", step=1.0)
         with cols[5]:
+            # max_value=100.0 entfernt, um Abstürze beim Tippen zu verhindern
             item['eingabe_ant'] = st.number_input("Anteil", value=b_anteil, key=f"ant_{item['id']}",
-                                                  label_visibility="collapsed", step=0.01, format="%.2f",
-                                                  max_value=100.0)
+                                                  label_visibility="collapsed", step=0.01, format="%.2f")
         with cols[6]:
+            # max_value=100.5 entfernt, um Abstürze beim Tippen zu verhindern
             item['eingabe_kum'] = st.number_input("Kumul.", value=live_kumuliert, key=f"kum_{item['id']}",
-                                                  label_visibility="collapsed", step=0.01, format="%.2f",
-                                                  max_value=100.5)
+                                                  label_visibility="collapsed", step=0.01, format="%.2f")
         with cols[7]:
             item['eingabe_kl'] = st.selectbox("Klasse", options=auswahl_optionen, index=vorauswahl_index,
                                               key=f"kl_{item['id']}", label_visibility="collapsed")
