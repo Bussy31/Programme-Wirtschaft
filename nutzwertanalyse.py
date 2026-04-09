@@ -155,10 +155,13 @@ with st.container(border=True):
 
     col_setup1, col_setup2 = st.columns(2)
     with col_setup1:
-        anzahl_optionen = st.number_input("Wie viele Optionen möchtest du vergleichen? (2 bis 5)", min_value=2,
-                                          max_value=5, value=2)
+        # Hinzugefügt: key="anzahl_optionen"
+        anzahl_optionen = st.number_input("Wie viele Optionen möchtest du vergleichen? (2 bis 5)",
+                                          min_value=2, max_value=5, value=2, key="anzahl_optionen")
     with col_setup2:
-        max_punkte = st.number_input("Maximalpunktzahl der Skala (z. B. 5, 10 oder 100):", min_value=1, value=10)
+        # Hinzugefügt: key="max_punkte"
+        max_punkte = st.number_input("Maximalpunktzahl der Skala (z. B. 5, 10 oder 100):",
+                                     min_value=1, value=10, key="max_punkte")
 
     st.markdown("**Benenne deine Optionen:**")
     option_namen = []
@@ -299,14 +302,19 @@ else:
                 st.error(
                     "🧐 Das stimmt noch nicht ganz. Überprüfe deine Rechnung bei allen Optionen! Achte auf die Dezimalstellen.")
 
-# --- AUTOMATISCHES SPEICHERN ---
-speicher_dict = {}
-for key, value in st.session_state.items():
-    # WICHTIG: Wir schließen die Schieberegler (beginnen mit "p_") aus!
-    if key != "daten_geladen" and not key.startswith("p_"):
-        speicher_dict[key] = value
+# --- OPTIMIERTES SPEICHERN (NUR STRUKTUR, KEINE REGLER) ---
+# Wir definieren exakt, welche Felder wichtig sind
+wichtige_keys = ["anzahl_kriterien"] # Start mit der Kriterien-Anzahl
 
-# Umwandeln und speichern, falls es Änderungen gab
+for key in st.session_state.keys():
+    # Wir speichern: Namen der Optionen, Kriterien-Namen, Gewichtungen und Rahmenbedingungen
+    # Wir ignorieren: Schieberegler (p_) und die Ergebnisfelder (erg_)
+    if key.startswith(("opt_name_", "name_", "gew_", "opt_name")) or key in ["anzahl_optionen", "max_punkte"]:
+        wichtige_keys.append(key)
+
+speicher_dict = {k: st.session_state[k] for k in wichtige_keys if k in st.session_state}
+
+# Nur speichern, wenn sich an der Struktur etwas geändert hat
 aktuelle_daten = json.dumps(speicher_dict)
 if aktuelle_daten != gespeicherte_daten:
     localS.setItem("nutzwert_daten", aktuelle_daten)
