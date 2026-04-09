@@ -83,7 +83,7 @@ with st.sidebar:
             {'id': 4, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
             {'id': 5, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
         ]
-
+        st.rerun()
         # KEIN st.rerun() hier! Das Skript läuft jetzt einfach weiter,
         # zeichnet die leere Tabelle und überschreibt ganz am Ende
         # automatisch den Speicher im Browser.
