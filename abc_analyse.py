@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
+import json
+from streamlit_local_storage import LocalStorage
 import io
 
 # --- Versuche FPDF für den PDF-Export zu laden ---
@@ -59,7 +61,21 @@ with st.sidebar:
     grenze_c = st.slider("C-Güter bis (%)", grenze_b, 100, 100)
     st.write(f"Klassen: A (0-{grenze_a}%), B ({grenze_a}-{grenze_b}%), C ({grenze_b}-{grenze_c}%)")
 
-# --- 2. DATEN & SESSION STATE (Jetzt mit 5 leeren Startzeilen!) ---
+# --- 2. DATEN & SESSION STATE ---
+localS = LocalStorage()
+
+# Versuchen, alte Daten aus dem Browser zu laden
+gespeicherte_daten = localS.getItem("abc_daten")
+
+# Wenn Daten da sind, diese laden (aber nur einmalig beim Start)
+if gespeicherte_daten and "daten_geladen" not in st.session_state:
+    try:
+        st.session_state.schueler_liste = json.loads(gespeicherte_daten)
+        st.session_state.daten_geladen = True
+    except json.JSONDecodeError:
+        pass
+
+# Falls gar keine Daten da sind, leere Standardliste erstellen:
 if 'schueler_liste' not in st.session_state:
     st.session_state.schueler_liste = [
         {'id': 1, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
@@ -315,3 +331,8 @@ with col_pdf:
         )
     else:
         st.button("📄 PDF Export (Modul 'fpdf' fehlt!)", disabled=True, use_container_width=True)
+
+# --- 8. AUTOMATISCHES SPEICHERN ---
+aktuelle_daten = json.dumps(st.session_state.schueler_liste)
+if aktuelle_daten != gespeicherte_daten:
+    localS.setItem("abc_daten", aktuelle_daten)
