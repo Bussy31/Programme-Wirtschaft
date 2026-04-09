@@ -34,18 +34,24 @@ st.markdown("""
 # --- 1. INITIALISIERUNG (UNZERSTÖRBARER DATENSPEICHER) ---
 st.set_page_config(page_title="Bestellmengen-Profi", layout="wide")
 
-# --- LOCAL STORAGE LADEN ---
+# --- LOCAL STORAGE LADEN (Wie bei ABC-Analyse) ---
 localS = LocalStorage()
-# Wir nennen es v3, um wieder eine frische, fehlerfreie Datei zu starten
-gespeicherte_daten = localS.getItem("bestell_v3")
+gespeicherte_daten = localS.getItem("bestell_v4")
 
 if gespeicherte_daten and "daten_geladen" not in st.session_state:
     try:
         geladene_daten = json.loads(gespeicherte_daten)
-        for key, value in geladene_daten.items():
-            # HIER GEÄNDERT: "dn_" wurde hinzugefügt!
-            if not key.startswith(("up_", "dn_", "down_", "del_", "rm_", "FormSubmitter")):
-                st.session_state[key] = value
+
+        # Wir laden NUR exakt die Daten, die wir wirklich brauchen. Kein Button-Müll!
+        if 'uebungen_daten' in geladene_daten: st.session_state['uebungen_daten'] = geladene_daten['uebungen_daten']
+        if 'sim_daten' in geladene_daten: st.session_state['sim_daten'] = geladene_daten['sim_daten']
+        if 'jahresbedarf' in geladene_daten: st.session_state['jahresbedarf'] = geladene_daten['jahresbedarf']
+        if 'bestellkosten' in geladene_daten: st.session_state['bestellkosten'] = geladene_daten['bestellkosten']
+        if 'einstandspreis' in geladene_daten: st.session_state['einstandspreis'] = geladene_daten['einstandspreis']
+        if 'lagerkostensatz' in geladene_daten: st.session_state['lagerkostensatz'] = geladene_daten['lagerkostensatz']
+        if 'mindestbestand' in geladene_daten: st.session_state['mindestbestand'] = geladene_daten['mindestbestand']
+        if 'app_modus' in geladene_daten: st.session_state['app_modus'] = geladene_daten['app_modus']
+
         st.session_state.daten_geladen = True
     except:
         pass
@@ -88,18 +94,11 @@ app_modus = st.sidebar.radio("Haupt-Modus:", ["📝 Übungsmodus (Manuell)","�
 
 st.sidebar.divider()
 
-# NEU: Der 100% sichere Reset-Button ohne JavaScript
+# --- RESET BUTTON ---
 if st.sidebar.button("🔄 Alles löschen & Neu starten", use_container_width=True):
-    # 1. Kompletten internen Speicher leeren
     st.session_state.clear()
-
-    # 2. Dem Programm verbieten, die Daten beim nächsten Start wieder aus dem Browser zu laden
     st.session_state.daten_geladen = True
-
-    # 3. Programm hart von oben neu starten
     st.rerun()
-    # (Wenn das Programm jetzt nach unten durchläuft, speichert es
-    # am Ende automatisch eine leere Seite ab und überschreibt den Browser!)
 
 # --- SICHERHEITS-CHECK ---
 if jahresbedarf <= 0 or einstandspreis <= 0:
@@ -375,14 +374,19 @@ else:
         mime="application/pdf"
     )
 
-# --- AUTOMATISCHES SPEICHERN ---
-speicher_dict = {}
-for key, value in st.session_state.items():
-    # HIER GEÄNDERT: "dn_" wurde hinzugefügt!
-    if key != "daten_geladen" and not key.startswith(("up_", "dn_", "down_", "del_", "rm_", "FormSubmitter")):
-        speicher_dict[key] = value
+# --- AUTOMATISCHES SPEICHERN (Wie bei ABC-Analyse) ---
+# Wir packen nur unsere echten Daten in den Koffer. Buttons werden komplett ignoriert!
+speicher_dict = {
+    "uebungen_daten": st.session_state.get('uebungen_daten'),
+    "sim_daten": st.session_state.get('sim_daten'),
+    "jahresbedarf": st.session_state.get('jahresbedarf'),
+    "bestellkosten": st.session_state.get('bestellkosten'),
+    "einstandspreis": st.session_state.get('einstandspreis'),
+    "lagerkostensatz": st.session_state.get('lagerkostensatz'),
+    "mindestbestand": st.session_state.get('mindestbestand'),
+    "app_modus": st.session_state.get('app_modus')
+}
 
 aktuelle_daten = json.dumps(speicher_dict)
 if aktuelle_daten != gespeicherte_daten:
-    # Wichtig: Hier auch auf v3 ändern!
-    localS.setItem("bestell_v3", aktuelle_daten)
+    localS.setItem("bestell_v4", aktuelle_daten)
