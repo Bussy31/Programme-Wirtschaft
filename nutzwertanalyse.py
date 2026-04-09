@@ -1,9 +1,28 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
+import json
+from streamlit_local_storage import LocalStorage
+import streamlit.components.v1 as components
 
 # --- Seiten-Setup ---
 st.set_page_config(page_title="Nutzwertanalyse", layout="wide")
+
+# --- LOCAL STORAGE INITIALISIEREN & LADEN ---
+localS = LocalStorage()
+
+# Speichernamen für dieses Programm: "nutzwert_daten"
+gespeicherte_daten = localS.getItem("nutzwert_daten")
+
+if gespeicherte_daten and "daten_geladen" not in st.session_state:
+    try:
+        geladene_daten = json.loads(gespeicherte_daten)
+        # Alle Schieberegler, Texte und Kriterien wiederherstellen
+        for key, value in geladene_daten.items():
+            st.session_state[key] = value
+        st.session_state.daten_geladen = True
+    except json.JSONDecodeError:
+        pass
 
 # --- COPYRIGHT FOOTER (Unten rechts) ---
 footer_html = """
@@ -121,6 +140,14 @@ st.markdown("""
 Nutze dieses Tool, um eine strukturierte Entscheidung zu treffen. 
 Lege zuerst die Rahmenbedingungen fest, verteile dann die prozentuale Gewichtung und bewerte die Optionen mit den Schiebereglern.
 """)
+
+# --- SEITENLEISTE MIT RESET-BUTTON ---
+with st.sidebar:
+    st.markdown("### ⚙️ Einstellungen")
+    if st.button("🔄 Alles löschen & Neu starten", use_container_width=True):
+        localS.setItem("nutzwert_daten", "")
+        st.session_state.clear()
+        components.html("<script>parent.window.location.reload();</script>", height=0)
 
 # --- 0. Rahmenbedingungen ---
 with st.container(border=True):
@@ -271,3 +298,15 @@ else:
             else:
                 st.error(
                     "🧐 Das stimmt noch nicht ganz. Überprüfe deine Rechnung bei allen Optionen! Achte auf die Dezimalstellen.")
+
+# --- AUTOMATISCHES SPEICHERN ---
+# Wir sammeln alle aktuellen Eingaben (Zahlen, Texte, Kriterien-Anzahl) ein
+speicher_dict = {}
+for key, value in st.session_state.items():
+    if key != "daten_geladen":
+        speicher_dict[key] = value
+
+# Umwandeln und speichern, falls es Änderungen gab
+aktuelle_daten = json.dumps(speicher_dict)
+if aktuelle_daten != gespeicherte_daten:
+    localS.setItem("nutzwert_daten", aktuelle_daten)
