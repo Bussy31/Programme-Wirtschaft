@@ -42,7 +42,9 @@ if gespeicherte_daten and "daten_geladen" not in st.session_state:
     try:
         geladene_daten = json.loads(gespeicherte_daten)
         for key, value in geladene_daten.items():
-            st.session_state[key] = value
+            # NEU: Wir ignorieren Buttons ("up_", "down_", etc.) beim Laden!
+            if not key.startswith(("up_", "down_", "del_", "FormSubmitter")):
+                st.session_state[key] = value
         st.session_state.daten_geladen = True
     except:
         pass
@@ -368,7 +370,8 @@ else:
 # --- AUTOMATISCHES SPEICHERN ---
 speicher_dict = {}
 for key, value in st.session_state.items():
-    if key != "daten_geladen":
+    # NEU: Wir ignorieren Buttons auch beim Speichern!
+    if key != "daten_geladen" and not key.startswith(("up_", "down_", "del_", "FormSubmitter")):
         speicher_dict[key] = value
 
 aktuelle_daten = json.dumps(speicher_dict)
