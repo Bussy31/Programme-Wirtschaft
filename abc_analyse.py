@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt
 import json
 from streamlit_local_storage import LocalStorage
+import streamlit.components.v1 as components
 import io
 
 # --- Versuche FPDF für den PDF-Export zu laden ---
@@ -67,25 +68,16 @@ with st.sidebar:
     st.markdown("---")  # Trennstrich
 
     # NEU: Der korrigierte Reset-Button (ohne st.rerun)
+    # NEU: Der Reset-Button mit echtem Browser-Reload (Hard Refresh)
     if st.button("🔄 Alles löschen & Neu starten", use_container_width=True):
-        # 1. Wir leeren den Zwischenspeicher komplett (alle vorherigen Eingaben weg)
+        # 1. Den Local Storage im Browser leeren
+        localS.setItem("abc_daten", "")
+
+        # 2. Den Zwischenspeicher von Streamlit leeren
         st.session_state.clear()
 
-        # 2. WICHTIG: Wir setzen diesen Marker, damit das Skript gleich NICHT
-        # versucht, die alten Daten wieder aus dem Browser-Speicher zu laden!
-        st.session_state.daten_geladen = True
-
-        # 3. Wir stellen die 5 leeren Startzeilen wieder her
-        st.session_state.schueler_liste = [
-            {'id': 1, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
-            {'id': 2, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
-            {'id': 3, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
-            {'id': 4, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
-            {'id': 5, 'Artikel': '', 'Menge': 0, 'Preis': 0.0},
-        ]
-        # KEIN st.rerun() hier! Das Skript läuft jetzt einfach weiter,
-        # zeichnet die leere Tabelle und überschreibt ganz am Ende
-        # automatisch den Speicher im Browser.
+        # 3. Der Trick: Ein unsichtbares Stück JavaScript, das den Browser (wie F5) komplett neu lädt!
+        components.html("<script>parent.window.location.reload();</script>", height=0)
 
 # --- 2. DATEN & SESSION STATE ---
 # Versuchen, alte Daten aus dem Browser zu laden
