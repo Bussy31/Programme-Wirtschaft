@@ -36,15 +36,15 @@ st.set_page_config(page_title="Bestellmengen-Profi", layout="wide")
 
 # --- LOCAL STORAGE LADEN ---
 localS = LocalStorage()
-# NEU: Wir ändern den Namen, um die alten, kaputten Daten im Browser zu umgehen!
-gespeicherte_daten = localS.getItem("bestell_v2")
+# Wir nennen es v3, um wieder eine frische, fehlerfreie Datei zu starten
+gespeicherte_daten = localS.getItem("bestell_v3")
 
 if gespeicherte_daten and "daten_geladen" not in st.session_state:
     try:
         geladene_daten = json.loads(gespeicherte_daten)
         for key, value in geladene_daten.items():
-            # Buttons strengstens ignorieren
-            if not key.startswith(("up_", "down_", "del_", "FormSubmitter")):
+            # HIER GEÄNDERT: "dn_" wurde hinzugefügt!
+            if not key.startswith(("up_", "dn_", "down_", "del_", "rm_", "FormSubmitter")):
                 st.session_state[key] = value
         st.session_state.daten_geladen = True
     except:
@@ -378,10 +378,11 @@ else:
 # --- AUTOMATISCHES SPEICHERN ---
 speicher_dict = {}
 for key, value in st.session_state.items():
-    # Keine Buttons speichern!
-    if key != "daten_geladen" and not key.startswith(("up_", "down_", "del_", "FormSubmitter")):
+    # HIER GEÄNDERT: "dn_" wurde hinzugefügt!
+    if key != "daten_geladen" and not key.startswith(("up_", "dn_", "down_", "del_", "rm_", "FormSubmitter")):
         speicher_dict[key] = value
 
 aktuelle_daten = json.dumps(speicher_dict)
 if aktuelle_daten != gespeicherte_daten:
-    localS.setItem("bestell_v2", aktuelle_daten)
+    # Wichtig: Hier auch auf v3 ändern!
+    localS.setItem("bestell_v3", aktuelle_daten)
