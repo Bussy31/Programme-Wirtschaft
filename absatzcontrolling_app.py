@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import json
+import os
+import tempfile
 
 try:
     from fpdf import FPDF
@@ -102,25 +104,25 @@ button[kind="primary"] { background: #0284c7 !important; border-radius: 8px !imp
 #  TESTDATEN (AgriGeno eG – Lernsituation)
 # ─────────────────────────────────────────────
 TESTDATEN_STAMM = [
-    {'id':1, 'name':'301 - Rinder-Ohrmarken (Blanko)',       'absatz':45000, 'preis':0.65,    'liegezeit':'6 Wochen'},
+    {'id':1, 'name':'301 - Rinder-Ohrmarken (Blanko)',      'absatz':45000, 'preis':0.65,    'liegezeit':'6 Wochen'},
     {'id':2, 'name':'302 - Arbeitshandschuhe "Grip"',        'absatz':18000, 'preis':2.10,    'liegezeit':'5 Wochen'},
     {'id':3, 'name':'103 - Spezial-Bio-Saatgutmischung',     'absatz':3000,  'preis':120.00,  'liegezeit':'1 Woche'},
-    {'id':4, 'name':'104 - NPK-Standarddünger (1t BigBag)',  'absatz':1500,  'preis':450.00,  'liegezeit':'2 Wochen'},
-    {'id':5, 'name':'203 - Kälber-Tränkeeimer',              'absatz':1000,  'preis':7.00,    'liegezeit':'3 Wochen'},
-    {'id':6, 'name':'204 - Kälber-Iglu "Premium"',           'absatz':600,   'preis':350.00,  'liegezeit':'4 Wochen'},
+    {'id':4, 'name':'104 - NPK-Standardduenger (1t BigBag)', 'absatz':1500,  'preis':450.00,  'liegezeit':'2 Wochen'},
+    {'id':5, 'name':'203 - Kaelber-Traenkeeimer',            'absatz':1000,  'preis':7.00,    'liegezeit':'3 Wochen'},
+    {'id':6, 'name':'204 - Kaelber-Iglu "Premium"',          'absatz':600,   'preis':350.00,  'liegezeit':'4 Wochen'},
     {'id':7, 'name':'403 - Konventionelles Pressengarn',     'absatz':120,   'preis':45.00,   'liegezeit':'18 Monate'},
     {'id':8, 'name':'105 - Agrar-Drohne (Rehkitzrettung)',   'absatz':10,    'preis':8900.00, 'liegezeit':'3 Wochen'},
 ]
 
 TESTDATEN_PLZ = [
-    {'id':1, 'Produkt':'NPK-Standarddünger (BigBag)',        'Phase_eingabe':'-'},
+    {'id':1, 'Produkt':'NPK-Standardduenger (BigBag)',       'Phase_eingabe':'-'},
     {'id':2, 'Produkt':'Agrar-Drohne (Rehkitzrettung)',      'Phase_eingabe':'-'},
     {'id':3, 'Produkt':'Spezial-Bio-Saatgutmischung',        'Phase_eingabe':'-'},
     {'id':4, 'Produkt':'Konventionelles Pressengarn (Rolle)','Phase_eingabe':'-'},
 ]
 
 TESTDATEN_BCG = [
-    {'id':1, 'Produkt':'NPK-Standarddünger (BigBag)',        'wachstum_text':'', 'anteil_text':'', 'ei_feld':'-'},
+    {'id':1, 'Produkt':'NPK-Standardduenger (BigBag)',       'wachstum_text':'', 'anteil_text':'', 'ei_feld':'-'},
     {'id':2, 'Produkt':'Agrar-Drohne (Rehkitzrettung)',      'wachstum_text':'', 'anteil_text':'', 'ei_feld':'-'},
     {'id':3, 'Produkt':'Spezial-Bio-Saatgutmischung',        'wachstum_text':'', 'anteil_text':'', 'ei_feld':'-'},
     {'id':4, 'Produkt':'Konventionelles Pressengarn (Rolle)','wachstum_text':'', 'anteil_text':'', 'ei_feld':'-'},
@@ -128,27 +130,27 @@ TESTDATEN_BCG = [
 
 TESTDATEN_ABC = [
     {'id':1,'Artikel':'301 - Rinder-Ohrmarken (Blanko)',     'Menge':45000,'Preis':0.65,   'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':2,'Artikel':'302 - Arbeitshandschuhe "Grip"',      'Menge':18000,'Preis':2.10,   'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
+    {'id':2,'Artikel':'302 - Arbeitshandschuhe "Grip"',       'Menge':18000,'Preis':2.10,   'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
     {'id':3,'Artikel':'103 - Spezial-Bio-Saatgutmischung',   'Menge':3000, 'Preis':120.00, 'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':4,'Artikel':'104 - NPK-Standarddünger (1t BigBag)','Menge':1500, 'Preis':450.00, 'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':5,'Artikel':'203 - Kälber-Tränkeeimer',            'Menge':1000, 'Preis':7.00,   'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':6,'Artikel':'204 - Kälber-Iglu "Premium"',         'Menge':600,  'Preis':350.00, 'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':7,'Artikel':'403 - Konventionelles Pressengarn',   'Menge':120,  'Preis':45.00,  'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':8,'Artikel':'105 - Agrar-Drohne (Rehkitzrettung)', 'Menge':10,   'Preis':8900.00,'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
+    {'id':4,'Artikel':'104 - NPK-Standardduenger (1t BigBag)','Menge':1500,'Preis':450.00, 'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
+    {'id':5,'Artikel':'203 - Kaelber-Traenkeeimer',           'Menge':1000, 'Preis':7.00,   'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
+    {'id':6,'Artikel':'204 - Kaelber-Iglu "Premium"',         'Menge':600,  'Preis':350.00, 'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
+    {'id':7,'Artikel':'403 - Konventionelles Pressengarn',    'Menge':120,  'Preis':45.00,  'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
+    {'id':8,'Artikel':'105 - Agrar-Drohne (Rehkitzrettung)',  'Menge':10,   'Preis':8900.00,'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
 ]
 
 TESTDATEN_RP = [
     {'id':1,'Produkt':'301 - Rinder-Ohrmarken','Absatz':45000,'DB':0.20,'typ_eingabe':'-'},
     {'id':2,'Produkt':'103 - Spezial-Bio-Saatgut','Absatz':3000,'DB':35.00,'typ_eingabe':'-'},
-    {'id':3,'Produkt':'104 - NPK-Standarddünger','Absatz':1500,'DB':85.00,'typ_eingabe':'-'},
+    {'id':3,'Produkt':'104 - NPK-Standardduenger','Absatz':1500,'DB':85.00,'typ_eingabe':'-'},
     {'id':4,'Produkt':'105 - Agrar-Drohne','Absatz':10,'DB':1200.00,'typ_eingabe':'-'},
     {'id':5,'Produkt':'403 - Pressengarn','Absatz':120,'DB':5.00,'typ_eingabe':'-'},
 ]
 
 TESTDATEN_DB = [
-    {'id':1,'Produkt':'204 - Kälber-Iglu "Premium"',        'Preis':350.00,'var_k':210.00,'Menge':600, 'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0},
-    {'id':2,'Produkt':'203 - Kälber-Tränkeeimer',           'Preis':7.00,  'var_k':8.50,  'Menge':1000,'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0},
-    {'id':3,'Produkt':'104 - NPK-Standarddünger (1t BigBag)','Preis':450.00,'var_k':310.00,'Menge':1500,'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0},
+    {'id':1,'Produkt':'204 - Kaelber-Iglu "Premium"',         'Preis':350.00,'var_k':210.00,'Menge':600, 'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0},
+    {'id':2,'Produkt':'203 - Kaelber-Traenkeeimer',           'Preis':7.00,  'var_k':8.50,  'Menge':1000,'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0},
+    {'id':3,'Produkt':'104 - NPK-Standardduenger (1t BigBag)','Preis':450.00,'var_k':310.00,'Menge':1500,'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0},
 ]
 
 
@@ -179,6 +181,10 @@ def do_autosave():
 # ─────────────────────────────────────────────
 if 'state_loaded' not in st.session_state:
     st.session_state.state_loaded = False
+if 'json_import_key' not in st.session_state:
+    st.session_state.json_import_key = 0
+if 'json_import_success' not in st.session_state:
+    st.session_state.json_import_success = False
 
 if not st.session_state.state_loaded:
     loaded = get_persisted_state()
@@ -187,7 +193,6 @@ if not st.session_state.state_loaded:
             st.session_state[k] = v
         st.query_params.clear()
     else:
-        # Testdaten laden
         st.session_state.stammdaten   = TESTDATEN_STAMM
         st.session_state.plz_produkte = TESTDATEN_PLZ
         st.session_state.bcg_liste    = TESTDATEN_BCG
@@ -196,7 +201,6 @@ if not st.session_state.state_loaded:
         st.session_state.db_produkte  = TESTDATEN_DB
     st.session_state.state_loaded = True
 
-# Fehlende Keys sichern
 for k, v in [('stammdaten', TESTDATEN_STAMM), ('plz_produkte', TESTDATEN_PLZ),
               ('bcg_liste', TESTDATEN_BCG), ('abc_liste', TESTDATEN_ABC),
               ('rp_liste', TESTDATEN_RP), ('db_produkte', TESTDATEN_DB)]:
@@ -205,13 +209,13 @@ for k, v in [('stammdaten', TESTDATEN_STAMM), ('plz_produkte', TESTDATEN_PLZ),
 
 
 # ─────────────────────────────────────────────
-#  HELPER
+#  HELPER – allgemein
 # ─────────────────────────────────────────────
 def safe_str(s):
+    """Konvertiert einen String zu Latin-1 (für fpdf1 kompatibel)."""
     return str(s).encode('latin-1', 'replace').decode('latin-1')
 
 def _is_fpdf2():
-    """Prüft ob fpdf2 (Version >= 2) oder fpdf1 installiert ist."""
     try:
         import fpdf as _m
         ver = str(getattr(_m, 'FPDF_VERSION', getattr(_m, '__version__', '1')))
@@ -223,21 +227,22 @@ _FPDF2 = _is_fpdf2()
 
 def pdf_output(pdf):
     """Gibt das PDF als bytes zurück.
-
-    WICHTIG: pdf.output() darf NUR EINMAL aufgerufen werden!
-    Bei fpdf1 schließt der erste Aufruf das Dokument (State=3),
-    ein zweiter Aufruf liefert dann leere bytes zurück.
+    WICHTIG: pdf.output() darf nur EINMAL aufgerufen werden!
+    Bei fpdf1 schließt der erste Aufruf das Dokument (State=3).
     """
     if _FPDF2:
-        # fpdf2: output() gibt bytearray zurück
         result = pdf.output()
         return bytes(result) if isinstance(result, (bytes, bytearray)) else result.encode('latin-1', 'replace')
     else:
-        # fpdf1: output(dest='S') gibt Latin-1-String zurück – NUR DIESEN EINEN Aufruf!
         raw = pdf.output(dest='S')
         if isinstance(raw, (bytes, bytearray)):
             return bytes(raw)
         return raw.encode('latin-1', 'replace')
+
+def fmt_de(val, decimals=2):
+    """Formatiert eine Zahl nach deutschem Standard: 1.234,56 (Punkt = Tausender, Komma = Dezimal)."""
+    s = f"{float(val):,.{decimals}f}"   # englisch: 1,234.56
+    return s.replace(',', 'X').replace('.', ',').replace('X', '.')
 
 def pdf_download_button(label, build_fn, filename):
     if PDF_AVAILABLE:
@@ -247,11 +252,11 @@ def pdf_download_button(label, build_fn, filename):
                 st.download_button(label=label, data=data, file_name=filename,
                                    mime="application/pdf", use_container_width=True)
             else:
-                st.error("⚠️ PDF leer – bitte Konsole/Terminal auf Fehlermeldungen prüfen.")
+                st.error("PDF leer – bitte Terminal auf Fehler prüfen.")
         except Exception as e:
-            st.error(f"⚠️ PDF-Fehler: {e}")
+            st.error(f"PDF-Fehler: {e}")
     else:
-        st.button("📄 PDF (fpdf fehlt)", disabled=True, use_container_width=True)
+        st.button("PDF (fpdf fehlt)", disabled=True, use_container_width=True)
 
 def get_stammdaten_namen():
     return [p['name'] for p in st.session_state.stammdaten if p.get('name','').strip()]
@@ -261,10 +266,10 @@ def produkt_auswahl_widget(modul_key: str):
     if not namen:
         return None
     with st.expander("📋 Produkte aus Stammdaten übernehmen", expanded=False):
-        st.caption("Wähle Produkte aus und klicke auf Übernehmen. Alle Felder sind danach noch editierbar.")
+        st.caption("Wähle Produkte aus und klicke auf Übernehmen.")
         selected = st.multiselect("Produkte:", options=namen,
                                   key=f"sel_{modul_key}", label_visibility="collapsed")
-        if selected and st.button("➕ Ausgewählte übernehmen", key=f"import_{modul_key}"):
+        if selected and st.button("Ausgewählte übernehmen", key=f"import_{modul_key}"):
             return selected
     return None
 
@@ -272,6 +277,212 @@ def get_export_json():
     keys = ['stammdaten','plz_produkte','abc_liste','bcg_liste','rp_liste','db_produkte']
     return json.dumps({k: st.session_state[k] for k in keys if k in st.session_state},
                       ensure_ascii=False, indent=2)
+
+
+# ─────────────────────────────────────────────
+#  HELPER – Diagramme als PNG (für PDF-Export)
+# ─────────────────────────────────────────────
+def _plz_y(t):
+    """PLZ-Umsatzkurve (schematisch)."""
+    if t < 10: return max(0, -5 + 8 * t)
+    if t < 22: return 75 + 20 * (t - 10) / 12
+    if t < 30: return 95 - 5 * (t - 22) / 8
+    if t < 40: return 90 - 25 * (t - 30) / 10
+    return max(0, 65 - 25 * (t - 40) / 10)
+
+PLZ_PHASEN_X = {
+    "Einführung": 5, "Wachstum": 16, "Reife": 26,
+    "Sättigung": 35, "Degeneration": 45
+}
+
+def create_plz_chart_png():
+    """Rendert den PLZ-Chart via Matplotlib in eine temporäre PNG-Datei.
+    Gibt den Dateipfad zurück (oder None bei Fehler). Datei muss nach Nutzung gelöscht werden.
+    """
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+
+        x = list(range(51))
+        y = [_plz_y(t) for t in x]
+
+        fig, ax = plt.subplots(figsize=(13, 4.2))
+        fig.patch.set_facecolor('white')
+        ax.set_facecolor('white')
+
+        phase_defs = [
+            (0,  10, '#38bdf8', 'Einführung'),
+            (10, 22, '#34d399', 'Wachstum'),
+            (22, 30, '#fbbf24', 'Reife'),
+            (30, 40, '#fb923c', 'Sättigung'),
+            (40, 50, '#f87171', 'Degeneration'),
+        ]
+        for start, end, color, name in phase_defs:
+            xs = [t for t in x if start <= t <= end]
+            ys = [_plz_y(t) for t in xs]
+            ax.fill_between(xs, 0, ys, alpha=0.25, color=color)
+            if start > 0:
+                ax.axvline(x=start, color='#cbd5e1', linewidth=0.8, linestyle='--')
+            mid = (start + end) / 2
+            ax.text(mid, 118, name, ha='center', va='bottom', fontsize=9,
+                    color='#334155', fontweight='bold')
+
+        ax.plot(x, y, color='#0284c7', linewidth=2.8)
+
+        # Produkt-Annotationen
+        counter = {p: 0 for p in PLZ_PHASEN_X}
+        for item in st.session_state.get('plz_produkte', []):
+            ph = item.get('Phase_eingabe', '-')
+            if ph in PLZ_PHASEN_X and item.get('Produkt', '').strip():
+                xc = PLZ_PHASEN_X[ph]
+                yc = _plz_y(xc)
+                off = counter[ph] * 12
+                counter[ph] += 1
+                kurz = item['Produkt']
+                kurz = (kurz[:28] + '..') if len(kurz) > 28 else kurz
+                ax.plot(xc, yc + 5 + off, 'o', color='#dc2626', markersize=7, zorder=5)
+                ax.text(xc, yc + 12 + off, kurz, ha='center', fontsize=7.5,
+                        color='#dc2626', fontweight='bold',
+                        bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.85, ec='none'))
+
+        ax.set_xlim(0, 50)
+        ax.set_ylim(-5, 132)
+        ax.set_xticks([])
+        ax.set_xlabel('Zeitachse →', fontsize=9, color='#64748b')
+        ax.set_ylabel('Umsatz / Gewinn (schematisch)', fontsize=9, color='#64748b')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        for sp in ['bottom', 'left']:
+            ax.spines[sp].set_color('#e2e8f0')
+        ax.tick_params(colors='#94a3b8')
+
+        plt.tight_layout(pad=0.5)
+        f = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        fname = f.name; f.close()
+        fig.savefig(fname, dpi=150, bbox_inches='tight', facecolor='white')
+        plt.close(fig)
+        return fname
+    except Exception:
+        return None
+
+
+def create_bcg_matrix_png(felder):
+    """Rendert die BCG-Matrix via Matplotlib in eine temporäre PNG-Datei.
+    Gibt den Dateipfad zurück (oder None bei Fehler). Datei muss nach Nutzung gelöscht werden.
+    """
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        import matplotlib.patches as mpatches
+
+        fig, ax = plt.subplots(figsize=(9, 7))
+        fig.patch.set_facecolor('white')
+        ax.set_facecolor('white')
+        ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+        ax.set_xticks([]); ax.set_yticks([])
+
+        # (label, bg-color, x0, x1, y0, y1, products)
+        quads = [
+            ('Question Marks', '#fefce8', 0.0, 0.5, 0.5, 1.0, felder.get('❓ Question Mark', [])),
+            ('Stars',          '#f0fdf4', 0.5, 1.0, 0.5, 1.0, felder.get('⭐ Star',          [])),
+            ('Poor Dogs',      '#fff1f2', 0.0, 0.5, 0.0, 0.5, felder.get('🐕 Poor Dog',      [])),
+            ('Cash Cows',      '#eff6ff', 0.5, 1.0, 0.0, 0.5, felder.get('🐄 Cash Cow',      [])),
+        ]
+
+        for label, color, x0, x1, y0, y1, prods in quads:
+            rect = mpatches.Rectangle((x0, y0), x1 - x0, y1 - y0,
+                                      facecolor=color, edgecolor='#cbd5e1',
+                                      linewidth=2, zorder=0)
+            ax.add_patch(rect)
+            cx = (x0 + x1) / 2
+            # Feldbezeichnung klar INNEN oben im Quadranten platzieren
+            ax.text(cx, y1 - 0.04, label, ha='center', va='top',
+                    fontsize=11, fontweight='bold', color='#1e293b', zorder=2)
+            # Produkte unterhalb der Bezeichnung
+            for i, prod in enumerate(prods[:4]):
+                safe_p = safe_str(prod)[:30]
+                ax.text(cx, y1 - 0.17 - i * 0.10, f'• {safe_p}',
+                        ha='center', va='top', fontsize=8, color='#475569',
+                        bbox=dict(boxstyle='round,pad=0.15', fc='white', alpha=0.85, ec='none'),
+                        zorder=3)
+
+        ax.axvline(0.5, color='#64748b', linewidth=2.0, zorder=1)
+        ax.axhline(0.5, color='#64748b', linewidth=2.0, zorder=1)
+
+        # Achsenbeschriftungen
+        ax.text(0.25, -0.05, 'Niedriger Marktanteil', ha='center', va='top',
+                fontsize=8.5, color='#64748b', transform=ax.transAxes)
+        ax.text(0.75, -0.05, 'Hoher Marktanteil', ha='center', va='top',
+                fontsize=8.5, color='#64748b', transform=ax.transAxes)
+        ax.text(1.05, 0.75, 'Hohes\nMarktwachstum', ha='left', va='center',
+                fontsize=8.5, color='#64748b', transform=ax.transAxes)
+        ax.text(1.05, 0.25, 'Niedriges\nMarktwachstum', ha='left', va='center',
+                fontsize=8.5, color='#64748b', transform=ax.transAxes)
+
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#e2e8f0')
+
+        plt.tight_layout(pad=1.5)
+        f = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        fname = f.name; f.close()
+        fig.savefig(fname, dpi=150, bbox_inches='tight', facecolor='white')
+        plt.close(fig)
+        return fname
+    except Exception:
+        return None
+
+
+def create_abc_pareto_png(current):
+    """Rendert das ABC-Pareto-Diagramm (Schüler-Eingaben) via Matplotlib als temporäre PNG-Datei.
+    Gibt den Dateipfad zurück (oder None bei Fehler). Datei muss nach Nutzung gelöscht werden.
+    """
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+
+        artikel = [f"{i+1}. {safe_str(x.get('Artikel',''))[:22]}"
+                   for i, x in enumerate(current) if x.get('Artikel','').strip()]
+        anteile   = [x.get('ei_ant', 0.0) for x in current if x.get('Artikel','').strip()]
+        kumuliert = [x.get('ei_kum', 0.0) for x in current if x.get('Artikel','').strip()]
+
+        if not artikel:
+            return None
+
+        fig, ax1 = plt.subplots(figsize=(14, 4.5))
+        fig.patch.set_facecolor('white')
+        ax1.set_facecolor('white')
+
+        xs = list(range(len(artikel)))
+        ax1.bar(xs, anteile, color='#93c5fd', alpha=0.85, width=0.55, zorder=2)
+        ax1.set_ylabel('Anteil (%)', color='#334155', fontsize=9)
+        ax1.set_ylim(0, 105)
+        ax1.set_xticks(xs)
+        ax1.set_xticklabels(artikel, rotation=30, ha='right', fontsize=7.5)
+        ax1.tick_params(colors='#94a3b8')
+        ax1.set_title('Pareto-Diagramm (eigene Eingaben)', fontsize=10,
+                      color='#1e293b', fontweight='bold', pad=8)
+
+        ax2 = ax1.twinx()
+        ax2.plot(xs, kumuliert, color='#0284c7', linewidth=2.5,
+                 marker='o', markersize=5, zorder=3)
+        ax2.set_ylabel('Kumuliert (%)', color='#0284c7', fontsize=9)
+        ax2.set_ylim(0, 110)
+        ax2.tick_params(colors='#0284c7')
+
+        for sp in ax1.spines.values(): sp.set_edgecolor('#e2e8f0')
+        for sp in ax2.spines.values(): sp.set_edgecolor('#e2e8f0')
+
+        plt.tight_layout(pad=0.5)
+        f = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        fname = f.name; f.close()
+        fig.savefig(fname, dpi=150, bbox_inches='tight', facecolor='white')
+        plt.close(fig)
+        return fname
+    except Exception:
+        return None
 
 
 # ─────────────────────────────────────────────
@@ -285,46 +496,50 @@ with st.sidebar:
         "🔄 Produktlebenszyklus",
         "🔷 Portfoliomatrix",
         "📦 ABC-Analyse",
-        "⚡ Renner-Penner-Liste",
         "💰 DB-Rechnung",
+        "⚡ Renner-Penner-Liste",
     ], label_visibility="collapsed")
 
-    st.markdown("---")
-    st.markdown("#### 💾 Daten")
-    if st.button("💾 Speichern", use_container_width=True):
-        do_autosave(); st.success("✅ Gespeichert!")
-
-    components.html(f"""
-    <script>
-    function ladeZustand() {{
-        var val = localStorage.getItem('{STORAGE_KEY}');
-        if (val) {{
-            window.parent.location.href =
-                window.parent.location.href.split('?')[0] + '?load=' + encodeURIComponent(val);
-        }} else {{ alert('Kein gespeicherter Zustand gefunden.'); }}
-    }}
-    </script>
-    <button onclick="ladeZustand()" style="width:100%;padding:8px 12px;background:#075985;color:white;
-        border:1px solid #0369a1;border-radius:8px;font-weight:600;font-size:0.875rem;cursor:pointer;
-        margin-top:4px;font-family:'IBM Plex Sans',sans-serif;white-space:nowrap;">
-        📂 Aus Browser laden</button>
-    """, height=55)
+    # ── Auto-Load aus localStorage beim Seitenstart (kein Button nötig) ──
+    components.html(f"""<script>
+    (function() {{
+        try {{
+            if (window.parent.sessionStorage.getItem('{STORAGE_KEY}_loaded')) return;
+            if (window.parent.location.search.includes('load=')) return;
+            var data = localStorage.getItem('{STORAGE_KEY}');
+            if (data) {{
+                window.parent.sessionStorage.setItem('{STORAGE_KEY}_loaded', '1');
+                window.parent.location.href =
+                    window.parent.location.href.split('?')[0] + '?load=' + encodeURIComponent(data);
+            }}
+        }} catch(e) {{}}
+    }})();
+    </script>""", height=0)
 
     st.markdown("---")
-    st.markdown("#### 📤 Export / Import")
+    st.markdown("#### 📤 JSON Export / Import")
     st.download_button("⬇️ JSON exportieren", data=get_export_json(),
                        file_name="agrigeno_daten.json", mime="application/json",
                        use_container_width=True)
-    uploaded = st.file_uploader("⬆️ JSON importieren", type=["json"],
-                                 key="json_import", label_visibility="collapsed")
+    st.caption("JSON-Datei auswählen und anschließend laden:")
+    uploaded = st.file_uploader("JSON importieren", type=["json"],
+                                 key=f"json_import_{st.session_state.json_import_key}",
+                                 label_visibility="collapsed")
+    if st.session_state.json_import_success:
+        st.success("✅ Daten wurden erfolgreich geladen!")
+        st.session_state.json_import_success = False
     if uploaded is not None:
-        try:
-            imported = json.load(uploaded)
-            for k, v in imported.items():
-                st.session_state[k] = v
-            st.success("✅ Importiert!"); st.rerun()
-        except Exception as e:
-            st.error(f"Fehler: {e}")
+        if st.button("📂 JSON laden", use_container_width=True):
+            try:
+                imported = json.load(uploaded)
+                for k, v in imported.items():
+                    st.session_state[k] = v
+                do_autosave()
+                st.session_state.json_import_key += 1   # Uploader zurücksetzen
+                st.session_state.json_import_success = True
+                st.rerun()
+            except Exception as e:
+                st.error(f"Fehler beim Laden: {e}")
 
     if st.button("🔄 Testdaten zurücksetzen", use_container_width=True):
         st.session_state.stammdaten   = TESTDATEN_STAMM
@@ -386,9 +601,12 @@ if modul == "🏠 Startseite / Stammdaten":
             with c3: item['preis']     = st.number_input("P", value=float(item.get('preis',0.0)), key=f"s_p_{item['id']}", label_visibility="collapsed", step=0.5, format="%.2f", min_value=0.0)
             with c4: item['liegezeit'] = st.text_input("L", value=item.get('liegezeit',''), key=f"s_l_{item['id']}", label_visibility="collapsed", placeholder="z.B. 6 Wochen")
             with c5:
-                if st.button("🗑️", key=f"s_del_{item['id']}", disabled=(len(stamm)<=1)):
-                    st.session_state.stammdaten = [x for x in stamm if x['id']!=item['id']]
-                    do_autosave(); st.rerun()
+                _, mid, _ = st.columns([0.2, 1, 0.2])
+                with mid:
+                    if st.button("🗑️", key=f"s_del_{item['id']}", disabled=(len(stamm) <= 1),
+                                 use_container_width=True):
+                        st.session_state.stammdaten = [x for x in stamm if x['id'] != item['id']]
+                        do_autosave(); st.rerun()
 
     ca, cb, _ = st.columns([2,2,3])
     with ca:
@@ -416,10 +634,10 @@ if modul == "🏠 Startseite / Stammdaten":
         """, unsafe_allow_html=True)
     with c2:
         st.markdown("""
-        <div class="info-card"><h4>④ ⚡ Renner-Penner-Liste</h4>
+        <div class="info-card"><h4>④ 💰 DB-Rechnung</h4>
+        <p>DB I und DB II selbst berechnen – Deckungsbeiträge als Grundlage für die Renner-Penner-Liste.</p></div>
+        <div class="info-card"><h4>⑤ ⚡ Renner-Penner-Liste</h4>
         <p>Produkte nach Absatz und Deckungsbeitrag klassifizieren.</p></div>
-        <div class="info-card"><h4>⑤ 💰 DB-Rechnung</h4>
-        <p>DB I und DB II selbst berechnen – inkl. Verbundartikel-Analyse (Kälber-Iglu & Tränkeeimer).</p></div>
         """, unsafe_allow_html=True)
     st.info("👈 Wähle ein Modul in der linken Seitenleiste.")
 
@@ -454,22 +672,14 @@ elif modul == "🔄 Produktlebenszyklus":
                          "strategie":"Eliminierung oder Nischenpflege, Ressourcen umschichten"},
     }
 
-    def plz_umsatz(t):
-        if t < 10: return max(0, -5 + 8*t)
-        if t < 22: return 75 + 20*(t-10)/12
-        if t < 30: return 95 - 5*(t-22)/8
-        if t < 40: return 90 - 25*(t-30)/10
-        return max(0, 65 - 25*(t-40)/10)
-
-    x = list(range(0, 51))
+    x_vals = list(range(0, 51))
     df_plz = pd.DataFrame({
-        "Zeit": x,
-        "Umsatz": [plz_umsatz(t) for t in x],
+        "Zeit": x_vals,
+        "Umsatz": [_plz_y(t) for t in x_vals],
         "Phase": [PHASEN[0] if t<10 else PHASEN[1] if t<22 else PHASEN[2] if t<30
-                  else PHASEN[3] if t<40 else PHASEN[4] for t in x]
+                  else PHASEN[3] if t<40 else PHASEN[4] for t in x_vals]
     })
 
-    # Produkt-Annotationen aus den SuS-Eingaben
     plz_prod = st.session_state.plz_produkte
     annot_rows = []
     phase_counter = {p: 0 for p in PHASEN}
@@ -477,16 +687,13 @@ elif modul == "🔄 Produktlebenszyklus":
         ph = item.get('Phase_eingabe', '-')
         if ph in PHASEN and item.get('Produkt','').strip():
             xc = PHASEN_INFO[ph]['x_center']
-            yc = plz_umsatz(xc)
-            # Leicht versetzen wenn mehrere Produkte in selber Phase
+            yc = _plz_y(xc)
             offset = phase_counter[ph] * 8
             phase_counter[ph] += 1
-            # Kurzname für Kurve
-            kurz = item['Produkt'].split('-')[-1].strip() if '-' in item['Produkt'] else item['Produkt']
-            kurz = kurz[:22] + '…' if len(kurz) > 22 else kurz
+            kurz = item['Produkt']
+            kurz = kurz[:30] + '…' if len(kurz) > 30 else kurz
             annot_rows.append({"Zeit": xc, "Umsatz": yc + 5 + offset, "Label": kurz})
 
-    # Kurve zeichnen
     area = alt.Chart(df_plz).mark_area(opacity=0.2).encode(
         x=alt.X("Zeit:Q", title="Zeitachse", axis=alt.Axis(labels=False, ticks=False)),
         y=alt.Y("Umsatz:Q", title="Umsatz / Gewinn (schematisch)", scale=alt.Scale(domain=[-5,115])),
@@ -494,12 +701,9 @@ elif modul == "🔄 Produktlebenszyklus":
             range=["#38bdf8","#34d399","#fbbf24","#fb923c","#f87171"]),
             legend=alt.Legend(title="Phase")),
         tooltip=["Phase:N"])
-
     linie = alt.Chart(df_plz).mark_line(strokeWidth=3, color="#0284c7").encode(
         x="Zeit:Q", y="Umsatz:Q")
-
     layers = [area, linie]
-
     if annot_rows:
         df_annot = pd.DataFrame(annot_rows)
         punkte = alt.Chart(df_annot).mark_point(size=120, color="#dc2626", filled=True).encode(
@@ -508,10 +712,9 @@ elif modul == "🔄 Produktlebenszyklus":
             fontSize=11, fontWeight=600, color="#dc2626", dy=-14, align="center"
         ).encode(x="Zeit:Q", y="Umsatz:Q", text="Label:N")
         layers += [punkte, texte]
-
     st.altair_chart(alt.layer(*layers).properties(height=310), use_container_width=True)
 
-    # ── Phasen-Info-Karten (gleiche Höhe durch feste height) ──
+    # ── Phasen-Info-Karten (gleiche Höhe) ──
     st.subheader("📋 Phasen im Detail")
     cols5 = st.columns(5)
     for i, (phase, info) in enumerate(PHASEN_INFO.items()):
@@ -552,14 +755,14 @@ elif modul == "🔄 Produktlebenszyklus":
 
     optionen_plz = ["-"] + PHASEN
     hdr_plz = "<div class='table-header'>"
-    for r,h in zip([2.5,2.0,0.7],["Produktname","Meine PLZ-Phase","Aktion"]):
-        hdr_plz += f"<div style='flex:{r} 1 0%;'>{h}</div>"
+    for r, h in zip([3.2, 2.2, 0.6], ["Produktname", "Meine PLZ-Phase", "Aktion"]):
+        hdr_plz += f"<div style='flex:{r} 1 0%;text-align:{'center' if r < 1 else 'left'}'>{h}</div>"
     hdr_plz += "</div>"
     st.markdown(hdr_plz, unsafe_allow_html=True)
 
     for item in st.session_state.plz_produkte:
         with st.container(border=True):
-            c1,c2,c3 = st.columns([2.5,2.0,0.7], gap="small")
+            c1, c2, c3 = st.columns([3.2, 2.2, 0.6], gap="small")
             with c1:
                 item['Produkt'] = st.text_input("P", value=item['Produkt'],
                     key=f"plz_p_{item['id']}", label_visibility="collapsed",
@@ -569,33 +772,50 @@ elif modul == "🔄 Produktlebenszyklus":
                 item['Phase_eingabe'] = st.selectbox("Ph", options=optionen_plz, index=pi,
                     key=f"plz_e_{item['id']}", label_visibility="collapsed")
             with c3:
-                if st.button("🗑️", key=f"plz_del_{item['id']}",
-                             disabled=(len(st.session_state.plz_produkte)<=1)):
-                    st.session_state.plz_produkte = [x for x in st.session_state.plz_produkte
-                                                     if x['id']!=item['id']]
-                    do_autosave(); st.rerun()
+                _, mid, _ = st.columns([0.3, 1, 0.3])
+                with mid:
+                    if st.button("🗑️", key=f"plz_del_{item['id']}",
+                                 disabled=(len(st.session_state.plz_produkte) <= 1),
+                                 use_container_width=True):
+                        st.session_state.plz_produkte = [x for x in st.session_state.plz_produkte
+                                                         if x['id'] != item['id']]
+                        do_autosave(); st.rerun()
 
     if st.button("➕ Produkt hinzufügen", key="plz_add"):
         plz_add(); do_autosave(); st.rerun()
 
     st.markdown("<hr/>", unsafe_allow_html=True)
-    col_ppdf, _ = st.columns([1,1])
-    with col_ppdf:
-        def build_plz_pdf():
-            pdf = FPDF(); pdf.add_page()
-            pdf.set_font("Arial",'B',16)
-            # Kein En-Dash (–) hier, damit latin-1 funktioniert
-            pdf.cell(0,10,"Produktlebenszyklus - Auswertung",ln=True,align="C"); pdf.ln(4)
-            pdf.set_font("Arial",'B',9); pdf.set_fill_color(226,232,240)
-            for h,w in zip(["Produkt","Gewaehlte Phase"],[100,80]):
-                pdf.cell(w,8,h,border=1,align="C",fill=True)
-            pdf.ln(); pdf.set_font("Arial",'',9)
-            for item in st.session_state.plz_produkte:
-                if not item['Produkt']: continue
-                pdf.cell(100,8,safe_str(item['Produkt']),border=1)
-                pdf.cell(80,8,safe_str(item['Phase_eingabe']),border=1,align="C"); pdf.ln()
-            return pdf_output(pdf)
-        pdf_download_button("📄 PLZ als PDF", build_plz_pdf, "Produktlebenszyklus.pdf")
+
+    # ── PDF-Export mit Diagramm ──
+    def build_plz_pdf():
+        pdf = FPDF(); pdf.add_page()
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, "Produktlebenszyklus - Auswertung", ln=True, align="C"); pdf.ln(3)
+
+        # PLZ-Kurve als Bild einbetten
+        img_path = create_plz_chart_png()
+        if img_path:
+            try:
+                pdf.image(img_path, x=10, y=None, w=190)
+                pdf.ln(4)
+            except Exception:
+                pass
+            finally:
+                try: os.unlink(img_path)
+                except Exception: pass
+
+        # Tabelle
+        pdf.set_font("Arial", 'B', 9); pdf.set_fill_color(226, 232, 240)
+        for h, w in zip(["Produkt", "Gewaehlte PLZ-Phase"], [120, 65]):
+            pdf.cell(w, 8, h, border=1, align="C", fill=True)
+        pdf.ln(); pdf.set_font("Arial", '', 9)
+        for item in st.session_state.plz_produkte:
+            if not item['Produkt']: continue
+            pdf.cell(120, 8, safe_str(item['Produkt']), border=1)
+            pdf.cell(65, 8, safe_str(item['Phase_eingabe']), border=1, align="C"); pdf.ln()
+        return pdf_output(pdf)
+
+    pdf_download_button("📄 PLZ als PDF (mit Diagramm)", build_plz_pdf, "Produktlebenszyklus.pdf")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -609,12 +829,43 @@ elif modul == "🔷 Portfoliomatrix":
     </div>
     """, unsafe_allow_html=True)
 
-    with st.expander("ℹ️ Theorie: Die vier Felder", expanded=False):
-        c1,c2,c3,c4 = st.columns(4)
-        with c1: st.success("⭐ **Stars**\nHohes Wachstum, hoher Anteil → Investieren")
-        with c2: st.warning("❓ **Question Marks**\nHohes Wachstum, niedriger Anteil → Selektieren")
-        with c3: st.info("🐄 **Cash Cows**\nNiedriges Wachstum, hoher Anteil → Abschöpfen")
-        with c4: st.error("🐕 **Poor Dogs**\nNiedriges Wachstum, niedriger Anteil → Desinvestieren")
+    # ── Theorie: BCG-Felder direkt sichtbar (wie PLZ-Phasenkarten) ──
+    st.subheader("📋 BCG-Felder im Detail")
+    bcg_theory = [
+        {"icon":"⭐","name":"Stars","farbe":"#f0fdf4","border":"#86efac",
+         "wachstum":"Hoch","anteil":"Hoch","strategie":"Investieren",
+         "info":"Marktführer in wachsenden Märkten. Erfordern hohe Investitionen, erwirtschaften aber starke Erträge. Sie sind die Zukunft des Unternehmens und werden zu Cash Cows, wenn das Marktwachstum nachlässt.",
+         "massnahme":"Marktposition ausbauen, Investitionen aufrechterhalten, aktiv bewerben"},
+        {"icon":"❓","name":"Question Marks","farbe":"#fefce8","border":"#fde047",
+         "wachstum":"Hoch","anteil":"Niedrig","strategie":"Selektieren",
+         "info":"Produkte in wachsenden Märkten mit noch geringem Marktanteil. Hoher Kapitalbedarf bei ungewisser Zukunft – können zu Stars oder Poor Dogs werden.",
+         "massnahme":"Selektiv in erfolgversprechende Produkte investieren, andere abstoßen"},
+        {"icon":"🐄","name":"Cash Cows","farbe":"#eff6ff","border":"#93c5fd",
+         "wachstum":"Niedrig","anteil":"Hoch","strategie":"Abschöpfen",
+         "info":"Starke Marktposition in reifen, wachstumsschwachen Märkten. Erwirtschaften hohe Überschüsse bei geringem Investitionsbedarf und finanzieren andere Bereiche.",
+         "massnahme":"Gewinne abschöpfen, zur Finanzierung von Stars und Question Marks nutzen"},
+        {"icon":"🐕","name":"Poor Dogs","farbe":"#fff1f2","border":"#fca5a5",
+         "wachstum":"Niedrig","anteil":"Niedrig","strategie":"Desinvestieren",
+         "info":"Schwache Position in stagnierenden Märkten. Binden Ressourcen ohne nennenswerten Ertrag. Empfehlung ist meist der geordnete Rückzug aus dem Markt.",
+         "massnahme":"Marktaustritt planen, Ressourcen für Stars und Question Marks freigeben"},
+    ]
+    cols_bcg_t = st.columns(4)
+    for col, info in zip(cols_bcg_t, bcg_theory):
+        with col:
+            st.markdown(f"""
+            <div style="background:{info['farbe']};border:1.5px solid {info['border']};border-radius:10px;
+                padding:0.9rem;box-sizing:border-box;">
+              <div style="font-size:1.4rem;text-align:center;margin-bottom:4px;">{info['icon']}</div>
+              <b style="font-size:0.9rem;">{info['name']}</b>
+              <p style="font-size:0.73rem;color:#334155;margin:6px 0 3px;">
+                <b>Marktwachstum:</b> {info['wachstum']}<br/>
+                <b>Marktanteil:</b> {info['anteil']}<br/>
+                <b>Normstrategie:</b> {info['strategie']}</p>
+              <p style="font-size:0.72rem;color:#475569;margin:4px 0;">{info['info']}</p>
+              <p style="font-size:0.72rem;color:#1e40af;margin:4px 0;"><b>Maßnahme:</b> {info['massnahme']}</p>
+            </div>""", unsafe_allow_html=True)
+
+    st.markdown("<hr/>", unsafe_allow_html=True)
 
     if 'bcg_liste' not in st.session_state:
         st.session_state.bcg_liste = TESTDATEN_BCG[:]
@@ -638,7 +889,6 @@ elif modul == "🔷 Portfoliomatrix":
         st.session_state.bcg_liste.append(
             {'id':nid,'Produkt':'','wachstum_text':'','anteil_text':'','ei_feld':'-'})
 
-    # ── Eingabetabelle ──
     st.subheader("📋 Produkte einordnen")
     st.markdown("""
     <div class="hint-box">
@@ -647,9 +897,9 @@ elif modul == "🔷 Portfoliomatrix":
     </div>
     """, unsafe_allow_html=True)
 
-    COL_BCG = [1.8,1.2,1.2,1.6,0.7]
+    COL_BCG = [2.0, 1.2, 1.2, 1.6, 0.55]
     hdr_b = "<div class='table-header'>"
-    for r,h in zip(COL_BCG,["Produkt","Marktwachstum","Rel. Marktanteil","Mein BCG-Feld","Akt."]):
+    for r, h in zip(COL_BCG, ["Produkt", "Marktwachstum", "Rel. Marktanteil", "Mein BCG-Feld", "Aktion"]):
         hdr_b += f"<div style='flex:{r} 1 0%;'>{h}</div>"
     hdr_b += "</div>"
     st.markdown(hdr_b, unsafe_allow_html=True)
@@ -662,21 +912,22 @@ elif modul == "🔷 Portfoliomatrix":
                 item['Produkt'] = st.text_input("P", value=item['Produkt'],
                     key=f"bcg_p_{item['id']}", label_visibility="collapsed", placeholder="Produktname …")
             with cols[1]:
-                item['wachstum_text'] = st.text_input("W", value=item.get('wachstum_text',''),
-                    key=f"bcg_w_{item['id']}", label_visibility="collapsed",
-                    placeholder="z.B. hoch, gering …")
+                item['wachstum_text'] = st.text_input("W", value=item.get('wachstum_text', ''),
+                    key=f"bcg_w_{item['id']}", label_visibility="collapsed", placeholder="z.B. hoch, gering …")
             with cols[2]:
-                item['anteil_text'] = st.text_input("A", value=item.get('anteil_text',''),
-                    key=f"bcg_a_{item['id']}", label_visibility="collapsed",
-                    placeholder="z.B. hoch, niedrig …")
+                item['anteil_text'] = st.text_input("A", value=item.get('anteil_text', ''),
+                    key=f"bcg_a_{item['id']}", label_visibility="collapsed", placeholder="z.B. hoch, niedrig …")
             with cols[3]:
-                fi = FELDER_OPT.index(item.get('ei_feld','-')) if item.get('ei_feld','-') in FELDER_OPT else 0
+                fi = FELDER_OPT.index(item.get('ei_feld', '-')) if item.get('ei_feld', '-') in FELDER_OPT else 0
                 item['ei_feld'] = st.selectbox("F", options=FELDER_OPT, index=fi,
                     key=f"bcg_f_{item['id']}", label_visibility="collapsed")
             with cols[4]:
-                if st.button("🗑️", key=f"bcg_del_{item['id']}", disabled=(len(bcg)<=1)):
-                    st.session_state.bcg_liste = [x for x in bcg if x['id']!=item['id']]
-                    do_autosave(); st.rerun()
+                _, mid, _ = st.columns([0.3, 1, 0.3])
+                with mid:
+                    if st.button("🗑️", key=f"bcg_del_{item['id']}", disabled=(len(bcg) <= 1),
+                                 use_container_width=True):
+                        st.session_state.bcg_liste = [x for x in bcg if x['id'] != item['id']]
+                        do_autosave(); st.rerun()
 
     if st.button("➕ Produkt hinzufügen", key="bcg_add"):
         bcg_add(); do_autosave(); st.rerun()
@@ -701,7 +952,6 @@ elif modul == "🔷 Portfoliomatrix":
             <div style="margin-top:6px;">{produkt_html}</div>
             </div>""", unsafe_allow_html=True)
 
-    # ── Achsenbeschriftung (bereinigt – kein verschobenes Layout mehr) ──
     st.markdown("""
     <div style="text-align:center;font-size:0.8rem;color:#64748b;margin-bottom:2px;font-weight:600;">
         ↑ Hohes Marktwachstum
@@ -715,35 +965,60 @@ elif modul == "🔷 Portfoliomatrix":
 
     left_col, right_col = st.columns(2)
     with left_col:
-        bcg_box("❓ Question Marks", "#fefce8", felder["❓ Question Mark"], "Hoch/Niedrig → Selektieren")
-        bcg_box("🐕 Poor Dogs",      "#fff1f2", felder["🐕 Poor Dog"],      "Niedrig/Niedrig → Desinvestieren")
+        bcg_box("❓ Question Marks", "#fefce8", felder["❓ Question Mark"], "Selektieren")
+        bcg_box("🐕 Poor Dogs",      "#fff1f2", felder["🐕 Poor Dog"],      "Desinvestieren")
     with right_col:
-        bcg_box("⭐ Stars",    "#f0fdf4", felder["⭐ Star"],    "Hoch/Hoch → Investieren")
-        bcg_box("🐄 Cash Cows","#eff6ff", felder["🐄 Cash Cow"],"Niedrig/Hoch → Abschöpfen")
-
+        bcg_box("⭐ Stars",    "#f0fdf4", felder["⭐ Star"],    "Investieren")
+        bcg_box("🐄 Cash Cows","#eff6ff", felder["🐄 Cash Cow"],"Abschöpfen")
     st.markdown("""<div style="font-size:0.8rem;color:#64748b;text-align:center;margin-top:4px;font-weight:600;">
         ↓ Niedriges Marktwachstum</div>""", unsafe_allow_html=True)
 
     st.markdown("<hr/>", unsafe_allow_html=True)
-    # ── PDF-Export (Prüfen-Button entfernt – Besprechung in der Stunde) ──
+
+    # ── PDF-Export mit Matrix-Bild ──
     def build_bcg_pdf():
         pdf = FPDF(); pdf.add_page()
-        pdf.set_font("Arial",'B',16)
-        # Kein En-Dash (–) hier, damit latin-1 funktioniert
-        pdf.cell(0,10,"Portfoliomatrix - Auswertung",ln=True,align="C"); pdf.ln(4)
-        pdf.set_font("Arial",'B',9); pdf.set_fill_color(226,232,240)
-        for h,w in zip(["Produkt","Marktwachstum","Rel. Anteil","BCG-Feld"],[55,40,40,55]):
-            pdf.cell(w,8,h,border=1,align="C",fill=True)
-        pdf.ln(); pdf.set_font("Arial",'',9)
-        clean = lambda s: s.replace("⭐","Star").replace("❓","?").replace("🐄","Cash Cow").replace("🐕","Poor Dog")
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, "Portfoliomatrix (BCG) - Auswertung", ln=True, align="C"); pdf.ln(3)
+
+        # BCG-Matrix als Bild einbetten
+        img_path = create_bcg_matrix_png(felder)
+        if img_path:
+            try:
+                # Zentriert, etwas breiter für bessere Lesbarkeit
+                pdf.image(img_path, x=15, y=None, w=180)
+                pdf.ln(6)
+            except Exception:
+                pass
+            finally:
+                try: os.unlink(img_path)
+                except Exception: pass
+
+        # Tabelle – Emojis vollständig entfernen (verhindert doppelte Bezeichnungen)
+        def clean_feld(s):
+            return (s.replace("⭐ Star", "Star")
+                     .replace("❓ Question Mark", "Question Mark")
+                     .replace("🐄 Cash Cow", "Cash Cow")
+                     .replace("🐕 Poor Dog", "Poor Dog")
+                     .replace("⭐", "").replace("❓", "")
+                     .replace("🐄", "").replace("🐕", "").strip())
+
+        pdf.set_font("Arial", 'B', 9); pdf.set_fill_color(226, 232, 240)
+        # Spalten: Produkt 65 | Marktwachstum 45 | Rel. Anteil 40 | BCG-Feld 40  = 190 mm
+        for h, w in zip(["Produkt", "Marktwachstum", "Rel. Marktanteil", "BCG-Feld"],
+                        [65, 55, 45, 35]):
+            pdf.cell(w, 8, h, border=1, align="C", fill=True)
+        pdf.ln(); pdf.set_font("Arial", '', 9)
         for item in bcg:
             if not item['Produkt']: continue
-            pdf.cell(55,8,safe_str(item['Produkt']),border=1)
-            pdf.cell(40,8,safe_str(item.get('wachstum_text','')),border=1)
-            pdf.cell(40,8,safe_str(item.get('anteil_text','')),border=1)
-            pdf.cell(55,8,safe_str(clean(item.get('ei_feld','-'))),border=1,align="C"); pdf.ln()
+            pdf.cell(65, 8, safe_str(item['Produkt']), border=1)
+            pdf.cell(50, 8, safe_str(item.get('wachstum_text', '')), border=1)
+            pdf.cell(50, 8, safe_str(item.get('anteil_text', '')), border=1)
+            pdf.cell(35, 8, safe_str(clean_feld(item.get('ei_feld', '-'))), border=1, align="C")
+            pdf.ln()
         return pdf_output(pdf)
-    pdf_download_button("📄 Portfolio als PDF", build_bcg_pdf, "Portfoliomatrix.pdf")
+
+    pdf_download_button("📄 Portfolio als PDF (mit Matrix)", build_bcg_pdf, "Portfoliomatrix.pdf")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -757,7 +1032,6 @@ elif modul == "📦 ABC-Analyse":
     </div>
     """, unsafe_allow_html=True)
 
-    # Klassengrenzen IM Hauptbereich (nicht Sidebar)
     with st.expander("⚙️ Klassengrenzen festlegen", expanded=True):
         cg1, cg2, cg3 = st.columns(3)
         with cg1:
@@ -767,7 +1041,6 @@ elif modul == "📦 ABC-Analyse":
             grenze_b = st.number_input("B-Klasse bis (kumuliert %)", value=95,
                                         min_value=grenze_a+1, max_value=99, step=1, key="abc_gb")
         with cg3:
-            # C-Klasse: immer bis 100 %, aber als sichtbares Eingabefeld (Lernzweck)
             _gc_min = min(grenze_b + 1, 100)
             grenze_c = st.number_input("C-Klasse bis (kumuliert %)", value=100,
                                         min_value=_gc_min, max_value=100, step=1, key="abc_gc")
@@ -803,7 +1076,7 @@ elif modul == "📦 ABC-Analyse":
         st.session_state.abc_liste.append({'id':nid,'Artikel':'','Menge':0,'Preis':0.0,
                                             'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'})
 
-    COL = [0.5,1.8,0.9,0.9,1.1,0.9,0.9,0.9,1.0]
+    COL = [0.5,1.8,0.9,0.9,1.1,0.9,0.9,0.9,1.2]
     hdr = "<div class='table-header'>"
     for r,h in zip(COL,["Rang","Artikel","Menge","Preis","Umsatz (€)","Anteil %","Kum. %","Klasse","Aktion"]):
         hdr += f"<div style='flex:{r} 1 0%;'>{h}</div>"
@@ -832,19 +1105,19 @@ elif modul == "📦 ABC-Analyse":
                 kl_idx = optionen.index(item.get('ei_kl','-')) if item.get('ei_kl','-') in optionen else 0
                 item['ei_kl'] = st.selectbox("Kl", options=optionen, index=kl_idx, key=f"abc_kl_{item['id']}", label_visibility="collapsed")
             with cols[8]:
-                cu,cd = st.columns(2)
-                if cu.button("↑", key=f"abc_up_{item['id']}", disabled=(i==0)):
+                cu, cd, cx = st.columns(3)
+                if cu.button("↑", key=f"abc_up_{item['id']}", disabled=(i==0), use_container_width=True):
                     abc_move(i,'up'); do_autosave(); st.rerun()
-                if cd.button("↓", key=f"abc_dn_{item['id']}", disabled=(i==len(current)-1)):
+                if cd.button("↓", key=f"abc_dn_{item['id']}", disabled=(i==len(current)-1), use_container_width=True):
                     abc_move(i,'down'); do_autosave(); st.rerun()
+                if cx.button("🗑️", key=f"abc_del_{item['id']}", disabled=(len(current)<=1), use_container_width=True):
+                    st.session_state.abc_liste = [x for x in current if x['id'] != item['id']]
+                    do_autosave(); st.rerun()
 
-    ca,cr,_ = st.columns([2,2,3])
+    ca, _ = st.columns([2, 5])
     with ca:
         if st.button("➕ Artikel hinzufügen", use_container_width=True):
             abc_add(); do_autosave(); st.rerun()
-    with cr:
-        if st.button("➖ Letzten entfernen", use_container_width=True, disabled=(len(current)<=1)):
-            st.session_state.abc_liste.pop(); do_autosave(); st.rerun()
 
     st.markdown("<hr/>", unsafe_allow_html=True)
     st.subheader("📊 Pareto-Diagramm (deine Eingaben)")
@@ -863,46 +1136,51 @@ elif modul == "📦 ABC-Analyse":
     st.altair_chart(alt.layer(bars, line).properties(height=340), use_container_width=True)
 
     st.markdown("<hr/>", unsafe_allow_html=True)
-    cp, cd_btn = st.columns(2)
-    with cp:
-        if st.button("✅ Analyse prüfen", use_container_width=True, type="primary"):
-            filled = [x for x in current if x['Artikel'].strip()]
-            if not filled:
-                st.warning("Bitte zuerst Artikel eintragen.")
-            elif any(filled[j]['Menge']*filled[j]['Preis'] < filled[j+1]['Menge']*filled[j+1]['Preis']
-                     for j in range(len(filled)-1)):
-                st.error("❌ Reihenfolge falsch – höchster Umsatz muss auf Rang 1!")
-            else:
-                fehler = False; kk=0.0
-                g = sum(x['Menge']*x['Preis'] for x in filled)
-                for i,item in enumerate(filled):
-                    u=item['Menge']*item['Preis']; a=(u/g*100) if g>0 else 0; kk+=a
-                    kl_soll = "A" if kk<=grenze_a+0.01 else ("B" if kk<=grenze_b+0.01 else "C")
-                    if abs(item.get('ei_ums',0)-u)>0.5 or abs(item.get('ei_ant',0)-a)>0.05 or abs(item.get('ei_kum',0)-kk)>0.05:
-                        st.error(f"❌ Rechenfehler bei Rang {i+1} ({item['Artikel']})"); fehler=True; break
-                    if item.get('ei_kl','-')!=kl_soll:
-                        st.error(f"❌ Falsche Klasse bei Rang {i+1} ({item['Artikel']}). Erwartet: {kl_soll}"); fehler=True; break
-                if not fehler:
-                    st.success("✅ Alles korrekt!")
-    with cd_btn:
-        def build_abc_pdf():
-            pdf=FPDF(); pdf.add_page(); pdf.set_font("Arial",'B',16)
-            pdf.cell(0,10,"ABC-Analyse - Auswertung",ln=True,align="C"); pdf.ln(4)
-            pdf.set_font("Arial",'B',9); pdf.set_fill_color(226,232,240)
-            for h,w in zip(["Rang","Artikel","Menge","Preis","Umsatz","Ant.%","Kum.%","Kl."],[10,52,15,22,28,18,18,12]):
-                pdf.cell(w,8,h,border=1,align="C",fill=True)
-            pdf.ln(); pdf.set_font("Arial",'',9)
-            g2=sum(x['Menge']*x['Preis'] for x in current); kk2=0.0
-            for i,item in enumerate(current):
-                if not item['Artikel']: continue
-                u=item['Menge']*item['Preis']; a=(u/g2*100) if g2>0 else 0; kk2+=a
-                kl="A" if kk2<=grenze_a+0.01 else("B" if kk2<=grenze_b+0.01 else "C")
-                pdf.cell(10,8,f"{i+1}.",border=1,align="C"); pdf.cell(52,8,safe_str(item.get('Artikel','-')),border=1)
-                pdf.cell(15,8,str(item.get('Menge',0)),border=1,align="C"); pdf.cell(22,8,f"{item.get('Preis',0):.2f}",border=1,align="R")
-                pdf.cell(28,8,f"{item.get('ei_ums',u):.2f}",border=1,align="R"); pdf.cell(18,8,f"{item.get('ei_ant',a):.2f}%",border=1,align="R")
-                pdf.cell(18,8,f"{item.get('ei_kum',kk2):.2f}%",border=1,align="R"); pdf.cell(12,8,str(item.get('ei_kl',kl)),border=1,align="C"); pdf.ln()
-            return pdf_output(pdf)
-        pdf_download_button("📄 PDF speichern", build_abc_pdf, "ABC_Analyse.pdf")
+
+    # ── PDF-Export (Querformat für mehr Platz bei Artikelbezeichnungen) ──
+    def build_abc_pdf():
+        # Querformat: A4 landscape = 297 × 210 mm → nutzbare Breite ~277 mm
+        pdf = FPDF(orientation='L', unit='mm', format='A4')
+        pdf.add_page()
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, "ABC-Analyse - Auswertung", ln=True, align="C"); pdf.ln(4)
+        pdf.set_font("Arial", '', 10)
+        pdf.cell(0, 6, f"Klassengrenzen: A bis {grenze_a}%  |  B bis {grenze_b}%  |  C bis 100%",
+                 ln=True, align="C"); pdf.ln(4)
+
+        # Pareto-Diagramm (Schüler-Eingaben) einbetten
+        pareto_path = create_abc_pareto_png(current)
+        if pareto_path:
+            try:
+                pdf.image(pareto_path, x=10, y=None, w=270)
+                pdf.ln(4)
+            except Exception:
+                pass
+            finally:
+                try: os.unlink(pareto_path)
+                except Exception: pass
+
+        pdf.set_font("Arial", 'B', 9); pdf.set_fill_color(226, 232, 240)
+        # Spaltenbreiten (Summe = 275 mm)
+        cols_w = [10, 85, 22, 32, 38, 26, 26, 20]
+        cols_h = ["Nr.", "Artikel", "Menge", "Preis (EUR)", "Umsatz (EUR)", "Anteil %", "Kum. %", "Klasse"]
+        for h, w in zip(cols_h, cols_w):
+            pdf.cell(w, 8, h, border=1, align="C", fill=True)
+        pdf.ln(); pdf.set_font("Arial", '', 9)
+        for i, item in enumerate(current):
+            if not item['Artikel']: continue
+            # Nur Schüler-Eingaben exportieren – keine berechneten Vergleichswerte
+            pdf.cell(10, 8, f"{i+1}.", border=1, align="C")
+            pdf.cell(85, 8, safe_str(item.get('Artikel', '-')), border=1)
+            pdf.cell(22, 8, str(item.get('Menge', 0)), border=1, align="R")
+            pdf.cell(32, 8, fmt_de(item.get('Preis', 0)), border=1, align="R")
+            pdf.cell(38, 8, fmt_de(item.get('ei_ums', 0.0)), border=1, align="R")
+            pdf.cell(26, 8, fmt_de(item.get('ei_ant', 0.0)) + " %", border=1, align="R")
+            pdf.cell(26, 8, fmt_de(item.get('ei_kum', 0.0)) + " %", border=1, align="R")
+            pdf.cell(20, 8, str(item.get('ei_kl', '-')), border=1, align="C"); pdf.ln()
+        return pdf_output(pdf)
+
+    pdf_download_button("📄 ABC-Analyse als PDF (Querformat)", build_abc_pdf, "ABC_Analyse.pdf")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -916,119 +1194,129 @@ elif modul == "⚡ Renner-Penner-Liste":
     </div>
     """, unsafe_allow_html=True)
 
-    with st.expander("ℹ️ Theorie", expanded=False):
-        c1,c2,c3,c4 = st.columns(4)
-        with c1: st.success("🏆 **Renner**\nHoher Absatz + Hoher DB")
-        with c2: st.warning("😴 **Schläfer**\nNiedriger Absatz + Hoher DB → reaktivieren")
-        with c3: st.info("❓ **Fragezeichen**\nHoher Absatz + Niedriger DB → Kosten senken")
-        with c4: st.error("💀 **Penner**\nNiedriger Absatz + Niedriger DB → eliminieren")
+    # ── Theorie: Renner-Penner-Typen direkt sichtbar ──
+    st.subheader("📋 Renner-Penner-Typen im Detail")
+    rp_theory = [
+        {"icon":"🏆","name":"Renner","farbe":"#f0fdf4","border":"#86efac",
+         "absatz":"Hoch","db":"Hoch",
+         "info":"Die erfolgreichsten Produkte im Sortiment: hoher Absatz kombiniert mit hohem Deckungsbeitrag. Sie sind die Tragsäulen des Unternehmens und sichern die Liquidität.",
+         "massnahme":"Stärken ausbauen, Verfügbarkeit sichern, gezielt bewerben"},
+        {"icon":"😴","name":"Schläfer","farbe":"#fefce8","border":"#fde047",
+         "absatz":"Niedrig","db":"Hoch",
+         "info":"Hohe Marge, aber zu geringe Absatzmengen. Oft handelt es sich um unbekannte oder schlecht platzierte Produkte mit ungenutztem Potenzial.",
+         "massnahme":"Reaktivieren durch bessere Platzierung, Werbung oder Aktionen"},
+        {"icon":"❓","name":"Fragezeichen","farbe":"#eff6ff","border":"#93c5fd",
+         "absatz":"Hoch","db":"Niedrig",
+         "info":"Hoher Absatz, aber kaum Gewinn. Häufig durch zu niedrige Preise oder hohe variable Kosten. Binden Kapazitäten ohne entsprechenden Ertrag.",
+         "massnahme":"Preise erhöhen, Kosten senken oder Sortimentsabgang prüfen"},
+        {"icon":"💀","name":"Penner","farbe":"#fff1f2","border":"#fca5a5",
+         "absatz":"Niedrig","db":"Niedrig",
+         "info":"Weder Absatz noch Gewinn. Binden Lagerplatz, Kapital und Personalressourcen ohne nennenswerten Beitrag zum Unternehmensergebnis.",
+         "massnahme":"Aus dem Sortiment nehmen, Lagerplatz für Renner freigeben"},
+    ]
+    cols_rp_t = st.columns(4)
+    for col, info in zip(cols_rp_t, rp_theory):
+        with col:
+            st.markdown(f"""
+            <div style="background:{info['farbe']};border:1.5px solid {info['border']};border-radius:10px;
+                padding:0.9rem;box-sizing:border-box;">
+              <div style="font-size:1.4rem;text-align:center;margin-bottom:4px;">{info['icon']}</div>
+              <b style="font-size:0.9rem;">{info['name']}</b>
+              <p style="font-size:0.73rem;color:#334155;margin:6px 0 3px;">
+                <b>Absatz:</b> {info['absatz']}<br/>
+                <b>Deckungsbeitrag:</b> {info['db']}</p>
+              <p style="font-size:0.72rem;color:#475569;margin:4px 0;">{info['info']}</p>
+              <p style="font-size:0.72rem;color:#1e40af;margin:4px 0;"><b>Maßnahme:</b> {info['massnahme']}</p>
+            </div>""", unsafe_allow_html=True)
 
-    with st.sidebar:
-        st.markdown("#### ⚙️ Schwellenwerte")
-        absatz_grenze = st.number_input("Absatz-Schwelle (Stk.)", value=500, step=100)
-        db_grenze     = st.number_input("DB-Schwelle (€/Stk.)", value=10.0, step=1.0, format="%.2f")
+    st.markdown("<hr/>", unsafe_allow_html=True)
+
+    # Schwellenwerte intern (nicht mehr als UI-Eingabe)
+    absatz_grenze = 500
+    db_grenze = 10.0
 
     if 'rp_liste' not in st.session_state:
         st.session_state.rp_liste = TESTDATEN_RP[:]
 
     def get_rp_typ(absatz, db):
-        h_a=absatz>=absatz_grenze; h_d=db>=db_grenze
-        if h_a and h_d:     return "🏆 Renner"
-        if not h_a and h_d: return "😴 Schläfer"
-        if h_a and not h_d: return "❓ Fragezeichen"
-        return "💀 Penner"
+        h_a = absatz >= absatz_grenze; h_d = db >= db_grenze
+        if h_a and h_d:     return "Renner"
+        if not h_a and h_d: return "Schlaefer"
+        if h_a and not h_d: return "Fragezeichen"
+        return "Penner"
 
     sel_rp = produkt_auswahl_widget("rp")
     if sel_rp:
-        existing=[x['Produkt'] for x in st.session_state.rp_liste]
-        nid=max([x['id'] for x in st.session_state.rp_liste], default=0)
+        existing = [x['Produkt'] for x in st.session_state.rp_liste]
+        nid = max([x['id'] for x in st.session_state.rp_liste], default=0)
         for name in sel_rp:
             if name not in existing:
-                nid+=1
+                nid += 1
                 st.session_state.rp_liste.append({'id':nid,'Produkt':name,'Absatz':0,'DB':0.0,'typ_eingabe':'-'})
-        st.session_state.rp_liste=[x for x in st.session_state.rp_liste if x['Produkt'].strip()]
+        st.session_state.rp_liste = [x for x in st.session_state.rp_liste if x['Produkt'].strip()]
         do_autosave(); st.rerun()
 
     def rp_add():
-        nid=max([x['id'] for x in st.session_state.rp_liste], default=0)+1
+        nid = max([x['id'] for x in st.session_state.rp_liste], default=0)+1
         st.session_state.rp_liste.append({'id':nid,'Produkt':'','Absatz':0,'DB':0.0,'typ_eingabe':'-'})
 
-    rp=st.session_state.rp_liste
-    hdr_rp="<div class='table-header'>"
-    for r,h in zip([1.8,1.0,1.0,1.5,0.7],["Produkt","Absatz (Stk.)","DB (€/Stk.)","Mein Typ","Akt."]):
-        hdr_rp+=f"<div style='flex:{r} 1 0%;'>{h}</div>"
-    hdr_rp+="</div>"
+    rp = st.session_state.rp_liste
+    # Dropdown-Optionen ohne Emojis (latin-1 sicher)
+    typen_opt = ["-","Renner","Schlaefer","Fragezeichen","Penner"]
+    typen_display = {"-":"-","Renner":"🏆 Renner","Schlaefer":"😴 Schläfer",
+                     "Fragezeichen":"❓ Fragezeichen","Penner":"💀 Penner"}
+
+    hdr_rp = "<div class='table-header'>"
+    for r, h in zip([2.0, 1.0, 1.0, 1.5, 0.55], ["Produkt", "Absatz (Stk.)", "DB (EUR/Stk.)", "Mein Typ", "Aktion"]):
+        hdr_rp += f"<div style='flex:{r} 1 0%;'>{h}</div>"
+    hdr_rp += "</div>"
     st.markdown(hdr_rp, unsafe_allow_html=True)
 
-    typen_opt=["-","🏆 Renner","😴 Schläfer","❓ Fragezeichen","💀 Penner"]
     for item in rp:
         with st.container(border=True):
-            cols=st.columns([1.8,1.0,1.0,1.5,0.7],gap="small")
-            with cols[0]: item['Produkt']=st.text_input("P",value=item['Produkt'],key=f"rp_p_{item['id']}",label_visibility="collapsed")
-            with cols[1]: item['Absatz']=st.number_input("A",value=int(item['Absatz']),key=f"rp_a_{item['id']}",label_visibility="collapsed",step=10,min_value=0)
-            with cols[2]: item['DB']=st.number_input("D",value=float(item['DB']),key=f"rp_d_{item['id']}",label_visibility="collapsed",step=0.5,format="%.2f")
+            cols = st.columns([2.0, 1.0, 1.0, 1.5, 0.55], gap="small")
+            with cols[0]: item['Produkt'] = st.text_input("P", value=item['Produkt'], key=f"rp_p_{item['id']}", label_visibility="collapsed")
+            with cols[1]: item['Absatz']  = st.number_input("A", value=int(item['Absatz']), key=f"rp_a_{item['id']}", label_visibility="collapsed", step=10, min_value=0)
+            with cols[2]: item['DB']      = st.number_input("D", value=float(item['DB']), key=f"rp_d_{item['id']}", label_visibility="collapsed", step=0.5, format="%.2f")
             with cols[3]:
-                ti=typen_opt.index(item.get('typ_eingabe','-')) if item.get('typ_eingabe','-') in typen_opt else 0
-                item['typ_eingabe']=st.selectbox("T",options=typen_opt,index=ti,key=f"rp_te_{item['id']}",label_visibility="collapsed")
+                raw = item.get('typ_eingabe', '-')
+                raw_clean = raw.replace("🏆 ","").replace("😴 ","").replace("❓ ","").replace("💀 ","").strip()
+                if raw_clean not in typen_opt: raw_clean = '-'
+                ti = typen_opt.index(raw_clean)
+                sel = st.selectbox("T", options=typen_opt, index=ti, key=f"rp_te_{item['id']}",
+                                   label_visibility="collapsed",
+                                   format_func=lambda v: typen_display.get(v, v))
+                item['typ_eingabe'] = sel
             with cols[4]:
-                if st.button("🗑️",key=f"rp_del_{item['id']}",disabled=(len(rp)<=1)):
-                    st.session_state.rp_liste=[x for x in rp if x['id']!=item['id']]
-                    do_autosave(); st.rerun()
+                _, mid, _ = st.columns([0.3, 1, 0.3])
+                with mid:
+                    if st.button("🗑️", key=f"rp_del_{item['id']}", disabled=(len(rp) <= 1),
+                                 use_container_width=True):
+                        st.session_state.rp_liste = [x for x in rp if x['id'] != item['id']]
+                        do_autosave(); st.rerun()
 
-    if st.button("➕ Produkt hinzufügen",key="rp_add"):
+    if st.button("➕ Produkt hinzufügen", key="rp_add"):
         rp_add(); do_autosave(); st.rerun()
 
     st.markdown("<hr/>", unsafe_allow_html=True)
-    col_rcheck,col_rpdf=st.columns(2)
-    with col_rcheck:
-        if st.button("✅ Eingaben prüfen",use_container_width=True,type="primary"):
-            fehler=False
-            for item in rp:
-                if not item['Produkt']: continue
-                soll=get_rp_typ(item['Absatz'],item['DB'])
-                if item.get('typ_eingabe','-')=='-':
-                    st.warning(f"⚠️ {item['Produkt']}: Kein Typ gewählt."); fehler=True
-                elif item.get('typ_eingabe')!=soll:
-                    st.error(f"❌ {item['Produkt']}: '{item['typ_eingabe']}' – richtig: {soll}"); fehler=True
-            if not fehler:
-                st.success("✅ Alle Klassifizierungen korrekt!")
-                felder_rp={"🏆 Renner":[],"😴 Schläfer":[],"❓ Fragezeichen":[],"💀 Penner":[]}
-                for item in rp:
-                    if item['Produkt']: felder_rp[get_rp_typ(item['Absatz'],item['DB'])].append(item['Produkt'])
-                cq2,cs2=st.columns(2); cd2,cc2=st.columns(2)
-                def rp_box(container,name,color,items):
-                    with container:
-                        st.markdown(f"""<div style="background:{color};border-radius:10px;padding:1rem;
-                            min-height:90px;border:1px solid #e2e8f0;"><b>{name}</b><br/>
-                            {"<br/>".join([f"• {p}" for p in items]) if items else "<i style='color:#94a3b8;'>Keine</i>"}
-                            </div>""", unsafe_allow_html=True)
-                rp_box(cq2,"😴 Schläfer","#fefce8",felder_rp["😴 Schläfer"])
-                rp_box(cs2,"🏆 Renner","#f0fdf4",felder_rp["🏆 Renner"])
-                rp_box(cd2,"💀 Penner","#fff1f2",felder_rp["💀 Penner"])
-                rp_box(cc2,"❓ Fragezeichen","#eff6ff",felder_rp["❓ Fragezeichen"])
-                st.caption("← Niedriger Absatz | Hoher Absatz →  (oben = hoher DB)")
 
-    with col_rpdf:
-        def build_rp_pdf():
-            pdf=FPDF(); pdf.add_page()
-            pdf.set_font("Arial",'B',16); pdf.cell(0,10,"Renner-Penner-Liste",ln=True,align="C"); pdf.ln(4)
-            pdf.set_font("Arial",'',10)
-            pdf.cell(0,6,f"Schwellenwerte: Absatz >= {absatz_grenze} Stk. | DB >= {db_grenze:.2f} EUR/Stk.",ln=True); pdf.ln(4)
-            pdf.set_font("Arial",'B',9); pdf.set_fill_color(226,232,240)
-            for h,w in zip(["Produkt","Absatz","DB (EUR/Stk.)","Eingabe SuS","Richtiger Typ"],[55,28,32,47,47]):
-                pdf.cell(w,8,h,border=1,align="C",fill=True)
-            pdf.ln(); pdf.set_font("Arial",'',9)
-            clean=lambda s: s.replace("🏆","").replace("😴","").replace("❓","").replace("💀","").strip()
-            for item in rp:
-                if not item['Produkt']: continue
-                soll=get_rp_typ(item['Absatz'],item['DB'])
-                pdf.cell(55,8,safe_str(item['Produkt']),border=1)
-                pdf.cell(28,8,str(item['Absatz']),border=1,align="R")
-                pdf.cell(32,8,f"{item['DB']:.2f}",border=1,align="R")
-                pdf.cell(47,8,safe_str(clean(item.get('typ_eingabe','-'))),border=1,align="C")
-                pdf.cell(47,8,safe_str(clean(soll)),border=1,align="C"); pdf.ln()
-            return pdf_output(pdf)
-        pdf_download_button("📄 Liste als PDF", build_rp_pdf, "Renner_Penner_Liste.pdf")
+    def build_rp_pdf():
+        pdf = FPDF(); pdf.add_page()
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, "Renner-Penner-Liste", ln=True, align="C"); pdf.ln(6)
+        pdf.set_font("Arial", 'B', 9); pdf.set_fill_color(226, 232, 240)
+        for h, w in zip(["Produkt","Absatz","DB (EUR/Stk.)","Mein Typ"],[70, 30, 35, 55]):
+            pdf.cell(w, 8, h, border=1, align="C", fill=True)
+        pdf.ln(); pdf.set_font("Arial", '', 9)
+        for item in rp:
+            if not item['Produkt']: continue
+            pdf.cell(70, 8, safe_str(item['Produkt']), border=1)
+            pdf.cell(30, 8, str(item['Absatz']), border=1, align="R")
+            pdf.cell(35, 8, fmt_de(item['DB']), border=1, align="R")
+            pdf.cell(55, 8, safe_str(item.get('typ_eingabe', '-')), border=1, align="C"); pdf.ln()
+        return pdf_output(pdf)
+
+    pdf_download_button("📄 Liste als PDF", build_rp_pdf, "Renner_Penner_Liste.pdf")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -1042,120 +1330,82 @@ elif modul == "💰 DB-Rechnung":
     </div>
     """, unsafe_allow_html=True)
 
-    with st.expander("ℹ️ Theorie: Deckungsbeitragsrechnung", expanded=False):
-        st.markdown("""
-        | Formel | Beschreibung |
-        |---|---|
-        | **DB I** = Erlös − variable Kosten | Deckungsbeitrag pro Stück |
-        | **DB II** = DB I × Absatzmenge | Gesamter Deckungsbeitrag |
-        | **Gewinn** = DB II − Fixkosten | Unternehmensergebnis |
-        | **BEP (Menge)** = Fixkosten ÷ DB I | Gewinnschwelle in Stück |
-        """)
-
-    with st.sidebar:
-        st.markdown("#### ⚙️ Fixkosten")
-        fixkosten = st.number_input("Fixkosten gesamt (€)", value=50000.0, step=1000.0, format="%.2f")
 
     if 'db_produkte' not in st.session_state:
         st.session_state.db_produkte = TESTDATEN_DB[:]
 
     sel_db = produkt_auswahl_widget("db")
     if sel_db:
-        existing=[x['Produkt'] for x in st.session_state.db_produkte]
-        nid=max([x['id'] for x in st.session_state.db_produkte], default=0)
-        stamm_map={p['name']:p for p in st.session_state.stammdaten}
+        existing = [x['Produkt'] for x in st.session_state.db_produkte]
+        nid = max([x['id'] for x in st.session_state.db_produkte], default=0)
+        stamm_map = {p['name']:p for p in st.session_state.stammdaten}
         for name in sel_db:
             if name not in existing:
-                nid+=1
-                sd=stamm_map.get(name,{})
+                nid += 1
+                sd = stamm_map.get(name,{})
                 st.session_state.db_produkte.append({
                     'id':nid,'Produkt':name,'Preis':float(sd.get('preis',0.0)),
                     'var_k':0.0,'Menge':int(sd.get('absatz',0)),
                     'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0})
-        st.session_state.db_produkte=[x for x in st.session_state.db_produkte if x['Produkt'].strip()]
+        st.session_state.db_produkte = [x for x in st.session_state.db_produkte if x['Produkt'].strip()]
         do_autosave(); st.rerun()
 
     def db_add():
-        nid=max([x['id'] for x in st.session_state.db_produkte], default=0)+1
+        nid = max([x['id'] for x in st.session_state.db_produkte], default=0)+1
         st.session_state.db_produkte.append({'id':nid,'Produkt':'','Preis':0.0,'var_k':0.0,
                                               'Menge':0,'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0})
 
-    db_prod=st.session_state.db_produkte
-    COL_DB=[1.5,1.0,1.0,1.0,1.0,1.1,1.1,0.6]
-    hdr_db="<div class='table-header'>"
-    for r,h in zip(COL_DB,["Produkt","Preis (€)","Var.K. (€)","Menge","DB I (€)","DB II (€)","BEP (Stk.)","Akt."]):
-        hdr_db+=f"<div style='flex:{r} 1 0%;'>{h}</div>"
-    hdr_db+="</div>"
+    db_prod = st.session_state.db_produkte
+    COL_DB = [1.6, 1.0, 1.0, 0.9, 1.1, 1.2, 0.55]
+    hdr_db = "<div class='table-header'>"
+    for r, h in zip(COL_DB, ["Produkt", "Preis (€)", "Var.K. (€)", "Menge", "DB I (€)", "DB II (€)", "Akt."]):
+        hdr_db += f"<div style='flex:{r} 1 0%;'>{h}</div>"
+    hdr_db += "</div>"
     st.markdown(hdr_db, unsafe_allow_html=True)
 
     for item in db_prod:
         with st.container(border=True):
-            cols=st.columns(COL_DB,gap="small")
-            with cols[0]: item['Produkt']=st.text_input("P",value=item['Produkt'],key=f"db_p_{item['id']}",label_visibility="collapsed")
-            with cols[1]: item['Preis']=st.number_input("Pr",value=float(item['Preis']),key=f"db_pr_{item['id']}",label_visibility="collapsed",step=0.5,format="%.2f",min_value=0.0)
-            with cols[2]: item['var_k']=st.number_input("Vk",value=float(item['var_k']),key=f"db_vk_{item['id']}",label_visibility="collapsed",step=0.5,format="%.2f",min_value=0.0)
-            with cols[3]: item['Menge']=st.number_input("Me",value=int(item['Menge']),key=f"db_me_{item['id']}",label_visibility="collapsed",step=10,min_value=0)
-            with cols[4]: item['ei_db1']=st.number_input("D1",value=float(item.get('ei_db1',0.0)),key=f"db_d1_{item['id']}",label_visibility="collapsed",step=0.5,format="%.2f")
-            with cols[5]: item['ei_db2']=st.number_input("D2",value=float(item.get('ei_db2',0.0)),key=f"db_d2_{item['id']}",label_visibility="collapsed",step=10.0,format="%.2f")
-            with cols[6]: item['ei_bep']=st.number_input("BP",value=float(item.get('ei_bep',0.0)),key=f"db_bp_{item['id']}",label_visibility="collapsed",step=1.0,format="%.0f")
-            with cols[7]:
-                if st.button("🗑️",key=f"db_del_{item['id']}",disabled=(len(db_prod)<=1)):
-                    st.session_state.db_produkte=[x for x in db_prod if x['id']!=item['id']]
-                    do_autosave(); st.rerun()
+            cols = st.columns(COL_DB, gap="small")
+            with cols[0]: item['Produkt'] = st.text_input("P", value=item['Produkt'], key=f"db_p_{item['id']}", label_visibility="collapsed")
+            with cols[1]: item['Preis']   = st.number_input("Pr", value=float(item['Preis']), key=f"db_pr_{item['id']}", label_visibility="collapsed", step=0.5, format="%.2f", min_value=0.0)
+            with cols[2]: item['var_k']   = st.number_input("Vk", value=float(item['var_k']), key=f"db_vk_{item['id']}", label_visibility="collapsed", step=0.5, format="%.2f", min_value=0.0)
+            with cols[3]: item['Menge']   = st.number_input("Me", value=int(item['Menge']), key=f"db_me_{item['id']}", label_visibility="collapsed", step=10, min_value=0)
+            with cols[4]: item['ei_db1']  = st.number_input("D1", value=float(item.get('ei_db1', 0.0)), key=f"db_d1_{item['id']}", label_visibility="collapsed", step=0.5, format="%.2f")
+            with cols[5]: item['ei_db2']  = st.number_input("D2", value=float(item.get('ei_db2', 0.0)), key=f"db_d2_{item['id']}", label_visibility="collapsed", step=10.0, format="%.2f")
+            with cols[6]:
+                _, mid, _ = st.columns([0.3, 1, 0.3])
+                with mid:
+                    if st.button("🗑️", key=f"db_del_{item['id']}", disabled=(len(db_prod) <= 1),
+                                 use_container_width=True):
+                        st.session_state.db_produkte = [x for x in db_prod if x['id'] != item['id']]
+                        do_autosave(); st.rerun()
 
-    if st.button("➕ Produkt hinzufügen",key="db_add"):
+    if st.button("➕ Produkt hinzufügen", key="db_add"):
         db_add(); do_autosave(); st.rerun()
 
     st.markdown("<hr/>", unsafe_allow_html=True)
-    col_dbcheck,col_dbpdf=st.columns(2)
-    with col_dbcheck:
-        if st.button("✅ Rechnung prüfen",use_container_width=True,type="primary"):
-            fehler=False
-            for item in db_prod:
-                if not item['Produkt']: continue
-                db1s=item['Preis']-item['var_k']
-                db2s=db1s*item['Menge']
-                beps=(fixkosten/db1s) if db1s>0 else 0
-                if abs(item['ei_db1']-db1s)>0.05:
-                    st.error(f"❌ {item['Produkt']}: DB I falsch ({item['ei_db1']:.2f} | richtig: {db1s:.2f})"); fehler=True; break
-                if abs(item['ei_db2']-db2s)>0.5:
-                    st.error(f"❌ {item['Produkt']}: DB II falsch ({item['ei_db2']:.2f} | richtig: {db2s:.2f})"); fehler=True; break
-                if db1s>0 and abs(item['ei_bep']-beps)>1:
-                    st.error(f"❌ {item['Produkt']}: BEP falsch ({item['ei_bep']:.0f} | richtig: {beps:.0f})"); fehler=True; break
-            if not fehler:
-                st.success("✅ Alle Berechnungen korrekt!")
-                g_db2=sum((x['Preis']-x['var_k'])*x['Menge'] for x in db_prod if x['Produkt'])
-                gewinn=g_db2-fixkosten
-                c1,c2,c3=st.columns(3)
-                with c1: st.markdown(f"""<div class='metric-box'><div class='val'>{g_db2:,.2f} €</div><div class='lbl'>Gesamt DB II</div></div>""",unsafe_allow_html=True)
-                with c2: st.markdown(f"""<div class='metric-box'><div class='val'>{fixkosten:,.2f} €</div><div class='lbl'>Fixkosten</div></div>""",unsafe_allow_html=True)
-                with c3:
-                    farbe="#f0fdf4" if gewinn>=0 else "#fff1f2"
-                    st.markdown(f"""<div class='metric-box' style='background:{farbe};'><div class='val'>{gewinn:+,.2f} €</div><div class='lbl'>Gewinn / Verlust</div></div>""",unsafe_allow_html=True)
 
-    with col_dbpdf:
-        def build_db_pdf():
-            pdf=FPDF(); pdf.add_page()
-            pdf.set_font("Arial",'B',16); pdf.cell(0,10,"Deckungsbeitragsrechnung",ln=True,align="C"); pdf.ln(4)
-            pdf.set_font("Arial",'B',9); pdf.set_fill_color(226,232,240)
-            for h,w in zip(["Produkt","Preis","Var.K.","Menge","DB I","DB II","BEP"],[50,22,22,20,25,28,25]):
-                pdf.cell(w,8,h,border=1,align="C",fill=True)
-            pdf.ln(); pdf.set_font("Arial",'',9); g_db2_p=0
-            for item in db_prod:
-                if not item['Produkt']: continue
-                db1=item['Preis']-item['var_k']; db2=db1*item['Menge']
-                bep=(fixkosten/db1) if db1>0 else 0; g_db2_p+=db2
-                pdf.cell(50,8,safe_str(item['Produkt']),border=1)
-                pdf.cell(22,8,f"{item['Preis']:.2f}",border=1,align="R"); pdf.cell(22,8,f"{item['var_k']:.2f}",border=1,align="R")
-                pdf.cell(20,8,str(item['Menge']),border=1,align="R"); pdf.cell(25,8,f"{item['ei_db1']:.2f}",border=1,align="R")
-                pdf.cell(28,8,f"{item['ei_db2']:.2f}",border=1,align="R"); pdf.cell(25,8,f"{item['ei_bep']:.0f}",border=1,align="R"); pdf.ln()
-            pdf.ln(4); g_p=g_db2_p-fixkosten
-            pdf.set_font("Arial",'B',10); pdf.cell(0,7,"Gesamtergebnis:",ln=True)
-            pdf.set_font("Arial",'',10)
-            pdf.cell(0,6,f"Gesamt DB II = {g_db2_p:,.2f} EUR",ln=True)
-            pdf.cell(0,6,f"Fixkosten   = {fixkosten:,.2f} EUR",ln=True)
-            pdf.cell(0,6,f"Gewinn/Verlust = {g_p:+,.2f} EUR",ln=True)
-            return pdf_output(pdf)
-        pdf_download_button("📄 DB-Rechnung als PDF", build_db_pdf, "DB_Rechnung.pdf")
+    def build_db_pdf():
+        pdf = FPDF(); pdf.add_page()
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, "Deckungsbeitragsrechnung", ln=True, align="C"); pdf.ln(4)
+        pdf.set_font("Arial", 'B', 9); pdf.set_fill_color(226, 232, 240)
+        # Spalten ohne BEP: Produkt 60 | Preis 28 | Var.K. 28 | Menge 22 | DB I 28 | DB II 32  = 198 mm
+        for h, w in zip(["Produkt", "Preis (EUR)", "Var.K. (EUR)", "Menge", "DB I (EUR)", "DB II (EUR)"],
+                        [60, 28, 28, 22, 28, 32]):
+            pdf.cell(w, 8, h, border=1, align="C", fill=True)
+        pdf.ln(); pdf.set_font("Arial", '', 9)
+        for item in db_prod:
+            if not item['Produkt']: continue
+            pdf.cell(60, 8, safe_str(item['Produkt']), border=1)
+            pdf.cell(28, 8, fmt_de(item['Preis']), border=1, align="R")
+            pdf.cell(28, 8, fmt_de(item['var_k']), border=1, align="R")
+            pdf.cell(22, 8, str(item['Menge']), border=1, align="R")
+            pdf.cell(28, 8, fmt_de(item.get('ei_db1', 0.0)), border=1, align="R")
+            pdf.cell(32, 8, fmt_de(item.get('ei_db2', 0.0)), border=1, align="R")
+            pdf.ln()
+        return pdf_output(pdf)
+
+    pdf_download_button("📄 DB-Rechnung als PDF", build_db_pdf, "DB_Rechnung.pdf")
 
 do_autosave()
