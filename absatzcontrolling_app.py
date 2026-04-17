@@ -11,7 +11,6 @@ try:
 except ImportError:
     PDF_AVAILABLE = False
 
-import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Absatzcontrolling – AgriGeno eG",
@@ -20,7 +19,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-STORAGE_KEY = "absatzcontrolling_v4"
+SAVE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.agrigeno_save.json')
 
 st.markdown("""
 <style>
@@ -112,25 +111,28 @@ TESTDATEN_DB    = []
 
 
 # ─────────────────────────────────────────────
-#  LOCALSTORAGE
+#  DATEI-BASIERTE PERSISTENZ
 # ─────────────────────────────────────────────
-def save_to_localstorage(data: dict):
-    json_str = json.dumps(data, ensure_ascii=False).replace("\\", "\\\\").replace("`", "\\`")
-    components.html(
-        f"<script>(function(){{try{{localStorage.setItem('{STORAGE_KEY}',`{json_str}`);}}catch(e){{}}}})();</script>",
-        height=0)
+SAVE_KEYS = ['stammdaten', 'plz_produkte', 'abc_liste', 'bcg_liste', 'rp_liste', 'db_produkte']
 
-def get_persisted_state():
-    if "load" in st.query_params:
-        try:
-            return json.loads(st.query_params["load"])
-        except Exception:
-            pass
+def save_to_file(data: dict):
+    try:
+        with open(SAVE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+def load_from_file():
+    try:
+        if os.path.exists(SAVE_FILE):
+            with open(SAVE_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception:
+        pass
     return None
 
 def do_autosave():
-    keys = ['stammdaten','plz_produkte','abc_liste','bcg_liste','rp_liste','db_produkte']
-    save_to_localstorage({k: st.session_state[k] for k in keys if k in st.session_state})
+    save_to_file({k: st.session_state[k] for k in SAVE_KEYS if k in st.session_state})
 
 
 # ─────────────────────────────────────────────
@@ -144,11 +146,10 @@ if 'json_import_success' not in st.session_state:
     st.session_state.json_import_success = False
 
 if not st.session_state.state_loaded:
-    loaded = get_persisted_state()
+    loaded = load_from_file()
     if loaded:
         for k, v in loaded.items():
             st.session_state[k] = v
-        st.query_params.clear()
     else:
         st.session_state.stammdaten   = TESTDATEN_STAMM
         st.session_state.plz_produkte = TESTDATEN_PLZ
@@ -458,22 +459,6 @@ with st.sidebar:
         "💰 DB-Rechnung",
         "⚡ Renner-Penner-Liste",
     ], label_visibility="collapsed")
-
-    # ── Auto-Load aus localStorage beim Seitenstart (kein Button nötig) ──
-    components.html(f"""<script>
-    (function() {{
-        try {{
-            if (window.parent.sessionStorage.getItem('{STORAGE_KEY}_loaded')) return;
-            if (window.parent.location.search.includes('load=')) return;
-            var data = localStorage.getItem('{STORAGE_KEY}');
-            if (data) {{
-                window.parent.sessionStorage.setItem('{STORAGE_KEY}_loaded', '1');
-                window.parent.location.href =
-                    window.parent.location.href.split('?')[0] + '?load=' + encodeURIComponent(data);
-            }}
-        }} catch(e) {{}}
-    }})();
-    </script>""", height=0)
 
     st.markdown("---")
     st.markdown("#### 📤 JSON Export / Import")
