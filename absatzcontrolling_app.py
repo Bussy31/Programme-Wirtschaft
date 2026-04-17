@@ -92,7 +92,7 @@ button[kind="primary"] { background: #0284c7 !important; border-radius: 8px !imp
 .metric-box .lbl { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
 .hint-box { background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px;
     padding:0.8rem 1rem; margin-bottom:1rem; font-size:0.9rem; color:#0369a1; }
-.bcg-feld { border-radius:10px; padding:1rem 1.2rem; min-height:110px;
+.bcg-feld { border-radius:10px; padding:1rem 1.2rem; min-height:340px;
     border:2px solid #e2e8f0; margin-bottom:4px; }
 .bcg-feld b { font-size:1rem; }
 </style>
@@ -101,57 +101,14 @@ button[kind="primary"] { background: #0284c7 !important; border-radius: 8px !imp
 
 
 # ─────────────────────────────────────────────
-#  TESTDATEN (AgriGeno eG – Lernsituation)
+#  STARTDATEN (leer – Schüler tragen selbst ein)
 # ─────────────────────────────────────────────
-TESTDATEN_STAMM = [
-    {'id':1, 'name':'301 - Rinder-Ohrmarken (Blanko)',      'absatz':45000, 'preis':0.65,    'liegezeit':'6 Wochen'},
-    {'id':2, 'name':'302 - Arbeitshandschuhe "Grip"',        'absatz':18000, 'preis':2.10,    'liegezeit':'5 Wochen'},
-    {'id':3, 'name':'103 - Spezial-Bio-Saatgutmischung',     'absatz':3000,  'preis':120.00,  'liegezeit':'1 Woche'},
-    {'id':4, 'name':'104 - NPK-Standardduenger (1t BigBag)', 'absatz':1500,  'preis':450.00,  'liegezeit':'2 Wochen'},
-    {'id':5, 'name':'203 - Kaelber-Traenkeeimer',            'absatz':1000,  'preis':7.00,    'liegezeit':'3 Wochen'},
-    {'id':6, 'name':'204 - Kaelber-Iglu "Premium"',          'absatz':600,   'preis':350.00,  'liegezeit':'4 Wochen'},
-    {'id':7, 'name':'403 - Konventionelles Pressengarn',     'absatz':120,   'preis':45.00,   'liegezeit':'18 Monate'},
-    {'id':8, 'name':'105 - Agrar-Drohne (Rehkitzrettung)',   'absatz':10,    'preis':8900.00, 'liegezeit':'3 Wochen'},
-]
-
-TESTDATEN_PLZ = [
-    {'id':1, 'Produkt':'NPK-Standardduenger (BigBag)',       'Phase_eingabe':'-'},
-    {'id':2, 'Produkt':'Agrar-Drohne (Rehkitzrettung)',      'Phase_eingabe':'-'},
-    {'id':3, 'Produkt':'Spezial-Bio-Saatgutmischung',        'Phase_eingabe':'-'},
-    {'id':4, 'Produkt':'Konventionelles Pressengarn (Rolle)','Phase_eingabe':'-'},
-]
-
-TESTDATEN_BCG = [
-    {'id':1, 'Produkt':'NPK-Standardduenger (BigBag)',       'wachstum_text':'', 'anteil_text':'', 'ei_feld':'-'},
-    {'id':2, 'Produkt':'Agrar-Drohne (Rehkitzrettung)',      'wachstum_text':'', 'anteil_text':'', 'ei_feld':'-'},
-    {'id':3, 'Produkt':'Spezial-Bio-Saatgutmischung',        'wachstum_text':'', 'anteil_text':'', 'ei_feld':'-'},
-    {'id':4, 'Produkt':'Konventionelles Pressengarn (Rolle)','wachstum_text':'', 'anteil_text':'', 'ei_feld':'-'},
-]
-
-TESTDATEN_ABC = [
-    {'id':1,'Artikel':'301 - Rinder-Ohrmarken (Blanko)',     'Menge':45000,'Preis':0.65,   'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':2,'Artikel':'302 - Arbeitshandschuhe "Grip"',       'Menge':18000,'Preis':2.10,   'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':3,'Artikel':'103 - Spezial-Bio-Saatgutmischung',   'Menge':3000, 'Preis':120.00, 'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':4,'Artikel':'104 - NPK-Standardduenger (1t BigBag)','Menge':1500,'Preis':450.00, 'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':5,'Artikel':'203 - Kaelber-Traenkeeimer',           'Menge':1000, 'Preis':7.00,   'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':6,'Artikel':'204 - Kaelber-Iglu "Premium"',         'Menge':600,  'Preis':350.00, 'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':7,'Artikel':'403 - Konventionelles Pressengarn',    'Menge':120,  'Preis':45.00,  'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-    {'id':8,'Artikel':'105 - Agrar-Drohne (Rehkitzrettung)',  'Menge':10,   'Preis':8900.00,'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'},
-]
-
-TESTDATEN_RP = [
-    {'id':1,'Produkt':'301 - Rinder-Ohrmarken','Absatz':45000,'DB':0.20,'typ_eingabe':'-'},
-    {'id':2,'Produkt':'103 - Spezial-Bio-Saatgut','Absatz':3000,'DB':35.00,'typ_eingabe':'-'},
-    {'id':3,'Produkt':'104 - NPK-Standardduenger','Absatz':1500,'DB':85.00,'typ_eingabe':'-'},
-    {'id':4,'Produkt':'105 - Agrar-Drohne','Absatz':10,'DB':1200.00,'typ_eingabe':'-'},
-    {'id':5,'Produkt':'403 - Pressengarn','Absatz':120,'DB':5.00,'typ_eingabe':'-'},
-]
-
-TESTDATEN_DB = [
-    {'id':1,'Produkt':'204 - Kaelber-Iglu "Premium"',         'Preis':350.00,'var_k':210.00,'Menge':600, 'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0},
-    {'id':2,'Produkt':'203 - Kaelber-Traenkeeimer',           'Preis':7.00,  'var_k':8.50,  'Menge':1000,'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0},
-    {'id':3,'Produkt':'104 - NPK-Standardduenger (1t BigBag)','Preis':450.00,'var_k':310.00,'Menge':1500,'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0},
-]
+TESTDATEN_STAMM = []
+TESTDATEN_PLZ   = []
+TESTDATEN_BCG   = []
+TESTDATEN_ABC   = []
+TESTDATEN_RP    = []
+TESTDATEN_DB    = []
 
 
 # ─────────────────────────────────────────────
@@ -283,12 +240,14 @@ def get_export_json():
 #  HELPER – Diagramme als PNG (für PDF-Export)
 # ─────────────────────────────────────────────
 def _plz_y(t):
-    """PLZ-Umsatzkurve (schematisch)."""
-    if t < 10: return max(0, -5 + 8 * t)
-    if t < 22: return 75 + 20 * (t - 10) / 12
-    if t < 30: return 95 - 5 * (t - 22) / 8
-    if t < 40: return 90 - 25 * (t - 30) / 10
-    return max(0, 65 - 25 * (t - 40) / 10)
+    """PLZ-Umsatzkurve (schematisch).
+    Einführung: flach/zögerlich; Wachstum: steil; Reife: Plateau; Sättigung: moderat; Degeneration: steil.
+    """
+    if t < 10: return max(0, t * t * 0.38)         # Einführung: quadratisch flach  0→38
+    if t < 22: return 38 + 57 * (t - 10) / 12      # Wachstum: steil               38→95
+    if t < 30: return 95 - 6 * (t - 22) / 8        # Reife: leicht abfallend       95→89
+    if t < 40: return 89 - 24 * (t - 30) / 10      # Sättigung: moderat            89→65
+    return max(0, 65 - 55 * (t - 40) / 10)         # Degeneration: steil           65→10→0
 
 PLZ_PHASEN_X = {
     "Einführung": 5, "Wachstum": 16, "Reife": 26,
@@ -541,7 +500,7 @@ with st.sidebar:
             except Exception as e:
                 st.error(f"Fehler beim Laden: {e}")
 
-    if st.button("🔄 Testdaten zurücksetzen", use_container_width=True):
+    if st.button("🗑️ Alle Daten löschen", use_container_width=True):
         st.session_state.stammdaten   = TESTDATEN_STAMM
         st.session_state.plz_produkte = TESTDATEN_PLZ
         st.session_state.bcg_liste    = TESTDATEN_BCG
@@ -608,13 +567,10 @@ if modul == "🏠 Startseite / Stammdaten":
                         st.session_state.stammdaten = [x for x in stamm if x['id'] != item['id']]
                         do_autosave(); st.rerun()
 
-    ca, cb, _ = st.columns([2,2,3])
+    ca, _ = st.columns([2, 5])
     with ca:
         if st.button("➕ Artikel hinzufügen", use_container_width=True):
             stamm_add(); do_autosave(); st.rerun()
-    with cb:
-        if st.button("➖ Letzten entfernen", use_container_width=True, disabled=(len(stamm)<=1)):
-            st.session_state.stammdaten.pop(); do_autosave(); st.rerun()
 
     namen = [p['name'] for p in stamm if p.get('name','').strip()]
     if namen:
@@ -622,23 +578,32 @@ if modul == "🏠 Startseite / Stammdaten":
 
     st.markdown("---")
     st.subheader("📚 Module – Reihenfolge der Lernsituation")
-    c1,c2 = st.columns(2)
-    with c1:
-        st.markdown("""
-        <div class="info-card"><h4>① 🔄 Produktlebenszyklus</h4>
-        <p>Produkte den PLZ-Phasen zuordnen und in der Kurve verorten.</p></div>
-        <div class="info-card"><h4>② 🔷 Portfoliomatrix</h4>
-        <p>Produkte selbst in die BCG-Matrix einordnen: Stars, Cash Cows, Question Marks & Poor Dogs.</p></div>
-        <div class="info-card"><h4>③ 📦 ABC-Analyse</h4>
-        <p>Artikel nach Umsatzbedeutung klassifizieren – Pareto-Diagramm & Klassengrenzen.</p></div>
-        """, unsafe_allow_html=True)
-    with c2:
-        st.markdown("""
-        <div class="info-card"><h4>④ 💰 DB-Rechnung</h4>
-        <p>DB I und DB II selbst berechnen – Deckungsbeiträge als Grundlage für die Renner-Penner-Liste.</p></div>
-        <div class="info-card"><h4>⑤ ⚡ Renner-Penner-Liste</h4>
-        <p>Produkte nach Absatz und Deckungsbeitrag klassifizieren.</p></div>
-        """, unsafe_allow_html=True)
+    st.markdown("""
+    <div class="info-card"><h4>① 🔄 Produktlebenszyklus</h4>
+    <p>Jedes Produkt durchläuft typischerweise fünf Phasen: Einführung, Wachstum, Reife, Sättigung und
+    Degeneration. In diesem Modul ordnest du die AgriGeno-Produkte den passenden PLZ-Phasen zu – sie
+    erscheinen dann direkt in der schematischen Kurve.</p></div>
+
+    <div class="info-card"><h4>② 🔷 Portfoliomatrix (BCG)</h4>
+    <p>Die BCG-Matrix klassifiziert Produkte nach Marktwachstum und relativem Marktanteil in vier Felder:
+    Stars, Question Marks, Cash Cows und Poor Dogs. Du ordnest die AgriGeno-Produkte selbst ein und
+    leitest daraus die passende Normstrategie ab.</p></div>
+
+    <div class="info-card"><h4>③ 📦 ABC-Analyse</h4>
+    <p>Die ABC-Analyse bewertet Artikel nach ihrer Umsatzbedeutung (Pareto-Prinzip): Wenige A-Artikel
+    machen einen Großteil des Umsatzes aus, viele C-Artikel nur einen kleinen Teil. Du berechnest
+    Umsatzanteile, kumulative Werte und trägst die ABC-Klasse ein.</p></div>
+
+    <div class="info-card"><h4>④ 💰 DB-Rechnung</h4>
+    <p>Der Deckungsbeitrag zeigt, wie viel ein Produkt nach Abzug der variablen Kosten zum Unternehmensergebnis
+    beiträgt. Du berechnest DB I (Stückbeitrag) und DB II (Gesamtbeitrag je Produkt) – die Grundlage für die
+    Renner-Penner-Einordnung.</p></div>
+
+    <div class="info-card"><h4>⑤ ⚡ Renner-Penner-Liste</h4>
+    <p>Die Renner-Penner-Analyse kombiniert Absatz und Deckungsbeitrag: Renner sind absatz- und ertragsstarke
+    Produkte, Penner sind in beiden Dimensionen schwach. Du klassifizierst alle Produkte und leitest
+    sortimentspolitische Maßnahmen ab.</p></div>
+    """, unsafe_allow_html=True)
     st.info("👈 Wähle ein Modul in der linken Seitenleiste.")
 
 
@@ -753,6 +718,9 @@ elif modul == "🔄 Produktlebenszyklus":
         nid = max([x['id'] for x in st.session_state.plz_produkte], default=0)+1
         st.session_state.plz_produkte.append({'id':nid,'Produkt':'','Phase_eingabe':'-'})
 
+    if not st.session_state.plz_produkte:
+        plz_add()
+
     optionen_plz = ["-"] + PHASEN
     hdr_plz = "<div class='table-header'>"
     for r, h in zip([3.2, 2.2, 0.6], ["Produktname", "Meine PLZ-Phase", "Aktion"]):
@@ -849,26 +817,24 @@ elif modul == "🔷 Portfoliomatrix":
          "info":"Schwache Position in stagnierenden Märkten. Binden Ressourcen ohne nennenswerten Ertrag. Empfehlung ist meist der geordnete Rückzug aus dem Markt.",
          "massnahme":"Marktaustritt planen, Ressourcen für Stars und Question Marks freigeben"},
     ]
-    cols_bcg_t = st.columns(4)
-    for col, info in zip(cols_bcg_t, bcg_theory):
-        with col:
-            st.markdown(f"""
-            <div style="background:{info['farbe']};border:1.5px solid {info['border']};border-radius:10px;
-                padding:0.9rem;box-sizing:border-box;">
-              <div style="font-size:1.4rem;text-align:center;margin-bottom:4px;">{info['icon']}</div>
-              <b style="font-size:0.9rem;">{info['name']}</b>
-              <p style="font-size:0.73rem;color:#334155;margin:6px 0 3px;">
-                <b>Marktwachstum:</b> {info['wachstum']}<br/>
-                <b>Marktanteil:</b> {info['anteil']}<br/>
-                <b>Normstrategie:</b> {info['strategie']}</p>
-              <p style="font-size:0.72rem;color:#475569;margin:4px 0;">{info['info']}</p>
-              <p style="font-size:0.72rem;color:#1e40af;margin:4px 0;"><b>Maßnahme:</b> {info['massnahme']}</p>
-            </div>""", unsafe_allow_html=True)
+    cards_html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.6rem;align-items:stretch;margin-bottom:1rem;">'
+    for info in bcg_theory:
+        cards_html += f"""
+        <div style="background:{info['farbe']};border:1.5px solid {info['border']};border-radius:10px;
+            padding:0.9rem;box-sizing:border-box;display:flex;flex-direction:column;">
+          <div style="font-size:1.4rem;text-align:center;margin-bottom:4px;">{info['icon']}</div>
+          <b style="font-size:0.9rem;">{info['name']}</b>
+          <p style="font-size:0.73rem;color:#334155;margin:6px 0 3px;">
+            <b>Marktwachstum:</b> {info['wachstum']}<br/>
+            <b>Marktanteil:</b> {info['anteil']}<br/>
+            <b>Normstrategie:</b> {info['strategie']}</p>
+          <p style="font-size:0.72rem;color:#475569;margin:4px 0;">{info['info']}</p>
+          <p style="font-size:0.72rem;color:#1e40af;margin:4px 0;"><b>Maßnahme:</b> {info['massnahme']}</p>
+        </div>"""
+    cards_html += '</div>'
+    st.markdown(cards_html, unsafe_allow_html=True)
 
     st.markdown("<hr/>", unsafe_allow_html=True)
-
-    if 'bcg_liste' not in st.session_state:
-        st.session_state.bcg_liste = TESTDATEN_BCG[:]
 
     FELDER_OPT = ["-","⭐ Star","❓ Question Mark","🐄 Cash Cow","🐕 Poor Dog"]
 
@@ -888,6 +854,9 @@ elif modul == "🔷 Portfoliomatrix":
         nid = max([x['id'] for x in st.session_state.bcg_liste], default=0)+1
         st.session_state.bcg_liste.append(
             {'id':nid,'Produkt':'','wachstum_text':'','anteil_text':'','ei_feld':'-'})
+
+    if not st.session_state.bcg_liste:
+        bcg_add()
 
     st.subheader("📋 Produkte einordnen")
     st.markdown("""
@@ -1032,6 +1001,39 @@ elif modul == "📦 ABC-Analyse":
     </div>
     """, unsafe_allow_html=True)
 
+    # ── Theorie: ABC-Klassen direkt sichtbar ──
+    st.subheader("📋 ABC-Klassen im Detail")
+    abc_theory = [
+        {"icon":"🥇","name":"A-Artikel","farbe":"#f0fdf4","border":"#86efac",
+         "anteil_art":"ca. 10–20 %","anteil_ums":"ca. 70–80 %",
+         "info":"Wenige, besonders umsatzstarke Artikel. Sie machen den Großteil des Gesamtumsatzes aus und sind für das Unternehmen unverzichtbar.",
+         "massnahme":"Hohe Lagerpriorität, enge Kontrolle, sichere Verfügbarkeit gewährleisten"},
+        {"icon":"🥈","name":"B-Artikel","farbe":"#fefce8","border":"#fde047",
+         "anteil_art":"ca. 30–40 %","anteil_ums":"ca. 15–25 %",
+         "info":"Artikel mit mittlerer Umsatzbedeutung. Regelmäßige Überprüfung sinnvoll – Potenzial für Aufstieg in die A-Klasse oder Abstieg in C.",
+         "massnahme":"Standard-Controlling, Entwicklung beobachten, Potenzial prüfen"},
+        {"icon":"🥉","name":"C-Artikel","farbe":"#fff1f2","border":"#fca5a5",
+         "anteil_art":"ca. 50–60 %","anteil_ums":"ca. 5–10 %",
+         "info":"Viele Artikel mit geringem Umsatzbeitrag. Binden Lagerkapazität, Kapital und Verwaltungsaufwand ohne nennenswerten Ertrag.",
+         "massnahme":"Vereinfachte Verwaltung, Sortimentsbereinigung prüfen, Bestellmengen reduzieren"},
+    ]
+    abc_cards_html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.6rem;align-items:stretch;margin-bottom:1rem;">'
+    for info in abc_theory:
+        abc_cards_html += f"""
+        <div style="background:{info['farbe']};border:1.5px solid {info['border']};border-radius:10px;
+            padding:0.9rem;box-sizing:border-box;display:flex;flex-direction:column;">
+          <div style="font-size:1.4rem;text-align:center;margin-bottom:4px;">{info['icon']}</div>
+          <b style="font-size:0.9rem;">{info['name']}</b>
+          <p style="font-size:0.73rem;color:#334155;margin:6px 0 3px;">
+            <b>Anteil Artikel:</b> {info['anteil_art']}<br/>
+            <b>Anteil Umsatz:</b> {info['anteil_ums']}</p>
+          <p style="font-size:0.72rem;color:#475569;margin:4px 0;">{info['info']}</p>
+          <p style="font-size:0.72rem;color:#1e40af;margin:4px 0;"><b>Maßnahme:</b> {info['massnahme']}</p>
+        </div>"""
+    abc_cards_html += '</div>'
+    st.markdown(abc_cards_html, unsafe_allow_html=True)
+    st.markdown("<hr/>", unsafe_allow_html=True)
+
     with st.expander("⚙️ Klassengrenzen festlegen", expanded=True):
         cg1, cg2, cg3 = st.columns(3)
         with cg1:
@@ -1072,9 +1074,12 @@ elif modul == "📦 ABC-Analyse":
         elif direction=='down' and index<len(l)-1: l[index],l[index+1] = l[index+1],l[index]
 
     def abc_add():
-        nid = max([x['id'] for x in st.session_state.abc_liste], default=0)+1
+        nid = max([x['id'] for x in st.session_state.abc_liste], default=0) + 1
         st.session_state.abc_liste.append({'id':nid,'Artikel':'','Menge':0,'Preis':0.0,
                                             'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'})
+
+    if not st.session_state.abc_liste:
+        abc_add()
 
     COL = [0.5,1.8,0.9,0.9,1.1,0.9,0.9,0.9,1.2]
     hdr = "<div class='table-header'>"
@@ -1260,6 +1265,9 @@ elif modul == "⚡ Renner-Penner-Liste":
         nid = max([x['id'] for x in st.session_state.rp_liste], default=0)+1
         st.session_state.rp_liste.append({'id':nid,'Produkt':'','Absatz':0,'DB':0.0,'typ_eingabe':'-'})
 
+    if not st.session_state.rp_liste:
+        rp_add()
+
     rp = st.session_state.rp_liste
     # Dropdown-Optionen ohne Emojis (latin-1 sicher)
     typen_opt = ["-","Renner","Schlaefer","Fragezeichen","Penner"]
@@ -1326,10 +1334,41 @@ elif modul == "💰 DB-Rechnung":
     st.markdown("""
     <div class="main-header">
         <h1>💰 Deckungsbeitragsrechnung</h1>
-        <p>DB I und DB II selbst berechnen - Verbundartikel: Kaelber-Iglu & Traenkeeimer</p>
+        <p>DB I und DB II selbst berechnen – Verbundartikel: Kälber-Iglu &amp; Tränkeeimer</p>
     </div>
     """, unsafe_allow_html=True)
 
+    # ── Theorie: Deckungsbeitrag direkt sichtbar ──
+    st.subheader("📋 Deckungsbeitrag im Detail")
+    db_theory = [
+        {"icon":"💶","name":"DB I – Stückdeckungsbeitrag","farbe":"#f0fdf4","border":"#86efac",
+         "formel":"DB I = Verkaufspreis − variable Kosten/Stk. (Einkauf + Bezug + variable Verkaufskosten)",
+         "info":"Der DB I zeigt, wie viel ein einzelnes Produkt nach Abzug aller variablen Kosten zum Ergebnis beiträgt. Variable Kosten entstehen direkt durch jede verkaufte Einheit (z. B. Einkaufspreis, Fracht, Provisionen). Ein negativer DB I bedeutet: Jedes verkaufte Stück verursacht Verlust.",
+         "massnahme":"Verkaufspreis erhöhen oder variable Kosten senken, wenn DB I negativ oder zu gering"},
+        {"icon":"💰","name":"DB II – Stückdeckungsbeitrag nach Fixkosten","farbe":"#eff6ff","border":"#93c5fd",
+         "formel":"DB II = DB I − anteilige Produktfixkosten/Stk. (Lager, Verwaltung)",
+         "info":"Der DB II zieht vom DB I noch die anteiligen Produktfixkosten ab – also die Fixkosten, die einem Produkt direkt zugeordnet werden können (z. B. Lager- und Verwaltungskosten). Ist DB II negativ, deckt das Produkt nicht einmal seine zurechenbaren Fixkosten.",
+         "massnahme":"Fixkosten senken oder Produkt aus dem Sortiment nehmen, wenn DB II dauerhaft negativ"},
+        {"icon":"📊","name":"Verbundprodukte & Sortimentspolitik","farbe":"#fefce8","border":"#fde047",
+         "formel":"Verbundeffekt: Zusatzdeckungsbeitrag aus Koppelverkäufen einrechnen",
+         "info":"Manche Produkte haben einen negativen DB II, sichern aber den Verkauf anderer, margenstarker Produkte (Verbundprodukte). Hier ist der kombinierte DB beider Produkte entscheidend – nicht der isolierte Wert des Einzelprodukts.",
+         "massnahme":"Verbundeffekte quantifizieren: Wie viele Iglus werden nur wegen der Eimer verkauft?"},
+    ]
+    db_cards_html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.6rem;align-items:stretch;margin-bottom:1rem;">'
+    for info in db_theory:
+        db_cards_html += f"""
+        <div style="background:{info['farbe']};border:1.5px solid {info['border']};border-radius:10px;
+            padding:0.9rem;box-sizing:border-box;display:flex;flex-direction:column;">
+          <div style="font-size:1.4rem;text-align:center;margin-bottom:4px;">{info['icon']}</div>
+          <b style="font-size:0.9rem;">{info['name']}</b>
+          <p style="font-size:0.73rem;color:#1e40af;margin:6px 0 3px;font-family:monospace;
+              background:#e0f2fe;padding:4px 6px;border-radius:5px;">{info['formel']}</p>
+          <p style="font-size:0.72rem;color:#475569;margin:4px 0;">{info['info']}</p>
+          <p style="font-size:0.72rem;color:#1e40af;margin:4px 0;"><b>Hinweis:</b> {info['massnahme']}</p>
+        </div>"""
+    db_cards_html += '</div>'
+    st.markdown(db_cards_html, unsafe_allow_html=True)
+    st.markdown("<hr/>", unsafe_allow_html=True)
 
     if 'db_produkte' not in st.session_state:
         st.session_state.db_produkte = TESTDATEN_DB[:]
@@ -1345,20 +1384,23 @@ elif modul == "💰 DB-Rechnung":
                 sd = stamm_map.get(name,{})
                 st.session_state.db_produkte.append({
                     'id':nid,'Produkt':name,'Preis':float(sd.get('preis',0.0)),
-                    'var_k':0.0,'Menge':int(sd.get('absatz',0)),
-                    'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0})
+                    'var_k':0.0,'fix_k':0.0,'Menge':int(sd.get('absatz',0)),
+                    'ei_db1':0.0,'ei_db2':0.0})
         st.session_state.db_produkte = [x for x in st.session_state.db_produkte if x['Produkt'].strip()]
         do_autosave(); st.rerun()
 
     def db_add():
         nid = max([x['id'] for x in st.session_state.db_produkte], default=0)+1
         st.session_state.db_produkte.append({'id':nid,'Produkt':'','Preis':0.0,'var_k':0.0,
-                                              'Menge':0,'ei_db1':0.0,'ei_db2':0.0,'ei_bep':0.0})
+                                              'fix_k':0.0,'Menge':0,'ei_db1':0.0,'ei_db2':0.0})
+
+    if not st.session_state.db_produkte:
+        db_add()
 
     db_prod = st.session_state.db_produkte
-    COL_DB = [1.6, 1.0, 1.0, 0.9, 1.1, 1.2, 0.55]
+    COL_DB = [1.6, 0.85, 0.85, 0.85, 0.8, 1.0, 1.1, 0.55]
     hdr_db = "<div class='table-header'>"
-    for r, h in zip(COL_DB, ["Produkt", "Preis (€)", "Var.K. (€)", "Menge", "DB I (€)", "DB II (€)", "Akt."]):
+    for r, h in zip(COL_DB, ["Produkt", "Preis (€/Stk.)", "Var. Kosten (€/Stk.)", "Fix. Kosten (€/Stk.)", "Menge", "DB I (€/Stk.)", "DB II (€/Stk.)", "Akt."]):
         hdr_db += f"<div style='flex:{r} 1 0%;'>{h}</div>"
     hdr_db += "</div>"
     st.markdown(hdr_db, unsafe_allow_html=True)
@@ -1366,13 +1408,14 @@ elif modul == "💰 DB-Rechnung":
     for item in db_prod:
         with st.container(border=True):
             cols = st.columns(COL_DB, gap="small")
-            with cols[0]: item['Produkt'] = st.text_input("P", value=item['Produkt'], key=f"db_p_{item['id']}", label_visibility="collapsed")
-            with cols[1]: item['Preis']   = st.number_input("Pr", value=float(item['Preis']), key=f"db_pr_{item['id']}", label_visibility="collapsed", step=0.5, format="%.2f", min_value=0.0)
-            with cols[2]: item['var_k']   = st.number_input("Vk", value=float(item['var_k']), key=f"db_vk_{item['id']}", label_visibility="collapsed", step=0.5, format="%.2f", min_value=0.0)
-            with cols[3]: item['Menge']   = st.number_input("Me", value=int(item['Menge']), key=f"db_me_{item['id']}", label_visibility="collapsed", step=10, min_value=0)
-            with cols[4]: item['ei_db1']  = st.number_input("D1", value=float(item.get('ei_db1', 0.0)), key=f"db_d1_{item['id']}", label_visibility="collapsed", step=0.5, format="%.2f")
-            with cols[5]: item['ei_db2']  = st.number_input("D2", value=float(item.get('ei_db2', 0.0)), key=f"db_d2_{item['id']}", label_visibility="collapsed", step=10.0, format="%.2f")
-            with cols[6]:
+            with cols[0]: item['Produkt'] = st.text_input("P",  value=item['Produkt'],                         key=f"db_p_{item['id']}",  label_visibility="collapsed")
+            with cols[1]: item['Preis']   = st.number_input("Pr", value=float(item['Preis']),                  key=f"db_pr_{item['id']}", label_visibility="collapsed", step=0.5,  format="%.2f", min_value=0.0)
+            with cols[2]: item['var_k']   = st.number_input("Vk", value=float(item['var_k']),                  key=f"db_vk_{item['id']}", label_visibility="collapsed", step=0.5,  format="%.2f", min_value=0.0)
+            with cols[3]: item['fix_k']   = st.number_input("Fk", value=float(item.get('fix_k', 0.0)),        key=f"db_fk_{item['id']}", label_visibility="collapsed", step=0.5,  format="%.2f", min_value=0.0)
+            with cols[4]: item['Menge']   = st.number_input("Me", value=int(item['Menge']),                    key=f"db_me_{item['id']}", label_visibility="collapsed", step=10,   min_value=0)
+            with cols[5]: item['ei_db1']  = st.number_input("D1", value=float(item.get('ei_db1', 0.0)),       key=f"db_d1_{item['id']}", label_visibility="collapsed", step=0.5,  format="%.2f")
+            with cols[6]: item['ei_db2']  = st.number_input("D2", value=float(item.get('ei_db2', 0.0)),       key=f"db_d2_{item['id']}", label_visibility="collapsed", step=0.5,  format="%.2f")
+            with cols[7]:
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
                     if st.button("🗑️", key=f"db_del_{item['id']}", disabled=(len(db_prod) <= 1),
@@ -1386,23 +1429,29 @@ elif modul == "💰 DB-Rechnung":
     st.markdown("<hr/>", unsafe_allow_html=True)
 
     def build_db_pdf():
-        pdf = FPDF(); pdf.add_page()
+        # Querformat: A4 landscape = 297 × 210 mm → nutzbare Breite ~277 mm
+        pdf = FPDF(orientation='L', unit='mm', format='A4')
+        pdf.add_page()
         pdf.set_font("Arial", 'B', 16)
-        pdf.cell(0, 10, "Deckungsbeitragsrechnung", ln=True, align="C"); pdf.ln(4)
+        pdf.cell(0, 10, "Deckungsbeitragsrechnung", ln=True, align="C"); pdf.ln(3)
+        pdf.set_font("Arial", '', 9)
+        pdf.cell(0, 6, "DB I = Verkaufspreis - variable Kosten/Stk. (Einkauf + Bezug + Provisionen)   |   DB II = DB I - anteilige Fixkosten/Stk. (Lager, Verwaltung)",
+                 ln=True, align="C"); pdf.ln(4)
         pdf.set_font("Arial", 'B', 9); pdf.set_fill_color(226, 232, 240)
-        # Spalten ohne BEP: Produkt 60 | Preis 28 | Var.K. 28 | Menge 22 | DB I 28 | DB II 32  = 198 mm
-        for h, w in zip(["Produkt", "Preis (EUR)", "Var.K. (EUR)", "Menge", "DB I (EUR)", "DB II (EUR)"],
-                        [60, 28, 28, 22, 28, 32]):
+        # Querformat: Produkt 80 | Preis 32 | Var.K 35 | Fix.K 35 | Menge 22 | DB I 35 | DB II 35 = 274 mm
+        for h, w in zip(["Produkt", "Preis (EUR/Stk.)", "Var. Kosten (EUR/Stk.)", "Fix. Kosten (EUR/Stk.)", "Menge", "DB I (EUR/Stk.)", "DB II (EUR/Stk.)"],
+                        [80, 32, 35, 35, 22, 35, 35]):
             pdf.cell(w, 8, h, border=1, align="C", fill=True)
         pdf.ln(); pdf.set_font("Arial", '', 9)
         for item in db_prod:
             if not item['Produkt']: continue
-            pdf.cell(60, 8, safe_str(item['Produkt']), border=1)
-            pdf.cell(28, 8, fmt_de(item['Preis']), border=1, align="R")
-            pdf.cell(28, 8, fmt_de(item['var_k']), border=1, align="R")
-            pdf.cell(22, 8, str(item['Menge']), border=1, align="R")
-            pdf.cell(28, 8, fmt_de(item.get('ei_db1', 0.0)), border=1, align="R")
-            pdf.cell(32, 8, fmt_de(item.get('ei_db2', 0.0)), border=1, align="R")
+            pdf.cell(80, 8, safe_str(item['Produkt']),           border=1)
+            pdf.cell(32, 8, fmt_de(item['Preis']),               border=1, align="R")
+            pdf.cell(35, 8, fmt_de(item['var_k']),               border=1, align="R")
+            pdf.cell(35, 8, fmt_de(item.get('fix_k', 0.0)),     border=1, align="R")
+            pdf.cell(22, 8, str(item['Menge']),                   border=1, align="R")
+            pdf.cell(35, 8, fmt_de(item.get('ei_db1', 0.0)),    border=1, align="R")
+            pdf.cell(35, 8, fmt_de(item.get('ei_db2', 0.0)),    border=1, align="R")
             pdf.ln()
         return pdf_output(pdf)
 
