@@ -78,7 +78,6 @@ html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
     padding: 1.2rem 1.5rem; margin-bottom: 1rem; }
 .info-card h4 { margin: 0 0 0.4rem; color: #0f172a; font-size: 1rem; font-weight: 600; }
 .info-card p  { margin: 0; color: #475569; font-size: 0.9rem; }
-button[kind="primary"] { background: #dc2626 !important; border: 1px solid #b91c1c !important; color: #ffffff !important; border-radius: 8px !important; font-weight: 700 !important; }
 .table-header { display: flex; gap: 0.5rem; background: #e2e8f0; padding: 10px 15px;
     border-radius: 8px; margin-bottom: 8px; border: 1px solid #cbd5e1; }
 .table-header div { text-align: center; font-weight: 700; color: #334155; font-size: 0.95rem; }
@@ -104,7 +103,6 @@ button[kind="primary"] { background: #dc2626 !important; border: 1px solid #b91c
         height: 24px !important;
         font-size: 0.78rem !important;
         line-height: 1 !important;
-        color: #ef4444 !important;
         font-weight: 700 !important;
     }
 }
