@@ -690,12 +690,17 @@ if modul == "🏠 Startseite / Stammdaten":
     """, unsafe_allow_html=True)
 
     for item in stamm:
+        sid = item['id']
+        if f"s_n_{sid}" not in st.session_state: st.session_state[f"s_n_{sid}"] = item.get('name', '')
+        if f"s_a_{sid}" not in st.session_state: st.session_state[f"s_a_{sid}"] = int(item.get('absatz', 0))
+        if f"s_p_{sid}" not in st.session_state: st.session_state[f"s_p_{sid}"] = float(item.get('preis', 0.0))
+        if f"s_l_{sid}" not in st.session_state: st.session_state[f"s_l_{sid}"] = item.get('liegezeit', '')
         with st.container(border=True):
             c1,c2,c3,c4,c5 = st.columns([2.4,1.1,1.1,1.5,0.5], gap="small")
-            with c1: item['name']      = st.text_input("N", value=item.get('name',''),     key=f"s_n_{item['id']}", label_visibility="collapsed")
-            with c2: item['absatz']    = st.number_input("A", value=int(item.get('absatz',0)), key=f"s_a_{item['id']}", label_visibility="collapsed", step=100, min_value=0)
-            with c3: item['preis']     = st.number_input("P", value=float(item.get('preis',0.0)), key=f"s_p_{item['id']}", label_visibility="collapsed", step=0.5, format="%.2f", min_value=0.0)
-            with c4: item['liegezeit'] = st.text_input("L", value=item.get('liegezeit',''), key=f"s_l_{item['id']}", label_visibility="collapsed")
+            with c1: item['name']      = st.text_input("N", key=f"s_n_{sid}", label_visibility="collapsed")
+            with c2: item['absatz']    = st.number_input("A", key=f"s_a_{sid}", label_visibility="collapsed", step=100, min_value=0)
+            with c3: item['preis']     = st.number_input("P", key=f"s_p_{sid}", label_visibility="collapsed", step=0.5, format="%.2f", min_value=0.0)
+            with c4: item['liegezeit'] = st.text_input("L", key=f"s_l_{sid}", label_visibility="collapsed")
             with c5:
                 _, mid, _ = st.columns([0.2, 1, 0.2])
                 with mid:
