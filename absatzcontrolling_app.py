@@ -1182,11 +1182,17 @@ elif modul == "📦 ABC-Analyse":
         pdf.set_font("Arial", 'B', 16)
         pdf.cell(0, 10, "ABC-Analyse - Auswertung", ln=True, align="C"); pdf.ln(4)
         pdf.set_font("Arial", '', 10)
-        pdf.cell(0, 6, f"Klassengrenzen: A bis {grenze_a}%  |  B bis {grenze_b}%  |  C bis 100%",
+        # Grenzen aus Session State holen (falls nicht verfügbar, Defaults nutzen)
+        _grenze_a = st.session_state.get('abc_ga', 80)
+        _grenze_b = st.session_state.get('abc_gb', 95)
+        pdf.cell(0, 6, f"Klassengrenzen: A bis {_grenze_a}%  |  B bis {_grenze_b}%  |  C bis 100%",
                  ln=True, align="C"); pdf.ln(4)
 
+        # Aktuelle Daten aus Session State
+        _current = st.session_state.get('abc_liste', [])
+        
         # Pareto-Diagramm (Schüler-Eingaben) einbetten
-        pareto_path = create_abc_pareto_png(current)
+        pareto_path = create_abc_pareto_png(_current)
         if pareto_path:
             try:
                 pdf.image(pareto_path, x=10, y=None, w=270)
@@ -1204,7 +1210,7 @@ elif modul == "📦 ABC-Analyse":
         for h, w in zip(cols_h, cols_w):
             pdf.cell(w, 8, h, border=1, align="C", fill=True)
         pdf.ln(); pdf.set_font("Arial", '', 9)
-        for i, item in enumerate(current):
+        for i, item in enumerate(_current):
             if not item['Artikel']: continue
             # Nur Schüler-Eingaben exportieren – keine berechneten Vergleichswerte
             pdf.cell(10, 8, f"{i+1}.", border=1, align="C")
