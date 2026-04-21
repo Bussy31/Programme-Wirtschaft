@@ -117,14 +117,7 @@ input[type="number"] { -moz-appearance: textfield !important; }
     display: none !important;
 }
 
-/* Mülleimer-Buttons in Tabellenzeilen auf ~50% verkleinern */
-[data-testid="stVerticalBlockBorderWrapper"] .stButton > button {
-    padding: 0px 4px !important;
-    min-height: 26px !important;
-    height: 26px !important;
-    font-size: 0.8rem !important;
-    line-height: 1 !important;
-}
+
 
 /* ── Tablet-Optimierung (481px – 1024px) ── */
 @media (max-width: 1024px) and (min-width: 481px) {
@@ -654,7 +647,7 @@ if modul == "🏠 Startseite / Stammdaten":
                 _, mid, _ = st.columns([0.2, 1, 0.2])
                 with mid:
                     if st.button("🗑️", key=f"s_del_{item['id']}", disabled=(len(stamm) <= 1),
-                                 use_container_width=True):
+                                 use_container_width=False):
                         st.session_state.stammdaten = [x for x in stamm if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
 
@@ -842,7 +835,7 @@ elif modul == "🔄 Produktlebenszyklus":
                 with mid:
                     if st.button("🗑️", key=f"plz_del_{item['id']}",
                                  disabled=(len(st.session_state.plz_produkte) <= 1),
-                                 use_container_width=True):
+                                 use_container_width=False):
                         st.session_state.plz_produkte = [x for x in st.session_state.plz_produkte
                                                          if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
@@ -1013,7 +1006,7 @@ elif modul == "🔷 Portfoliomatrix":
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
                     if st.button("🗑️", key=f"bcg_del_{item['id']}", disabled=(len(bcg) <= 1),
-                                 use_container_width=True):
+                                 use_container_width=False):
                         st.session_state.bcg_liste = [x for x in bcg if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
 
@@ -1238,7 +1231,7 @@ elif modul == "📦 ABC-Analyse":
                     abc_move(i,'up'); do_autosave(force=True); st.rerun()
                 if cd.button("↓", key=f"abc_dn_{item['id']}", disabled=(i==len(current)-1), use_container_width=True):
                     abc_move(i,'down'); do_autosave(force=True); st.rerun()
-                if cx.button("🗑️", key=f"abc_del_{item['id']}", disabled=(len(current)<=1), use_container_width=True):
+                if cx.button("🗑️", key=f"abc_del_{item['id']}", disabled=(len(current)<=1), use_container_width=False):
                     st.session_state.abc_liste = [x for x in current if x['id'] != item['id']]
                     do_autosave(force=True); st.rerun()
 
@@ -1428,7 +1421,7 @@ elif modul == "⚡ Renner-Penner-Liste":
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
                     if st.button("🗑️", key=f"rp_del_{item['id']}", disabled=(len(rp) <= 1),
-                                 use_container_width=True):
+                                 use_container_width=False):
                         st.session_state.rp_liste = [x for x in rp if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
 
@@ -1548,7 +1541,7 @@ elif modul == "💰 DB-Rechnung":
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
                     if st.button("🗑️", key=f"db_del_{item['id']}", disabled=(len(db_prod) <= 1),
-                                 use_container_width=True):
+                                 use_container_width=False):
                         st.session_state.db_produkte = [x for x in db_prod if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
 
