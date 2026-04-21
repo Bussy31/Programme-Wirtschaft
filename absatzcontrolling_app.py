@@ -115,15 +115,14 @@ TESTDATEN_DB    = []
 # ─────────────────────────────────────────────
 SAVE_KEYS = ['stammdaten', 'plz_produkte', 'abc_liste', 'bcg_liste', 'rp_liste', 'db_produkte']
 _LAST_SAVED = {}
-_AUTOSAVE_SCHEDULED = False
+_PENDING_CHANGES = 0
 
 def save_to_file(data: dict):
     """Speichert Daten zu JSON-Datei – speichert nur, wenn sich etwas geändert hat."""
     global _LAST_SAVED
-    # Schneller Check: Nur speichern, wenn sich tatsächlich etwas geändert hat
     data_str = json.dumps(data, ensure_ascii=False, sort_keys=True)
     if _LAST_SAVED.get('data') == data_str:
-        return  # Nichts geändert – nicht speichern!
+        return
     try:
         with open(SAVE_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
@@ -142,11 +141,21 @@ def load_from_file():
     return None
 
 def do_autosave(force=False):
-    """Speichert Session-State Daten mit Change-Detection."""
-    # Wenn force=True, sofort speichern; sonst: Change Detection
+    """Speichert Session-State Daten. Bei force=True sofort, sonst nach 5 Änderungen."""
+    global _PENDING_CHANGES
     data = {k: st.session_state[k] for k in SAVE_KEYS if k in st.session_state}
-    if force or _LAST_SAVED.get('data') != json.dumps(data, ensure_ascii=False, sort_keys=True):
+
+    if force:
         save_to_file(data)
+        _PENDING_CHANGES = 0
+        return
+
+    data_str = json.dumps(data, ensure_ascii=False, sort_keys=True)
+    if _LAST_SAVED.get('data') != data_str:
+        _PENDING_CHANGES += 1
+        if _PENDING_CHANGES >= 5:
+            save_to_file(data)
+            _PENDING_CHANGES = 0
 
 
 # ─────────────────────────────────────────────
