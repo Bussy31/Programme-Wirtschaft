@@ -584,7 +584,7 @@ with st.sidebar:
             except Exception as e:
                 st.error(f"Fehler beim Laden: {e}")
 
-    if st.button("🗑️ Alle Daten löschen", use_container_width=True):
+    if st.button("🗑︎ Alle Daten löschen", use_container_width=True):
         st.session_state.stammdaten   = TESTDATEN_STAMM
         st.session_state.plz_produkte = TESTDATEN_PLZ
         st.session_state.bcg_liste    = TESTDATEN_BCG
@@ -646,7 +646,7 @@ if modul == "🏠 Startseite / Stammdaten":
             with c5:
                 _, mid, _ = st.columns([0.2, 1, 0.2])
                 with mid:
-                    if st.button("🗑️", key=f"s_del_{item['id']}", disabled=(len(stamm) <= 1),
+                    if st.button("🗑︎", key=f"s_del_{item['id']}", disabled=(len(stamm) <= 1),
                                  use_container_width=False):
                         st.session_state.stammdaten = [x for x in stamm if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
@@ -833,7 +833,7 @@ elif modul == "🔄 Produktlebenszyklus":
             with c3:
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
-                    if st.button("🗑️", key=f"plz_del_{item['id']}",
+                    if st.button("🗑︎", key=f"plz_del_{item['id']}",
                                  disabled=(len(st.session_state.plz_produkte) <= 1),
                                  use_container_width=False):
                         st.session_state.plz_produkte = [x for x in st.session_state.plz_produkte
@@ -1005,7 +1005,7 @@ elif modul == "🔷 Portfoliomatrix":
             with cols[4]:
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
-                    if st.button("🗑️", key=f"bcg_del_{item['id']}", disabled=(len(bcg) <= 1),
+                    if st.button("🗑︎", key=f"bcg_del_{item['id']}", disabled=(len(bcg) <= 1),
                                  use_container_width=False):
                         st.session_state.bcg_liste = [x for x in bcg if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
@@ -1231,7 +1231,7 @@ elif modul == "📦 ABC-Analyse":
                     abc_move(i,'up'); do_autosave(force=True); st.rerun()
                 if cd.button("↓", key=f"abc_dn_{item['id']}", disabled=(i==len(current)-1), use_container_width=True):
                     abc_move(i,'down'); do_autosave(force=True); st.rerun()
-                if cx.button("🗑️", key=f"abc_del_{item['id']}", disabled=(len(current)<=1), use_container_width=False):
+                if cx.button("🗑︎", key=f"abc_del_{item['id']}", disabled=(len(current)<=1), use_container_width=False):
                     st.session_state.abc_liste = [x for x in current if x['id'] != item['id']]
                     do_autosave(force=True); st.rerun()
 
@@ -1420,7 +1420,7 @@ elif modul == "⚡ Renner-Penner-Liste":
             with cols[4]:
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
-                    if st.button("🗑️", key=f"rp_del_{item['id']}", disabled=(len(rp) <= 1),
+                    if st.button("🗑︎", key=f"rp_del_{item['id']}", disabled=(len(rp) <= 1),
                                  use_container_width=False):
                         st.session_state.rp_liste = [x for x in rp if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
@@ -1540,7 +1540,7 @@ elif modul == "💰 DB-Rechnung":
             with cols[7]:
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
-                    if st.button("🗑️", key=f"db_del_{item['id']}", disabled=(len(db_prod) <= 1),
+                    if st.button("🗑︎", key=f"db_del_{item['id']}", disabled=(len(db_prod) <= 1),
                                  use_container_width=False):
                         st.session_state.db_produkte = [x for x in db_prod if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
