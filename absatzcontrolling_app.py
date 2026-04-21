@@ -117,6 +117,15 @@ input[type="number"] { -moz-appearance: textfield !important; }
     display: none !important;
 }
 
+/* Mülleimer-Buttons in Tabellenzeilen auf ~50% verkleinern */
+[data-testid="stVerticalBlockBorderWrapper"] .stButton > button {
+    padding: 0px 4px !important;
+    min-height: 26px !important;
+    height: 26px !important;
+    font-size: 0.8rem !important;
+    line-height: 1 !important;
+}
+
 /* ── Tablet-Optimierung (481px – 1024px) ── */
 @media (max-width: 1024px) and (min-width: 481px) {
     /* Etwas kleinere Basis-Schrift damit mehr auf den Bildschirm passt */
