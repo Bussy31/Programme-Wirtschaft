@@ -94,6 +94,57 @@ button[kind="primary"] { background: #0284c7 !important; border-radius: 8px !imp
 .bcg-feld { border-radius:10px; padding:1rem 1.2rem; min-height:340px;
     border:2px solid #e2e8f0; margin-bottom:4px; }
 .bcg-feld b { font-size:1rem; }
+
+/* ── Tablet-Optimierung (481px – 1024px) ── */
+@media (max-width: 1024px) and (min-width: 481px) {
+    /* Etwas kleinere Basis-Schrift damit mehr auf den Bildschirm passt */
+    html, body, [class*="css"] { font-size: 13px !important; }
+
+    /* Horizontales Scrollen für Zeilen mit vielen Spalten */
+    [data-testid="stHorizontalBlock"] {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex-wrap: nowrap !important;
+    }
+    [data-testid="column"] {
+        min-width: 80px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Touch-freundliche Eingabefelder (mind. 42px Tipp-Fläche) */
+    .stTextInput input,
+    .stNumberInput input {
+        min-height: 42px !important;
+        font-size: 0.88rem !important;
+        padding: 6px 8px !important;
+    }
+    .stSelectbox > div > div {
+        min-height: 42px !important;
+        font-size: 0.88rem !important;
+    }
+    .stButton > button {
+        min-height: 42px !important;
+        font-size: 0.85rem !important;
+        padding: 4px 10px !important;
+    }
+
+    /* Header kompakter */
+    .main-header { padding: 1.2rem 1.5rem !important; }
+    .main-header h1 { font-size: 1.5rem !important; }
+    .main-header p { font-size: 0.85rem !important; }
+
+    /* Tabellen-Header */
+    .table-header { padding: 8px 10px !important; }
+    .table-header div { font-size: 0.78rem !important; }
+
+    /* BCG-Matrix kompakter */
+    .bcg-feld { min-height: 240px !important; padding: 0.75rem !important; }
+    .bcg-feld b { font-size: 0.9rem !important; }
+
+    /* Metriken */
+    .metric-box .val { font-size: 1.3rem !important; }
+    .metric-box { padding: 0.75rem !important; }
+}
 </style>
 <div class="footer">© Philipp Bußmann</div>
 """, unsafe_allow_html=True)
