@@ -95,6 +95,18 @@ button[kind="primary"] { background: #0284c7 !important; border-radius: 8px !imp
     border:2px solid #e2e8f0; margin-bottom:4px; }
 .bcg-feld b { font-size:1rem; }
 
+/* ── Mülleimer-Buttons in schmalen Spalten verkleinern (Container Queries) ── */
+[data-testid="column"] { container-type: inline-size; }
+@container (max-width: 150px) {
+    .stButton > button {
+        padding: 1px 5px !important;
+        min-height: 24px !important;
+        height: 24px !important;
+        font-size: 0.78rem !important;
+        line-height: 1 !important;
+    }
+}
+
 /* ── Globale Input-Optimierung ── */
 .stTextInput input,
 .stNumberInput input {
