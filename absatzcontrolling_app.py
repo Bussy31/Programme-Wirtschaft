@@ -102,13 +102,20 @@ button[kind="primary"] { background: #0284c7 !important; border-radius: 8px !imp
 }
 .stSelectbox > div > div { font-size: 0.82rem !important; }
 
-/* +/- Spinner ausblenden */
+/* +/- Spinner ausblenden – Browser-nativ */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none !important;
     margin: 0 !important;
 }
 input[type="number"] { -moz-appearance: textfield !important; }
+
+/* +/- Buttons von Streamlit selbst ausblenden */
+[data-testid="stNumberInputStepDown"],
+[data-testid="stNumberInputStepUp"],
+[data-testid="stNumberInput"] button {
+    display: none !important;
+}
 
 /* ── Tablet-Optimierung (481px – 1024px) ── */
 @media (max-width: 1024px) and (min-width: 481px) {
