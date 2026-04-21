@@ -114,15 +114,25 @@ TESTDATEN_DB    = []
 #  DATEI-BASIERTE PERSISTENZ
 # ─────────────────────────────────────────────
 SAVE_KEYS = ['stammdaten', 'plz_produkte', 'abc_liste', 'bcg_liste', 'rp_liste', 'db_produkte']
+_LAST_SAVED = {}
+_AUTOSAVE_SCHEDULED = False
 
 def save_to_file(data: dict):
+    """Speichert Daten zu JSON-Datei – speichert nur, wenn sich etwas geändert hat."""
+    global _LAST_SAVED
+    # Schneller Check: Nur speichern, wenn sich tatsächlich etwas geändert hat
+    data_str = json.dumps(data, ensure_ascii=False, sort_keys=True)
+    if _LAST_SAVED.get('data') == data_str:
+        return  # Nichts geändert – nicht speichern!
     try:
         with open(SAVE_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
+        _LAST_SAVED['data'] = data_str
     except Exception:
         pass
 
 def load_from_file():
+    """Lädt Daten aus JSON-Datei."""
     try:
         if os.path.exists(SAVE_FILE):
             with open(SAVE_FILE, 'r', encoding='utf-8') as f:
@@ -131,8 +141,12 @@ def load_from_file():
         pass
     return None
 
-def do_autosave():
-    save_to_file({k: st.session_state[k] for k in SAVE_KEYS if k in st.session_state})
+def do_autosave(force=False):
+    """Speichert Session-State Daten mit Change-Detection."""
+    # Wenn force=True, sofort speichern; sonst: Change Detection
+    data = {k: st.session_state[k] for k in SAVE_KEYS if k in st.session_state}
+    if force or _LAST_SAVED.get('data') != json.dumps(data, ensure_ascii=False, sort_keys=True):
+        save_to_file(data)
 
 
 # ─────────────────────────────────────────────
@@ -220,6 +234,7 @@ def get_stammdaten_namen():
     return [p['name'] for p in st.session_state.stammdaten if p.get('name','').strip()]
 
 def produkt_auswahl_widget(modul_key: str):
+    """Widget zur Produktauswahl – speichert nach Bestätigung."""
     namen = get_stammdaten_namen()
     if not namen:
         return None
@@ -492,7 +507,7 @@ with st.sidebar:
         st.session_state.abc_liste    = TESTDATEN_ABC
         st.session_state.rp_liste     = TESTDATEN_RP
         st.session_state.db_produkte  = TESTDATEN_DB
-        do_autosave(); st.rerun()
+        do_autosave(force=True); st.rerun()
 
     st.markdown("---")
     if not PDF_AVAILABLE:
@@ -550,12 +565,12 @@ if modul == "🏠 Startseite / Stammdaten":
                     if st.button("🗑️", key=f"s_del_{item['id']}", disabled=(len(stamm) <= 1),
                                  use_container_width=True):
                         st.session_state.stammdaten = [x for x in stamm if x['id'] != item['id']]
-                        do_autosave(); st.rerun()
+                        do_autosave(force=True); st.rerun()
 
     ca, _ = st.columns([2, 5])
     with ca:
         if st.button("➕ Artikel hinzufügen", use_container_width=True):
-            stamm_add(); do_autosave(); st.rerun()
+            stamm_add(); do_autosave(force=True); st.rerun()
 
     namen = [p['name'] for p in stamm if p.get('name','').strip()]
     if namen:
@@ -697,7 +712,7 @@ elif modul == "🔄 Produktlebenszyklus":
                 nid += 1
                 st.session_state.plz_produkte.append({'id':nid,'Produkt':name,'Phase_eingabe':'-'})
         st.session_state.plz_produkte = [x for x in st.session_state.plz_produkte if x['Produkt'].strip()]
-        do_autosave(); st.rerun()
+        do_autosave(force=True); st.rerun()
 
     def plz_add():
         nid = max([x['id'] for x in st.session_state.plz_produkte], default=0)+1
@@ -713,17 +728,24 @@ elif modul == "🔄 Produktlebenszyklus":
     hdr_plz += "</div>"
     st.markdown(hdr_plz, unsafe_allow_html=True)
 
+    should_save_later = False
     for item in st.session_state.plz_produkte:
         with st.container(border=True):
             c1, c2, c3 = st.columns([3.2, 2.2, 0.6], gap="small")
             with c1:
-                item['Produkt'] = st.text_input("P", value=item['Produkt'],
+                new_val = st.text_input("P", value=item['Produkt'],
                     key=f"plz_p_{item['id']}", label_visibility="collapsed",
                     placeholder="Produktname …")
+                if new_val != item['Produkt']:
+                    item['Produkt'] = new_val
+                    should_save_later = True
             with c2:
                 pi = optionen_plz.index(item['Phase_eingabe']) if item['Phase_eingabe'] in optionen_plz else 0
-                item['Phase_eingabe'] = st.selectbox("Ph", options=optionen_plz, index=pi,
+                new_val = st.selectbox("Ph", options=optionen_plz, index=pi,
                     key=f"plz_e_{item['id']}", label_visibility="collapsed")
+                if new_val != item['Phase_eingabe']:
+                    item['Phase_eingabe'] = new_val
+                    should_save_later = True
             with c3:
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
@@ -732,10 +754,14 @@ elif modul == "🔄 Produktlebenszyklus":
                                  use_container_width=True):
                         st.session_state.plz_produkte = [x for x in st.session_state.plz_produkte
                                                          if x['id'] != item['id']]
-                        do_autosave(); st.rerun()
+                        do_autosave(force=True); st.rerun()
 
     if st.button("➕ Produkt hinzufügen", key="plz_add"):
-        plz_add(); do_autosave(); st.rerun()
+        plz_add(); do_autosave(force=True); st.rerun()
+    
+    # Am Ende: Speichern wenn nötig (lazy save)
+    if should_save_later:
+        do_autosave()
 
     st.markdown("<hr/>", unsafe_allow_html=True)
 
@@ -833,7 +859,8 @@ elif modul == "🔷 Portfoliomatrix":
                 st.session_state.bcg_liste.append(
                     {'id':nid,'Produkt':name,'wachstum_text':'','anteil_text':'','ei_feld':'-'})
         st.session_state.bcg_liste = [x for x in st.session_state.bcg_liste if x['Produkt'].strip()]
-        do_autosave(); st.rerun()
+        do_autosave()  # Speichern OHNE rerun!
+        st.rerun()
 
     def bcg_add():
         nid = max([x['id'] for x in st.session_state.bcg_liste], default=0)+1
@@ -859,32 +886,52 @@ elif modul == "🔷 Portfoliomatrix":
     st.markdown(hdr_b, unsafe_allow_html=True)
 
     bcg = st.session_state.bcg_liste
+    
+    # Optimierung: Nach dem Rendern speichern, nicht vorher!
+    should_save_later = False
+    
     for item in bcg:
         with st.container(border=True):
             cols = st.columns(COL_BCG, gap="small")
             with cols[0]:
-                item['Produkt'] = st.text_input("P", value=item['Produkt'],
+                new_val = st.text_input("P", value=item['Produkt'],
                     key=f"bcg_p_{item['id']}", label_visibility="collapsed", placeholder="Produktname …")
+                if new_val != item['Produkt']:
+                    item['Produkt'] = new_val
+                    should_save_later = True
             with cols[1]:
-                item['wachstum_text'] = st.text_input("W", value=item.get('wachstum_text', ''),
+                new_val = st.text_input("W", value=item.get('wachstum_text', ''),
                     key=f"bcg_w_{item['id']}", label_visibility="collapsed", placeholder="z.B. hoch, gering …")
+                if new_val != item.get('wachstum_text', ''):
+                    item['wachstum_text'] = new_val
+                    should_save_later = True
             with cols[2]:
-                item['anteil_text'] = st.text_input("A", value=item.get('anteil_text', ''),
+                new_val = st.text_input("A", value=item.get('anteil_text', ''),
                     key=f"bcg_a_{item['id']}", label_visibility="collapsed", placeholder="z.B. hoch, niedrig …")
+                if new_val != item.get('anteil_text', ''):
+                    item['anteil_text'] = new_val
+                    should_save_later = True
             with cols[3]:
                 fi = FELDER_OPT.index(item.get('ei_feld', '-')) if item.get('ei_feld', '-') in FELDER_OPT else 0
-                item['ei_feld'] = st.selectbox("F", options=FELDER_OPT, index=fi,
+                new_val = st.selectbox("F", options=FELDER_OPT, index=fi,
                     key=f"bcg_f_{item['id']}", label_visibility="collapsed")
+                if new_val != item.get('ei_feld', '-'):
+                    item['ei_feld'] = new_val
+                    should_save_later = True
             with cols[4]:
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
                     if st.button("🗑️", key=f"bcg_del_{item['id']}", disabled=(len(bcg) <= 1),
                                  use_container_width=True):
                         st.session_state.bcg_liste = [x for x in bcg if x['id'] != item['id']]
-                        do_autosave(); st.rerun()
+                        do_autosave(force=True); st.rerun()
 
     if st.button("➕ Produkt hinzufügen", key="bcg_add"):
-        bcg_add(); do_autosave(); st.rerun()
+        bcg_add(); do_autosave(force=True); st.rerun()
+    
+    # Am Ende: Speichern wenn nötig (lazy save)
+    if should_save_later:
+        do_autosave()
 
     # ── Live 2×2-Matrix ──
     st.markdown("<hr/>", unsafe_allow_html=True)
@@ -1051,7 +1098,7 @@ elif modul == "📦 ABC-Analyse":
                     'Menge':int(sd.get('absatz',0)),'Preis':float(sd.get('preis',0.0)),
                     'ei_ums':0.0,'ei_ant':0.0,'ei_kum':0.0,'ei_kl':'-'})
         st.session_state.abc_liste = [x for x in st.session_state.abc_liste if x['Artikel'].strip()]
-        do_autosave(); st.rerun()
+        do_autosave(force=True); st.rerun()
 
     def abc_move(index, direction):
         l = st.session_state.abc_liste
@@ -1097,17 +1144,17 @@ elif modul == "📦 ABC-Analyse":
             with cols[8]:
                 cu, cd, cx = st.columns(3)
                 if cu.button("↑", key=f"abc_up_{item['id']}", disabled=(i==0), use_container_width=True):
-                    abc_move(i,'up'); do_autosave(); st.rerun()
+                    abc_move(i,'up'); do_autosave(force=True); st.rerun()
                 if cd.button("↓", key=f"abc_dn_{item['id']}", disabled=(i==len(current)-1), use_container_width=True):
-                    abc_move(i,'down'); do_autosave(); st.rerun()
+                    abc_move(i,'down'); do_autosave(force=True); st.rerun()
                 if cx.button("🗑️", key=f"abc_del_{item['id']}", disabled=(len(current)<=1), use_container_width=True):
                     st.session_state.abc_liste = [x for x in current if x['id'] != item['id']]
-                    do_autosave(); st.rerun()
+                    do_autosave(force=True); st.rerun()
 
     ca, _ = st.columns([2, 5])
     with ca:
         if st.button("➕ Artikel hinzufügen", use_container_width=True):
-            abc_add(); do_autosave(); st.rerun()
+            abc_add(); do_autosave(force=True); st.rerun()
 
     st.markdown("<hr/>", unsafe_allow_html=True)
     st.subheader("📊 Pareto-Diagramm (deine Eingaben)")
@@ -1244,7 +1291,7 @@ elif modul == "⚡ Renner-Penner-Liste":
                 nid += 1
                 st.session_state.rp_liste.append({'id':nid,'Produkt':name,'Absatz':0,'DB':0.0,'typ_eingabe':'-'})
         st.session_state.rp_liste = [x for x in st.session_state.rp_liste if x['Produkt'].strip()]
-        do_autosave(); st.rerun()
+        do_autosave(force=True); st.rerun()
 
     def rp_add():
         nid = max([x['id'] for x in st.session_state.rp_liste], default=0)+1
@@ -1286,10 +1333,10 @@ elif modul == "⚡ Renner-Penner-Liste":
                     if st.button("🗑️", key=f"rp_del_{item['id']}", disabled=(len(rp) <= 1),
                                  use_container_width=True):
                         st.session_state.rp_liste = [x for x in rp if x['id'] != item['id']]
-                        do_autosave(); st.rerun()
+                        do_autosave(force=True); st.rerun()
 
     if st.button("➕ Produkt hinzufügen", key="rp_add"):
-        rp_add(); do_autosave(); st.rerun()
+        rp_add(); do_autosave(force=True); st.rerun()
 
     st.markdown("<hr/>", unsafe_allow_html=True)
 
@@ -1372,7 +1419,7 @@ elif modul == "💰 DB-Rechnung":
                     'var_k':0.0,'fix_k':0.0,'Menge':int(sd.get('absatz',0)),
                     'ei_db1':0.0,'ei_db2':0.0})
         st.session_state.db_produkte = [x for x in st.session_state.db_produkte if x['Produkt'].strip()]
-        do_autosave(); st.rerun()
+        do_autosave(force=True); st.rerun()
 
     def db_add():
         nid = max([x['id'] for x in st.session_state.db_produkte], default=0)+1
@@ -1406,10 +1453,10 @@ elif modul == "💰 DB-Rechnung":
                     if st.button("🗑️", key=f"db_del_{item['id']}", disabled=(len(db_prod) <= 1),
                                  use_container_width=True):
                         st.session_state.db_produkte = [x for x in db_prod if x['id'] != item['id']]
-                        do_autosave(); st.rerun()
+                        do_autosave(force=True); st.rerun()
 
     if st.button("➕ Produkt hinzufügen", key="db_add"):
-        db_add(); do_autosave(); st.rerun()
+        db_add(); do_autosave(force=True); st.rerun()
 
     st.markdown("<hr/>", unsafe_allow_html=True)
 
