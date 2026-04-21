@@ -95,6 +95,21 @@ button[kind="primary"] { background: #0284c7 !important; border-radius: 8px !imp
     border:2px solid #e2e8f0; margin-bottom:4px; }
 .bcg-feld b { font-size:1rem; }
 
+/* ── Globale Input-Optimierung ── */
+.stTextInput input,
+.stNumberInput input {
+    font-size: 0.82rem !important;
+}
+.stSelectbox > div > div { font-size: 0.82rem !important; }
+
+/* +/- Spinner ausblenden */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+input[type="number"] { -moz-appearance: textfield !important; }
+
 /* ── Tablet-Optimierung (481px – 1024px) ── */
 @media (max-width: 1024px) and (min-width: 481px) {
     /* Etwas kleinere Basis-Schrift damit mehr auf den Bildschirm passt */
