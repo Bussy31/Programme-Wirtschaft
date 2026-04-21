@@ -78,7 +78,7 @@ html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
     padding: 1.2rem 1.5rem; margin-bottom: 1rem; }
 .info-card h4 { margin: 0 0 0.4rem; color: #0f172a; font-size: 1rem; font-weight: 600; }
 .info-card p  { margin: 0; color: #475569; font-size: 0.9rem; }
-button[kind="primary"] { background: #0284c7 !important; border-radius: 8px !important; font-weight: 600 !important; }
+button[kind="primary"] { background: #dc2626 !important; border: 1px solid #b91c1c !important; color: #ffffff !important; border-radius: 8px !important; font-weight: 700 !important; }
 .table-header { display: flex; gap: 0.5rem; background: #e2e8f0; padding: 10px 15px;
     border-radius: 8px; margin-bottom: 8px; border: 1px solid #cbd5e1; }
 .table-header div { text-align: center; font-weight: 700; color: #334155; font-size: 0.95rem; }
@@ -574,6 +574,11 @@ with st.sidebar:
     ], label_visibility="collapsed")
 
     st.markdown("---")
+    if st.button("💾 Jetzt speichern", use_container_width=True):
+        do_autosave(force=True)
+        st.toast("✅ Gespeichert!", icon="💾")
+
+    st.markdown("---")
     st.markdown("#### 📤 JSON Export / Import")
     st.download_button("⬇️ JSON exportieren", data=get_export_json(),
                        file_name="agrigeno_daten.json", mime="application/json",
@@ -661,7 +666,7 @@ if modul == "🏠 Startseite / Stammdaten":
                 _, mid, _ = st.columns([0.2, 1, 0.2])
                 with mid:
                     if st.button("✕", key=f"s_del_{item['id']}", disabled=(len(stamm) <= 1),
-                                 use_container_width=False):
+                                 use_container_width=False, type="primary"):
                         st.session_state.stammdaten = [x for x in stamm if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
 
@@ -849,7 +854,7 @@ elif modul == "🔄 Produktlebenszyklus":
                 with mid:
                     if st.button("✕", key=f"plz_del_{item['id']}",
                                  disabled=(len(st.session_state.plz_produkte) <= 1),
-                                 use_container_width=False):
+                                 use_container_width=False, type="primary"):
                         st.session_state.plz_produkte = [x for x in st.session_state.plz_produkte
                                                          if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
@@ -1020,7 +1025,7 @@ elif modul == "🔷 Portfoliomatrix":
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
                     if st.button("✕", key=f"bcg_del_{item['id']}", disabled=(len(bcg) <= 1),
-                                 use_container_width=False):
+                                 use_container_width=False, type="primary"):
                         st.session_state.bcg_liste = [x for x in bcg if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
 
@@ -1245,7 +1250,7 @@ elif modul == "📦 ABC-Analyse":
                     abc_move(i,'up'); do_autosave(force=True); st.rerun()
                 if cd.button("↓", key=f"abc_dn_{item['id']}", disabled=(i==len(current)-1), use_container_width=True):
                     abc_move(i,'down'); do_autosave(force=True); st.rerun()
-                if cx.button("✕", key=f"abc_del_{item['id']}", disabled=(len(current)<=1), use_container_width=False):
+                if cx.button("✕", key=f"abc_del_{item['id']}", disabled=(len(current)<=1), use_container_width=False, type="primary"):
                     st.session_state.abc_liste = [x for x in current if x['id'] != item['id']]
                     do_autosave(force=True); st.rerun()
 
@@ -1435,7 +1440,7 @@ elif modul == "⚡ Renner-Penner-Liste":
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
                     if st.button("✕", key=f"rp_del_{item['id']}", disabled=(len(rp) <= 1),
-                                 use_container_width=False):
+                                 use_container_width=False, type="primary"):
                         st.session_state.rp_liste = [x for x in rp if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
 
@@ -1555,7 +1560,7 @@ elif modul == "💰 DB-Rechnung":
                 _, mid, _ = st.columns([0.3, 1, 0.3])
                 with mid:
                     if st.button("✕", key=f"db_del_{item['id']}", disabled=(len(db_prod) <= 1),
-                                 use_container_width=False):
+                                 use_container_width=False, type="primary"):
                         st.session_state.db_produkte = [x for x in db_prod if x['id'] != item['id']]
                         do_autosave(force=True); st.rerun()
 
