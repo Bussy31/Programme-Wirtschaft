@@ -592,14 +592,44 @@ with st.sidebar:
         if st.button("📂 JSON laden", use_container_width=True):
             try:
                 imported = json.load(uploaded)
-                _system_keys = {'state_loaded', 'json_import_key', 'json_import_success',
-                                'stammdaten', 'plz_produkte', 'bcg_liste', 'abc_liste',
-                                'rp_liste', 'db_produkte'}
-                for key in list(st.session_state.keys()):
-                    if key not in _system_keys:
-                        del st.session_state[key]
                 for k, v in imported.items():
                     st.session_state[k] = v
+                # Widget-Keys explizit setzen damit alle Felder sofort korrekte Werte zeigen
+                _rp_clean = lambda s: s.replace("🏆 ","").replace("😴 ","").replace("❓ ","").replace("💀 ","").strip()
+                _rp_opt = ["-","Renner","Schlaefer","Fragezeichen","Penner"]
+                for item in imported.get('stammdaten', []):
+                    st.session_state[f"s_n_{item['id']}"]  = item.get('name', '')
+                    st.session_state[f"s_a_{item['id']}"]  = int(item.get('absatz', 0))
+                    st.session_state[f"s_p_{item['id']}"]  = float(item.get('preis', 0.0))
+                    st.session_state[f"s_l_{item['id']}"]  = item.get('liegezeit', '')
+                for item in imported.get('plz_produkte', []):
+                    st.session_state[f"plz_p_{item['id']}"] = item.get('Produkt', '')
+                    st.session_state[f"plz_e_{item['id']}"] = item.get('Phase_eingabe', '-')
+                for item in imported.get('bcg_liste', []):
+                    st.session_state[f"bcg_p_{item['id']}"] = item.get('Produkt', '')
+                    st.session_state[f"bcg_w_{item['id']}"] = item.get('wachstum_text', '')
+                    st.session_state[f"bcg_a_{item['id']}"] = item.get('anteil_text', '')
+                    st.session_state[f"bcg_f_{item['id']}"] = item.get('ei_feld', '-')
+                for item in imported.get('abc_liste', []):
+                    st.session_state[f"abc_art_{item['id']}"] = item.get('Artikel', '')
+                    st.session_state[f"abc_men_{item['id']}"] = int(item.get('Menge', 0))
+                    st.session_state[f"abc_pre_{item['id']}"] = float(item.get('Preis', 0.0))
+                    st.session_state[f"abc_ums_{item['id']}"] = float(item.get('ei_ums', 0.0))
+                    st.session_state[f"abc_ant_{item['id']}"] = float(item.get('ei_ant', 0.0))
+                    st.session_state[f"abc_kum_{item['id']}"] = float(item.get('ei_kum', 0.0))
+                    st.session_state[f"abc_kl_{item['id']}"]  = item.get('ei_kl', '-')
+                for item in imported.get('rp_liste', []):
+                    st.session_state[f"rp_p_{item['id']}"]  = item.get('Produkt', '')
+                    st.session_state[f"rp_a_{item['id']}"]  = int(item.get('Absatz', 0))
+                    st.session_state[f"rp_d_{item['id']}"]  = float(item.get('DB', 0.0))
+                    v = _rp_clean(item.get('typ_eingabe', '-'))
+                    st.session_state[f"rp_te_{item['id']}"] = v if v in _rp_opt else '-'
+                for item in imported.get('db_produkte', []):
+                    st.session_state[f"db_p_{item['id']}"]  = item.get('Produkt', '')
+                    st.session_state[f"db_pr_{item['id']}"] = float(item.get('Preis', 0.0))
+                    st.session_state[f"db_vk_{item['id']}"] = float(item.get('var_k', 0.0))
+                    st.session_state[f"db_fk_{item['id']}"] = float(item.get('fix_k', 0.0))
+                    st.session_state[f"db_me_{item['id']}"] = int(item.get('Menge', 0))
                 do_autosave(force=True)
                 st.session_state.json_import_key += 1   # Uploader zurücksetzen
                 st.session_state.json_import_success = True
