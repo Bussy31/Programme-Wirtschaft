@@ -1583,10 +1583,10 @@ elif modul == "📋 Gesamtauswertung":
         pdf.set_font("Arial", '', 9)
         for item in bew:
             if not item['Produkt']: continue
-            pdf.cell(80, 8, safe_str(item['Produkt']), border=1, valign="T")
+            pdf.cell(80, 8, safe_str(item['Produkt']), border=1)
             bewertung_lines = item['bewertung'].split('\n')
             first_line = safe_str(bewertung_lines[0][:80]) if bewertung_lines else ""
-            pdf.multi_cell(0, 8, first_line, border=1, valign="T"); pdf.ln()
+            pdf.multi_cell(0, 8, first_line, border=1); pdf.ln()
         return pdf_output(pdf)
 
     pdf_download_button("📄 Auswertung als PDF", build_bew_pdf, "Gesamtauswertung.pdf")
