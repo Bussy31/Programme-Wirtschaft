@@ -1574,18 +1574,19 @@ elif modul == "📋 Gesamtauswertung":
     st.markdown("<hr/>", unsafe_allow_html=True)
 
     def build_bew_pdf():
-        pdf = FPDF(); pdf.add_page()
+        pdf = FPDF(orientation='L'); pdf.add_page()
         pdf.set_font("Arial", 'B', 16)
-        pdf.cell(0, 10, "Gesamtauswertung", ln=True, align="C"); pdf.ln(6)
-        pdf.set_font("Arial", 'B', 9); pdf.set_fill_color(226, 232, 240)
-        for h, w in zip(["Produkt","Bewertung"],[80, 120]):
-            pdf.cell(w, 8, h, border=1, align="C", fill=True)
-        pdf.ln(); pdf.set_font("Arial", '', 9)
+        pdf.cell(0, 10, "Gesamtauswertung", ln=True, align="C"); pdf.ln(4)
+        pdf.set_font("Arial", '', 9)
         for item in bew:
             if not item['Produkt']: continue
-            pdf.cell(80, 8, safe_str(item['Produkt']), border=1)
-            bewertung_kurz = safe_str(item['bewertung'][:60])
-            pdf.cell(120, 8, bewertung_kurz, border=1); pdf.ln()
+            prod_text = safe_str(item['Produkt'])
+            bew_text = safe_str(item['bewertung'])
+            pdf.set_font("Arial", 'B', 9)
+            pdf.cell(0, 6, f"Produkt: {prod_text}", ln=True, border=1)
+            pdf.set_font("Arial", '', 8)
+            pdf.multi_cell(0, 4, f"Bewertung:\n{bew_text}", border=1)
+            pdf.ln(2)
         return pdf_output(pdf)
 
     pdf_download_button("📄 Auswertung als PDF", build_bew_pdf, "Gesamtauswertung.pdf")
