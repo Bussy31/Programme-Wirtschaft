@@ -195,12 +195,13 @@ TESTDATEN_BCG   = []
 TESTDATEN_ABC   = []
 TESTDATEN_RP    = []
 TESTDATEN_DB    = []
+TESTDATEN_BEWERTUNG = []
 
 
 # ─────────────────────────────────────────────
 #  DATEI-BASIERTE PERSISTENZ
 # ─────────────────────────────────────────────
-SAVE_KEYS = ['stammdaten', 'plz_produkte', 'abc_liste', 'bcg_liste', 'rp_liste', 'db_produkte']
+SAVE_KEYS = ['stammdaten', 'plz_produkte', 'abc_liste', 'bcg_liste', 'rp_liste', 'db_produkte', 'bewertung_liste']
 _LAST_SAVED = {}
 _PENDING_CHANGES = 0
 
@@ -267,11 +268,13 @@ if not st.session_state.state_loaded:
         st.session_state.abc_liste    = TESTDATEN_ABC
         st.session_state.rp_liste     = TESTDATEN_RP
         st.session_state.db_produkte  = TESTDATEN_DB
+        st.session_state.bewertung_liste = TESTDATEN_BEWERTUNG
     st.session_state.state_loaded = True
 
 for k, v in [('stammdaten', TESTDATEN_STAMM), ('plz_produkte', TESTDATEN_PLZ),
               ('bcg_liste', TESTDATEN_BCG), ('abc_liste', TESTDATEN_ABC),
-              ('rp_liste', TESTDATEN_RP), ('db_produkte', TESTDATEN_DB)]:
+              ('rp_liste', TESTDATEN_RP), ('db_produkte', TESTDATEN_DB),
+              ('bewertung_liste', TESTDATEN_BEWERTUNG)]:
     if k not in st.session_state:
         st.session_state[k] = v
 
@@ -343,7 +346,7 @@ def produkt_auswahl_widget(modul_key: str):
     return None
 
 def get_export_json():
-    keys = ['stammdaten','plz_produkte','abc_liste','bcg_liste','rp_liste','db_produkte']
+    keys = ['stammdaten','plz_produkte','abc_liste','bcg_liste','rp_liste','db_produkte','bewertung_liste']
     return json.dumps({k: st.session_state[k] for k in keys if k in st.session_state},
                       ensure_ascii=False, indent=2)
 
@@ -569,6 +572,7 @@ with st.sidebar:
         "📦 ABC-Analyse",
         "💰 DB-Rechnung",
         "⚡ Renner-Penner-Liste",
+        "📋 Gesamtauswertung",
     ], label_visibility="collapsed")
 
     st.markdown("---")
@@ -630,6 +634,9 @@ with st.sidebar:
                     st.session_state[f"db_vk_{item['id']}"] = float(item.get('var_k', 0.0))
                     st.session_state[f"db_fk_{item['id']}"] = float(item.get('fix_k', 0.0))
                     st.session_state[f"db_me_{item['id']}"] = int(item.get('Menge', 0))
+                for item in imported.get('bewertung_liste', []):
+                    st.session_state[f"bew_p_{item['id']}"]  = item.get('Produkt', '')
+                    st.session_state[f"bew_t_{item['id']}"]  = item.get('bewertung', '')
                 do_autosave(force=True)
                 st.session_state.json_import_key += 1   # Uploader zurücksetzen
                 st.session_state.json_import_success = True
@@ -644,6 +651,7 @@ with st.sidebar:
         st.session_state.abc_liste    = TESTDATEN_ABC
         st.session_state.rp_liste     = TESTDATEN_RP
         st.session_state.db_produkte  = TESTDATEN_DB
+        st.session_state.bewertung_liste = TESTDATEN_BEWERTUNG
         do_autosave(force=True); st.rerun()
 
     st.markdown("---")
@@ -1505,6 +1513,83 @@ elif modul == "⚡ Renner-Penner-Liste":
         return pdf_output(pdf)
 
     pdf_download_button("📄 Liste als PDF", build_rp_pdf, "Renner_Penner_Liste.pdf")
+
+
+# ═══════════════════════════════════════════════════════════
+#  MODUL: GESAMTAUSWERTUNG
+# ═══════════════════════════════════════════════════════════
+elif modul == "📋 Gesamtauswertung":
+    st.markdown("""
+    <div class="main-header">
+        <h1>📋 Gesamtauswertung</h1>
+        <p>Schreibe deine Bewertung zu jedem Produkt auf</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if 'bewertung_liste' not in st.session_state:
+        st.session_state.bewertung_liste = TESTDATEN_BEWERTUNG[:]
+
+    sel_bew = produkt_auswahl_widget("bew")
+    if sel_bew:
+        existing = [x['Produkt'] for x in st.session_state.bewertung_liste]
+        nid = max([x['id'] for x in st.session_state.bewertung_liste], default=0)
+        for name in sel_bew:
+            if name not in existing:
+                nid += 1
+                st.session_state.bewertung_liste.append({'id':nid,'Produkt':name,'bewertung':''})
+        st.session_state.bewertung_liste = [x for x in st.session_state.bewertung_liste if x['Produkt'].strip()]
+        do_autosave(force=True); st.rerun()
+
+    def bew_add():
+        nid = max([x['id'] for x in st.session_state.bewertung_liste], default=0)+1
+        st.session_state.bewertung_liste.append({'id':nid,'Produkt':'','bewertung':''})
+
+    if not st.session_state.bewertung_liste:
+        bew_add()
+
+    bew = st.session_state.bewertung_liste
+
+    hdr_bew = "<div class='table-header'>"
+    for r, h in zip([2.0, 5.0, 0.55], ["Produkt", "Bewertung", "Aktion"]):
+        hdr_bew += f"<div style='flex:{r} 1 0%;'>{h}</div>"
+    hdr_bew += "</div>"
+    st.markdown(hdr_bew, unsafe_allow_html=True)
+
+    for item in bew:
+        with st.container(border=True):
+            cols = st.columns([2.0, 5.0, 0.55], gap="small")
+            with cols[0]: item['Produkt'] = st.text_input("P", value=item['Produkt'], key=f"bew_p_{item['id']}", label_visibility="collapsed")
+            with cols[1]: item['bewertung'] = st.text_area("B", value=item['bewertung'], key=f"bew_t_{item['id']}", label_visibility="collapsed", height=80)
+            with cols[2]:
+                _, mid, _ = st.columns([0.3, 1, 0.3])
+                with mid:
+                    if st.button("✕", key=f"bew_del_{item['id']}", disabled=(len(bew) <= 1),
+                                 use_container_width=False):
+                        st.session_state.bewertung_liste = [x for x in bew if x['id'] != item['id']]
+                        do_autosave(force=True); st.rerun()
+
+    if st.button("➕ Produkt hinzufügen", key="bew_add"):
+        bew_add(); do_autosave(force=True); st.rerun()
+
+    st.markdown("<hr/>", unsafe_allow_html=True)
+
+    def build_bew_pdf():
+        pdf = FPDF(); pdf.add_page()
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, "Gesamtauswertung", ln=True, align="C"); pdf.ln(6)
+        pdf.set_font("Arial", 'B', 9); pdf.set_fill_color(226, 232, 240)
+        pdf.cell(80, 8, "Produkt", border=1, align="C", fill=True)
+        pdf.cell(0, 8, "Bewertung", border=1, align="C", fill=True); pdf.ln()
+        pdf.set_font("Arial", '', 9)
+        for item in bew:
+            if not item['Produkt']: continue
+            pdf.cell(80, 8, safe_str(item['Produkt']), border=1, valign="T")
+            bewertung_lines = item['bewertung'].split('\n')
+            first_line = safe_str(bewertung_lines[0][:80]) if bewertung_lines else ""
+            pdf.multi_cell(0, 8, first_line, border=1, valign="T"); pdf.ln()
+        return pdf_output(pdf)
+
+    pdf_download_button("📄 Auswertung als PDF", build_bew_pdf, "Gesamtauswertung.pdf")
 
 
 # ═══════════════════════════════════════════════════════════
