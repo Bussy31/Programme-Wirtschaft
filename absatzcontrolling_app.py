@@ -1578,15 +1578,14 @@ elif modul == "📋 Gesamtauswertung":
         pdf.set_font("Arial", 'B', 16)
         pdf.cell(0, 10, "Gesamtauswertung", ln=True, align="C"); pdf.ln(6)
         pdf.set_font("Arial", 'B', 9); pdf.set_fill_color(226, 232, 240)
-        pdf.cell(80, 8, "Produkt", border=1, align="C", fill=True)
-        pdf.cell(0, 8, "Bewertung", border=1, align="C", fill=True); pdf.ln()
-        pdf.set_font("Arial", '', 9)
+        for h, w in zip(["Produkt","Bewertung"],[80, 120]):
+            pdf.cell(w, 8, h, border=1, align="C", fill=True)
+        pdf.ln(); pdf.set_font("Arial", '', 9)
         for item in bew:
             if not item['Produkt']: continue
             pdf.cell(80, 8, safe_str(item['Produkt']), border=1)
-            bewertung_lines = item['bewertung'].split('\n')
-            first_line = safe_str(bewertung_lines[0][:80]) if bewertung_lines else ""
-            pdf.multi_cell(0, 8, first_line, border=1); pdf.ln()
+            bewertung_kurz = safe_str(item['bewertung'][:60])
+            pdf.cell(120, 8, bewertung_kurz, border=1); pdf.ln()
         return pdf_output(pdf)
 
     pdf_download_button("📄 Auswertung als PDF", build_bew_pdf, "Gesamtauswertung.pdf")
