@@ -24,27 +24,23 @@ _LAST_SAVED = {}
 
 
 def _get_save_file():
-    """Gibt für die aktuelle Session einen eigenen JSON-Pfad zurück."""
-    if 'save_uuid' not in st.session_state:
-        save_id = None
-        params = {}
-        try:
-            params = st.experimental_get_query_params() or {}
-            save_id = params.get('save_uuid', [None])[0]
-        except Exception:
-            pass
+    """Lokale Browser-Persistenz ist deaktiviert. JSON-Export/Import ist der zuverlässige Weg."""
+    return None
 
-        if not save_id:
-            save_id = uuid.uuid4().hex
-            try:
-                st.experimental_set_query_params(**{**params, 'save_uuid': save_id})
-            except Exception:
-                pass
 
-        st.session_state.save_uuid = save_id
+def save_to_file(data: dict):
+    """Lokale Datei-Speicherung ist deaktiviert."""
+    return
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_dir, f'.agrigeno_save_{st.session_state.save_uuid}.json')
+
+def load_from_file():
+    """Lokale Datei-Ladung ist deaktiviert."""
+    return None
+
+
+def do_autosave(force=False):
+    """Lokale Auto-Save-Funktion ist deaktiviert."""
+    return
 
 
 st.markdown("""
@@ -605,9 +601,7 @@ with st.sidebar:
     ], label_visibility="collapsed")
 
     st.markdown("---")
-    if st.button("💾 Jetzt speichern", use_container_width=True):
-        do_autosave(force=True)
-        st.toast("✅ Gespeichert!", icon="💾")
+    st.info("⚠️ Lokale Browser-Speicherung ist deaktiviert. Bitte nutze den JSON-Export unten.")
 
     st.markdown("---")
     st.markdown("#### 📤 JSON Export / Import")
