@@ -26,8 +26,25 @@ _LAST_SAVED = {}
 def _get_save_file():
     """Gibt für die aktuelle Session einen eigenen JSON-Pfad zurück."""
     if 'save_uuid' not in st.session_state:
-        st.session_state.save_uuid = uuid.uuid4().hex
-    return os.path.join(tempfile.gettempdir(), f'.agrigeno_save_{st.session_state.save_uuid}.json')
+        save_id = None
+        params = {}
+        try:
+            params = st.experimental_get_query_params() or {}
+            save_id = params.get('save_uuid', [None])[0]
+        except Exception:
+            pass
+
+        if not save_id:
+            save_id = uuid.uuid4().hex
+            try:
+                st.experimental_set_query_params(**{**params, 'save_uuid': save_id})
+            except Exception:
+                pass
+
+        st.session_state.save_uuid = save_id
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_dir, f'.agrigeno_save_{st.session_state.save_uuid}.json')
 
 
 st.markdown("""
