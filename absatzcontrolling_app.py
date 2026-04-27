@@ -4,6 +4,7 @@ import altair as alt
 import json
 import os
 import tempfile
+import uuid
 
 try:
     from fpdf import FPDF
@@ -19,7 +20,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-SAVE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.agrigeno_save.json')
+_LAST_SAVED = {}
+
+
+def _get_save_file():
+    """Gibt für die aktuelle Session einen eigenen JSON-Pfad zurück."""
+    if 'save_uuid' not in st.session_state:
+        st.session_state.save_uuid = uuid.uuid4().hex
+    return os.path.join(tempfile.gettempdir(), f'.agrigeno_save_{st.session_state.save_uuid}.json')
+
 
 st.markdown("""
 <style>
@@ -207,22 +216,24 @@ _PENDING_CHANGES = 0
 
 def save_to_file(data: dict):
     """Speichert Daten zu JSON-Datei – speichert nur, wenn sich etwas geändert hat."""
-    global _LAST_SAVED
+    file_path = _get_save_file()
     data_str = json.dumps(data, ensure_ascii=False, sort_keys=True)
-    if _LAST_SAVED.get('data') == data_str:
+    if _LAST_SAVED.get(file_path) == data_str:
         return
     try:
-        with open(SAVE_FILE, 'w', encoding='utf-8') as f:
+        with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        _LAST_SAVED['data'] = data_str
+        _LAST_SAVED[file_path] = data_str
     except Exception:
         pass
 
+
 def load_from_file():
-    """Lädt Daten aus JSON-Datei."""
+    """Lädt Daten aus der Session-spezifischen JSON-Datei."""
+    file_path = _get_save_file()
     try:
-        if os.path.exists(SAVE_FILE):
-            with open(SAVE_FILE, 'r', encoding='utf-8') as f:
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
     except Exception:
         pass
@@ -231,6 +242,7 @@ def load_from_file():
 def do_autosave(force=False):
     """Speichert Session-State Daten. Bei force=True sofort, sonst nach 5 Änderungen."""
     global _PENDING_CHANGES
+    file_path = _get_save_file()
     data = {k: st.session_state[k] for k in SAVE_KEYS if k in st.session_state}
 
     if force:
@@ -239,7 +251,7 @@ def do_autosave(force=False):
         return
 
     data_str = json.dumps(data, ensure_ascii=False, sort_keys=True)
-    if _LAST_SAVED.get('data') != data_str:
+    if _LAST_SAVED.get(file_path) != data_str:
         _PENDING_CHANGES += 1
         if _PENDING_CHANGES >= 5:
             save_to_file(data)
