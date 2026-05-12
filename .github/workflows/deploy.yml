@@ -3,7 +3,7 @@ name: Deploy Streamlit App
 on:
   push:
     branches:
-      - main  # Auch hier prüfen: main oder master?
+      - main
 
 jobs:
   deploy:
@@ -17,5 +17,20 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /root/Programme-Wirtschaft
-            git pull origin main
-            # Der Neustart-Befehl für Streamlit kommt später hier hin!
+            git fetch origin main
+            git reset --hard origin/main
+            pip install -r requirements.txt --quiet --break-system-packages
+            pkill -f "streamlit run" || true
+            sleep 3
+            setsid streamlit run entgeltabrechnung.py --server.port 8507 --server.address 127.0.0.1 --server.baseUrlPath /entgeltabrechnung > /dev/null 2>&1 &
+            setsid streamlit run nutzwertanalyse.py --server.port 8508 --server.address 127.0.0.1 --server.baseUrlPath /nutzwertanalyse > /dev/null 2>&1 &
+            setsid streamlit run einfacher_wirtschaftskreislauf.py --server.port 8504 --server.address 127.0.0.1 --server.baseUrlPath /einfacher_wirtschaftskreislauf > /dev/null 2>&1 &
+            setsid streamlit run erweiterter_wirtschaftskreislauf.py --server.port 8505 --server.address 127.0.0.1 --server.baseUrlPath /erweiterter_wirtschaftskreislauf > /dev/null 2>&1 &
+            setsid streamlit run optimaleBestellmenge.py --server.port 8510 --server.address 127.0.0.1 --server.baseUrlPath /optimaleBestellmenge > /dev/null 2>&1 &
+            setsid streamlit run Kontenverwaltung_complete_bank.py --server.port 8502 --server.address 127.0.0.1 --server.baseUrlPath /kontenverwaltung_bank > /dev/null 2>&1 &
+            setsid streamlit run Kontenverwaltung_complete.py --server.port 8501 --server.address 127.0.0.1 --server.baseUrlPath /kontenverwaltung > /dev/null 2>&1 &
+            setsid streamlit run Break-Even-Point.py --server.port 8503 --server.address 127.0.0.1 --server.baseUrlPath /break-even-point > /dev/null 2>&1 &
+            setsid streamlit run Bruttoinlandsprodukt.py --server.port 8506 --server.address 127.0.0.1 --server.baseUrlPath /bip > /dev/null 2>&1 &
+            setsid streamlit run abc_analyse.py --server.port 8511 --server.address 127.0.0.1 --server.baseUrlPath /abcAnalyse > /dev/null 2>&1 &
+            setsid streamlit run Marktspiel/marktspiel.py --server.port 8509 --server.address 127.0.0.1 --server.baseUrlPath /marktspiel > /dev/null 2>&1 &
+            setsid streamlit run absatzcontrolling_app.py --server.port 8599 --server.address 127.0.0.1 --server.baseUrlPath /absatzcontrolling_app > /dev/null 2>&1 &
