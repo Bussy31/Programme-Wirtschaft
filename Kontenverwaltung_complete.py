@@ -3,8 +3,6 @@ import pandas as pd
 from fpdf import FPDF
 import copy
 import json
-import os
-import uuid
 from streamlit_local_storage import LocalStorage  # <--- NEU
 
 # ---  SEITEN-KONFIGURATION  ---
@@ -34,6 +32,13 @@ def format_german_num(value):
 
 # --- LOCAL STORAGE LADEN & INITIALISIEREN ---
 localS = LocalStorage()
+
+if st.session_state.get('_clear_storage'):
+    _leer = json.dumps({"konten": {}, "journal": [], "soll_count": 1, "haben_count": 1,
+                        "sort_orders": {"Aktiv": [], "Passiv": [], "Aufwand": [], "Ertrag": []}})
+    localS.setItem("buchhaltung_v1", _leer)
+    del st.session_state['_clear_storage']
+
 gespeicherte_daten = localS.getItem("buchhaltung_v1")
 
 if gespeicherte_daten and "daten_geladen" not in st.session_state:
@@ -78,6 +83,7 @@ def reset_alles():
     st.session_state['uploader_key'] = 0
 
     st.session_state.daten_geladen = True
+    st.session_state['_clear_storage'] = True
 
 # ==========================================
 # SEITENLEISTE: SPEICHERN & LADEN
@@ -352,6 +358,11 @@ with tab1:
                                         if s["konto"] == selected_kto: s["konto"] = new_k_name
                                     for h in entry["haben"]:
                                         if h["konto"] == selected_kto: h["konto"] = new_k_name
+                                for gruppe in st.session_state.sort_orders:
+                                    st.session_state.sort_orders[gruppe] = [
+                                        new_k_name if k == selected_kto else k
+                                        for k in st.session_state.sort_orders[gruppe]
+                                    ]
 
                             st.session_state.konten[new_k_name]["Kategorie"] = new_k_kat
                             st.session_state.konten[new_k_name]["Seite"] = new_seite
@@ -631,7 +642,7 @@ with tab3:
                 if st.button("Abschlussbuchung eintragen", type="primary"):
                     expected_seite = "Haben" if s_sum > h_sum else "Soll"
 
-                    if abs_betrag != saldo:
+                    if abs(abs_betrag - saldo) > 0.01:
                         st.error(f"Falscher Betrag! Der auszugleichende Saldo beträgt exakt {format_german_num(saldo)} €.")
                     elif abs_seite != expected_seite:
                         st.error(
@@ -1038,6 +1049,8 @@ with tab4:
             else:
                 pdf.ln(10)
 
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 8, "Hauptbuch - Bestandskonten", ln=True)
             pdf.set_font("Helvetica", "I", 10)
             pdf.cell(0, 6, "(Aktivkonten links & Passivkonten rechts)", ln=True)
             pdf.ln(4)
@@ -1132,17 +1145,7 @@ with tab4:
 
                 draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv, sb_passiv)
 
-            # Generiert einen einzigartigen Namen für diesen einen Schüler
-            temp_pdf_path = f"temp_loesung_{uuid.uuid4().hex}.pdf"
-            pdf.output(temp_pdf_path)
-
-            # Liest das PDF in den Arbeitsspeicher
-            with open(temp_pdf_path, "rb") as pdf_file:
-                PDFbyte = pdf_file.read()
-
-            # Datei direkt wieder von der Festplatte löschen, um Müll zu vermeiden
-            if os.path.exists(temp_pdf_path):
-                os.remove(temp_pdf_path)
+            PDFbyte = bytes(pdf.output())
 
             st.success("PDF erfolgreich generiert! Dein aktueller Arbeitsstand wurde gedruckt.")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,

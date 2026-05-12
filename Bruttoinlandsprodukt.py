@@ -1,10 +1,9 @@
 import streamlit as st
 import random
 import pandas as pd
-import io
-import matplotlib.pyplot as plt
 from fpdf import FPDF
 import json
+from pathlib import Path
 
 st.set_page_config(page_title="Musterland Simulation", layout="wide", initial_sidebar_state="expanded")
 
@@ -25,7 +24,7 @@ footer_html = """
 st.markdown(footer_html, unsafe_allow_html=True)
 
 # --- 1. DATENBANK DER SZENARIEN LADEN ---
-with open("Bruttoinlandsprodukt_szenarien.json", "r", encoding="utf-8") as file:
+with open(Path(__file__).parent / "Bruttoinlandsprodukt_szenarien.json", "r", encoding="utf-8") as file:
     alle_szenarien = json.load(file)
 
 # --- 2. HILFSFUNKTIONEN FÜR LOGIK UND MATHEMATIK ---
@@ -153,7 +152,7 @@ def erstelle_pdf():
             pdf.cell(0, 5, f"Wohlstandsindex: {w_vorz}{w_delta}%", ln=True)
         pdf.ln(2)  # Kleine Lücke zwischen den Ereignissen
 
-    return bytes(pdf.output(dest='S'), encoding='latin1')
+    return bytes(pdf.output())
 
 
 def anwenden(option, titel, index):

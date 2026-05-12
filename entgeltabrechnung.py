@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
-import uuid
-import os
+
+st.set_page_config(page_title="Entgeltabrechnung", page_icon="💶", layout="centered")
 
 # --- COPYRIGHT FOOTER (Unten rechts) ---
 footer_html = """
@@ -81,23 +81,10 @@ def erstelle_pdf(brutto, vl_ag, st_sv_gehalt, lohnsteuer,
     pdf.set_text_color(0, 0, 0)
     zeile("Überweisungsbetrag", f"{ueberweisung:.2f} EUR", font_style="B", border=1, fill=True)
 
-    temp_pdf_path = f"temp_loesung_{uuid.uuid4().hex}.pdf"
-    pdf.output(temp_pdf_path)
-
-    # Liest das PDF in den Arbeitsspeicher
-    with open(temp_pdf_path, "rb") as pdf_file:
-        PDFbyte = pdf_file.read()
-
-    # Datei direkt wieder von der Festplatte löschen, um Müll zu vermeiden
-    if os.path.exists(temp_pdf_path):
-        os.remove(temp_pdf_path)
-
-    return PDFbyte
+    return bytes(pdf.output())
 
 
 # --- STREAMLIT APP ---
-
-st.set_page_config(page_title="Entgeltabrechnung", page_icon="💶", layout="centered")
 
 st.title("💶 Entgeltabrechnung erstellen")
 st.info("""

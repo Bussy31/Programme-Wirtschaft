@@ -1,7 +1,7 @@
 streamlit
-fpdf
+fpdf2
 pandas
 plotly
-streamlit-lottie
-requests
+altair
+streamlit-local-storage
 matplotlib

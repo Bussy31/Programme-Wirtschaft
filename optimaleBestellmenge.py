@@ -380,11 +380,7 @@ else:
                      border=1, align="C")
             pdf.ln()
 
-        # PDF sicher konvertieren (kompatibel mit FPDF 1 und 2)
-        try:
-            return pdf.output(dest="S").encode("latin-1")
-        except TypeError:
-            return bytes(pdf.output())
+        return bytes(pdf.output())
 
 
     pdf_daten = erstelle_pdf(st.session_state['uebungen_daten'])

@@ -3,8 +3,6 @@ import pandas as pd
 from fpdf import FPDF
 import copy
 import json
-import os
-import uuid
 from streamlit_local_storage import LocalStorage
 
 
@@ -1232,16 +1230,7 @@ with tab4:
                 draw_bilanz_pdf(pdf, "Schlussbilanz", sb_aktiv_bilanz, sb_passiv_bilanz)
 
 
-            # Generiert einen einzigartigen Namen, z.B. "temp_loesung_8f3a1b...pdf"
-            temp_pdf_path = f"temp_loesung_{uuid.uuid4().hex}.pdf"
-            pdf.output(temp_pdf_path)
-
-            with open(temp_pdf_path, "rb") as pdf_file:
-                PDFbyte = pdf_file.read()
-
-            # Datei direkt wieder vom Server löschen, der Inhalt ist ja jetzt in "PDFbyte" gespeichert
-            if os.path.exists(temp_pdf_path):
-                os.remove(temp_pdf_path)
+            PDFbyte = bytes(pdf.output())
 
             st.success("PDF erfolgreich generiert! Dein aktueller Arbeitsstand wurde gedruckt.")
             st.download_button(label="📥 PDF jetzt herunterladen", data=PDFbyte,

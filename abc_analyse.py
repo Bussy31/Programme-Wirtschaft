@@ -3,7 +3,6 @@ import pandas as pd
 import altair as alt
 import json
 from streamlit_local_storage import LocalStorage
-import io
 
 # --- Versuche FPDF für den PDF-Export zu laden ---
 try:
@@ -339,10 +338,7 @@ with col_pdf:
                 pdf.ln(3)
 
             # Rückgabe als Download-Bytes
-            try:
-                return pdf.output(dest='S').encode('latin-1')
-            except AttributeError:
-                return pdf.output()
+            return bytes(pdf.output())
 
 
         pdf_bytes = create_pdf(current_list)
