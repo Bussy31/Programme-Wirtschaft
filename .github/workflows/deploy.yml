@@ -17,8 +17,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /root/Programme-Wirtschaft
-            git pull origin main
-            pip install -r requirements.txt --quiet
+            git fetch origin main
+            git reset --hard origin/main
+            pip install -r requirements.txt --quiet --break-system-packages
             pkill -f "streamlit run" || true
             sleep 3
             nohup streamlit run entgeltabrechnung.py --server.port 8507 --server.address 127.0.0.1 --server.baseUrlPath /entgeltabrechnung > /dev/null 2>&1 &
