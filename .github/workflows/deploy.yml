@@ -33,4 +33,3 @@ jobs:
             nohup streamlit run abc_analyse.py --server.port 8511 --server.address 127.0.0.1 --server.baseUrlPath /abcAnalyse > /dev/null 2>&1 &
             nohup streamlit run Marktspiel/marktspiel.py --server.port 8509 --server.address 127.0.0.1 --server.baseUrlPath /marktspiel > /dev/null 2>&1 &
             nohup streamlit run absatzcontrolling_app.py --server.port 8599 --server.address 127.0.0.1 --server.baseUrlPath /absatzcontrolling_app > /dev/null 2>&1 &
-            disown -a
